@@ -1,13 +1,24 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
     FiSettings, FiSave, FiUser, FiBell, FiLock, FiGlobe,
     FiMail, FiDollarSign, FiDatabase, FiChevronRight, FiCheck
 } from 'react-icons/fi';
 
 export default function SettingsPage() {
-    const [activeTab, setActiveTab] = useState('general');
+    const searchParams = useSearchParams();
+    const tabFromUrl = searchParams.get('tab');
+    const [activeTab, setActiveTab] = useState(tabFromUrl || 'general');
+
+    // Update tab when URL changes
+    useEffect(() => {
+        if (tabFromUrl) {
+            setActiveTab(tabFromUrl);
+        }
+    }, [tabFromUrl]);
+
     const [saving, setSaving] = useState(false);
     const [settings, setSettings] = useState({
         siteName: 'MotionBoss',
@@ -67,8 +78,8 @@ export default function SettingsPage() {
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
                                     className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === tab.id
-                                            ? 'bg-indigo-50 text-indigo-600'
-                                            : 'text-slate-600 hover:bg-slate-50'
+                                        ? 'bg-indigo-50 text-indigo-600'
+                                        : 'text-slate-600 hover:bg-slate-50'
                                         }`}
                                 >
                                     <span className="flex items-center gap-3">

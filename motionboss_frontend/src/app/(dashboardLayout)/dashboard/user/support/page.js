@@ -2,8 +2,10 @@
 
 import React, { useState } from 'react';
 import { FiHelpCircle, FiMessageCircle, FiPhone, FiMail, FiClock, FiChevronDown, FiChevronUp, FiExternalLink, FiLoader, FiSend } from 'react-icons/fi';
+import { useTheme } from '@/providers/ThemeProvider';
 
 export default function UserSupportPage() {
+    const { isDark } = useTheme();
     const [expandedFaq, setExpandedFaq] = useState(null);
     const [ticketForm, setTicketForm] = useState({
         subject: '',
@@ -45,24 +47,24 @@ export default function UserSupportPage() {
             title: 'Phone Support',
             value: '+880 1321-231802',
             subtext: 'Mon-Fri, 9AM-6PM',
-            color: 'text-emerald-600',
-            bg: 'bg-emerald-100',
+            color: 'text-indigo-500',
+            bg: 'bg-indigo-500/10',
         },
         {
             icon: FiMail,
             title: 'Email Support',
             value: 'support@bdcallingacademy.com',
             subtext: '24-48 hours response',
-            color: 'text-blue-600',
-            bg: 'bg-blue-100',
+            color: 'text-purple-500',
+            bg: 'bg-purple-500/10',
         },
         {
             icon: FiMessageCircle,
             title: 'Live Chat',
             value: 'Coming Soon',
             subtext: 'Real-time support',
-            color: 'text-purple-600',
-            bg: 'bg-purple-100',
+            color: 'text-blue-500',
+            bg: 'bg-blue-500/10',
         },
     ];
 
@@ -71,31 +73,37 @@ export default function UserSupportPage() {
         alert('🔄 Support ticket system is processing. This feature will be available soon!');
     };
 
+    const cardClass = `rounded-2xl border transition-all duration-300 ${isDark ? 'bg-slate-800/50 border-white/5 shadow-xl' : 'bg-white border-slate-200 shadow-sm'}`;
+
     return (
-        <div className="p-6 lg:p-8 min-h-screen bg-slate-50">
+        <div className="space-y-8">
             {/* Header */}
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-slate-900 outfit">Help & Support</h1>
-                <p className="text-slate-500 mt-1">Get help with your courses and account</p>
+            <div>
+                <h1 className={`text-2xl font-black outfit tracking-tight ${isDark ? 'text-white' : 'text-slate-800'}`}>
+                    Help & Support
+                </h1>
+                <p className={`text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                    Get help with your courses and account
+                </p>
             </div>
 
             {/* Contact Methods */}
-            <div className="grid md:grid-cols-3 gap-4 mb-8">
+            <div className="grid md:grid-cols-3 gap-6">
                 {contactMethods.map((method, index) => {
                     const Icon = method.icon;
                     return (
                         <div
                             key={index}
-                            className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md hover:border-[#41bfb8]/30 transition"
+                            className={`${cardClass} p-6 hover:border-indigo-500/30 group`}
                         >
                             <div className="flex items-start gap-4">
-                                <div className={`w-12 h-12 rounded-xl ${method.bg} flex items-center justify-center`}>
+                                <div className={`w-12 h-12 rounded-xl ${method.bg} flex items-center justify-center transition-transform group-hover:scale-110`}>
                                     <Icon className={method.color} size={22} />
                                 </div>
                                 <div>
-                                    <h3 className="font-semibold text-slate-800">{method.title}</h3>
-                                    <p className="text-sm text-slate-700 font-medium mt-1">{method.value}</p>
-                                    <p className="text-xs text-slate-500 mt-0.5">{method.subtext}</p>
+                                    <h3 className={`font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>{method.title}</h3>
+                                    <p className={`text-sm font-black outfit mt-1 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>{method.value}</p>
+                                    <p className="text-[10px] uppercase font-black tracking-widest text-slate-500 mt-1">{method.subtext}</p>
                                 </div>
                             </div>
                         </div>
@@ -103,33 +111,35 @@ export default function UserSupportPage() {
                 })}
             </div>
 
-            <div className="grid lg:grid-cols-2 gap-6">
+            <div className="grid lg:grid-cols-2 gap-8">
                 {/* FAQs */}
-                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-                    <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                        <FiHelpCircle className="text-[#41bfb8]" />
-                        Frequently Asked Questions
-                    </h2>
+                <div className={`${cardClass} p-8`}>
+                    <div className="flex items-center gap-3 mb-8">
+                        <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-500">
+                            <FiHelpCircle size={20} />
+                        </div>
+                        <h2 className={`text-lg font-black outfit ${isDark ? 'text-white' : 'text-slate-800'}`}>Frequently Asked Questions</h2>
+                    </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                         {faqs.map((faq) => (
                             <div
                                 key={faq.id}
-                                className="border border-slate-200 rounded-xl overflow-hidden"
+                                className={`border rounded-2xl overflow-hidden transition-all ${isDark ? 'border-white/5 bg-white/5' : 'border-slate-100 bg-slate-50/50'}`}
                             >
                                 <button
                                     onClick={() => setExpandedFaq(expandedFaq === faq.id ? null : faq.id)}
-                                    className="w-full flex items-center justify-between p-4 text-left hover:bg-slate-50 transition"
+                                    className="w-full flex items-center justify-between p-4 text-left hover:bg-indigo-500/5 transition"
                                 >
-                                    <span className="font-medium text-slate-800">{faq.question}</span>
+                                    <span className={`font-bold text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{faq.question}</span>
                                     {expandedFaq === faq.id ? (
-                                        <FiChevronUp className="text-[#41bfb8]" />
+                                        <FiChevronUp className="text-indigo-500" />
                                     ) : (
                                         <FiChevronDown className="text-slate-400" />
                                     )}
                                 </button>
                                 {expandedFaq === faq.id && (
-                                    <div className="px-4 pb-4 text-sm text-slate-600 border-t border-slate-100 pt-3">
+                                    <div className={`px-4 pb-4 text-xs font-medium leading-relaxed border-t ${isDark ? 'text-slate-400 border-white/5' : 'text-slate-600 border-slate-100'} pt-3`}>
                                         {faq.answer}
                                     </div>
                                 )}
@@ -140,7 +150,7 @@ export default function UserSupportPage() {
                     {/* More Help Link */}
                     <a
                         href="/help"
-                        className="mt-6 flex items-center justify-center gap-2 text-[#41bfb8] font-medium hover:underline"
+                        className="mt-8 flex items-center justify-center gap-2 text-indigo-500 text-xs font-black uppercase tracking-widest hover:underline"
                     >
                         View All FAQs
                         <FiExternalLink size={14} />
@@ -148,32 +158,40 @@ export default function UserSupportPage() {
                 </div>
 
                 {/* Submit Ticket */}
-                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-                    <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                        <FiMessageCircle className="text-[#41bfb8]" />
-                        Submit a Support Ticket
-                    </h2>
+                <div className={`${cardClass} p-8`}>
+                    <div className="flex items-center gap-3 mb-8">
+                        <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-500">
+                            <FiMessageCircle size={20} />
+                        </div>
+                        <h2 className={`text-lg font-black outfit ${isDark ? 'text-white' : 'text-slate-800'}`}>Submit a Support Ticket</h2>
+                    </div>
 
-                    <form onSubmit={handleSubmitTicket} className="space-y-4">
+                    <form onSubmit={handleSubmitTicket} className="space-y-6">
                         {/* Subject */}
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Subject</label>
+                            <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Subject</label>
                             <input
                                 type="text"
                                 value={ticketForm.subject}
                                 onChange={(e) => setTicketForm({ ...ticketForm, subject: e.target.value })}
                                 placeholder="Brief description of your issue"
-                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#41bfb8] focus:ring-2 focus:ring-[#41bfb8]/20 outline-none"
+                                className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all ${isDark
+                                    ? 'bg-slate-900 border-white/10 text-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20'
+                                    : 'bg-white border-slate-200 text-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 shadow-sm'
+                                    }`}
                             />
                         </div>
 
                         {/* Category */}
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Category</label>
+                            <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Category</label>
                             <select
                                 value={ticketForm.category}
                                 onChange={(e) => setTicketForm({ ...ticketForm, category: e.target.value })}
-                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#41bfb8] focus:ring-2 focus:ring-[#41bfb8]/20 outline-none"
+                                className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all ${isDark
+                                    ? 'bg-slate-900 border-white/10 text-slate-200 focus:border-indigo-500'
+                                    : 'bg-white border-slate-200 text-slate-800 focus:border-indigo-500 shadow-sm'
+                                    }`}
                             >
                                 <option value="general">General Inquiry</option>
                                 <option value="course">Course Related</option>
@@ -185,41 +203,28 @@ export default function UserSupportPage() {
 
                         {/* Message */}
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Message</label>
+                            <label className={`block text-[10px] font-black uppercase tracking-widest mb-2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Message</label>
                             <textarea
                                 value={ticketForm.message}
                                 onChange={(e) => setTicketForm({ ...ticketForm, message: e.target.value })}
                                 placeholder="Describe your issue in detail..."
-                                rows={5}
-                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-[#41bfb8] focus:ring-2 focus:ring-[#41bfb8]/20 outline-none resize-none"
+                                rows={4}
+                                className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all resize-none ${isDark
+                                    ? 'bg-slate-900 border-white/10 text-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20'
+                                    : 'bg-white border-slate-200 text-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 shadow-sm'
+                                    }`}
                             />
                         </div>
 
                         {/* Submit Button */}
                         <button
                             type="submit"
-                            className="w-full py-3 bg-gradient-to-r from-[#41bfb8] to-[#38a89d] text-white font-semibold rounded-xl hover:shadow-lg transition flex items-center justify-center gap-2"
+                            className="w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-black text-xs uppercase tracking-widest rounded-xl hover:shadow-lg hover:shadow-indigo-500/25 transition-all flex items-center justify-center gap-2"
                         >
-                            <FiSend size={18} />
+                            <FiSend size={16} />
                             Submit Ticket
                         </button>
                     </form>
-
-                    {/* Processing Notice */}
-                    <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
-                        <div className="flex items-start gap-3">
-                            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                                <FiLoader className="text-blue-600 animate-spin" />
-                            </div>
-                            <div>
-                                <h4 className="font-semibold text-blue-900">Ticket System Processing</h4>
-                                <p className="text-sm text-blue-700 mt-1">
-                                    Our ticket management system is being set up.
-                                    For urgent issues, please contact us directly via phone or email.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>

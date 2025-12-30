@@ -141,7 +141,7 @@ const SoftwareController = {
 
     // ==================== ADMIN: GET ALL ====================
     getAdminSoftware: catchAsync(async (req: Request, res: Response) => {
-        const filters = pick(req.query, ['searchTerm', 'status', 'category', 'platform']) as ISoftwareFilters;
+        const filters = pick(req.query, ['searchTerm', 'status', 'category', 'platform', 'softwareType']) as ISoftwareFilters;
         const query: ISoftwareQuery = {
             page: req.query.page ? Number(req.query.page) : 1,
             limit: req.query.limit ? Number(req.query.limit) : 10,

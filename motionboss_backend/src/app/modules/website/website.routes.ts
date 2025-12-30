@@ -28,35 +28,39 @@ router.get('/slug/:slug', WebsiteController.getWebsiteBySlug);
 // ADMIN ROUTES - Website Management (seller removed)
 // ===================================================================
 
-// GET /api/websites/seller/my - Get admin's websites
+// ===================================================================
+// ADMIN ROUTES - Website Management
+// ===================================================================
+
+// GET /api/websites/admin/my - Get admin's websites
 router.get(
-    '/seller/my',
+    '/admin/my',
     authMiddleware,
     authorizeRoles('admin'),
     WebsiteController.getMyWebsites
 );
 
-// POST /api/websites/seller - Create new website
+// POST /api/websites/admin - Create new website
 router.post(
-    '/seller',
+    '/admin',
     authMiddleware,
     authorizeRoles('admin'),
     validateRequest(createWebsiteValidation),
     WebsiteController.createWebsite
 );
 
-// PATCH /api/websites/seller/:id - Update website
+// PATCH /api/websites/admin/managed/:id - Update website
 router.patch(
-    '/seller/:id',
+    '/admin/managed/:id',
     authMiddleware,
     authorizeRoles('admin'),
     validateRequest(updateWebsiteValidation),
     WebsiteController.updateWebsite
 );
 
-// DELETE /api/websites/seller/:id - Delete website
+// DELETE /api/websites/admin/managed/:id - Delete website
 router.delete(
-    '/seller/:id',
+    '/admin/managed/:id',
     authMiddleware,
     authorizeRoles('admin'),
     WebsiteController.deleteWebsite

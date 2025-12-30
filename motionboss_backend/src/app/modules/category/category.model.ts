@@ -15,7 +15,6 @@ const categorySchema = new Schema<ICategory>(
         name: {
             type: String,
             required: [true, 'Category name is required'],
-            unique: true,
             trim: true,
             maxlength: [100, 'Name cannot exceed 100 characters'],
         },
@@ -38,10 +37,20 @@ const categorySchema = new Schema<ICategory>(
             type: String,
             default: '',
         },
+        parentCategory: {
+            type: Schema.Types.ObjectId,
+            ref: 'Category',
+            default: null,
+        },
         status: {
             type: String,
             enum: ['active', 'inactive'],
             default: 'active',
+        },
+        type: {
+            type: String,
+            enum: ['course', 'website', 'software'],
+            default: 'course',
         },
         productCount: {
             type: Number,
@@ -50,6 +59,10 @@ const categorySchema = new Schema<ICategory>(
         order: {
             type: Number,
             default: 0,
+        },
+        isParent: {
+            type: Boolean,
+            default: false,
         },
     },
     {

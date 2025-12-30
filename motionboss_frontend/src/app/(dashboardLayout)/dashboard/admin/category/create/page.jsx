@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiArrowLeft, FiSave, FiLoader, FiCheckCircle, FiImage, FiGlobe, FiInfo } from 'react-icons/fi';
+import { FiArrowLeft, FiSave, FiLoader, FiImage, FiGlobe, FiInfo, FiBook, FiCode, FiLayout, FiCheck, FiFolder, FiChevronRight } from 'react-icons/fi';
 import Link from 'next/link';
 
 const CreateCategory = () => {
@@ -11,10 +11,32 @@ const CreateCategory = () => {
     slug: '',
     description: '',
     image: '',
-    isActive: true
+    status: 'active',
+    type: 'course',
+    isParent: false,
+    parentCategory: null
   });
+  const [parentCategories, setParentCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  // Fetch parent categories
+  useEffect(() => {
+    const fetchParents = async () => {
+      const BASE_URL = 'http://localhost:5000/api';
+      const token = localStorage.getItem('token');
+      try {
+        const res = await fetch(`${BASE_URL}/categories/admin/parents`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        setParentCategories(data.data || []);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchParents();
+  }, []);
 
   // Auto-generate slug from name
   useEffect(() => {
@@ -30,6 +52,12 @@ const CreateCategory = () => {
     const BASE_URL = 'http://localhost:5000/api';
     const token = localStorage.getItem('token');
 
+    // Prepare payload
+    const payload = {
+      ...formData,
+      parentCategory: formData.isParent ? null : formData.parentCategory
+    };
+
     try {
       const response = await fetch(`${BASE_URL}/categories/admin`, {
         method: 'POST',
@@ -37,13 +65,13 @@ const CreateCategory = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       const result = await response.json();
 
       if (response.ok) {
-        alert('Category segment initialized! ✅');
+        alert('Category created successfully! ✅');
         router.push('/dashboard/admin/category');
       } else {
         alert(result.message || 'Failed to create category');
@@ -55,123 +83,255 @@ const CreateCategory = () => {
     }
   };
 
-  const inputClass = "w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-slate-100 focus:border-slate-400 outline-none text-sm transition-all bg-white font-bold text-slate-700 placeholder:text-slate-300";
-  const labelClass = "block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-[0.2em]";
+  const getTypeColor = (type) => {
+    switch (type) {
+      case 'course': return 'from-indigo-500 to-purple-500';
+      case 'website': return 'from-emerald-500 to-teal-500';
+      case 'software': return 'from-violet-500 to-purple-600';
+      default: return 'from-slate-500 to-slate-600';
+    }
+  };
+
+  const typeOptions = [
+    { value: 'course', label: 'Course', icon: FiBook, desc: 'LMS & Education', color: 'indigo' },
+    { value: 'website', label: 'Website', icon: FiLayout, desc: 'Templates & Themes', color: 'emerald' },
+    { value: 'software', label: 'Software', icon: FiCode, desc: 'Plugins & Scripts', color: 'violet' },
+  ];
+
+  // Filter parent categories by selected type
+  const filteredParents = parentCategories.filter(p => p.type === formData.type);
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 md:p-12">
-      <div className="max-w-xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6 md:p-12">
+      <div className="max-w-2xl mx-auto">
 
-        {/* Navigation */}
+        {/* Header */}
         <div className="flex items-center justify-between mb-10">
-          <Link href="/dashboard/admin/category" className="flex items-center gap-3 px-4 py-2 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-slate-800 transition-all font-bold text-xs">
-            <FiArrowLeft /> Back to Taxonomy
-          </Link>
-          <div className="text-right">
-            <h1 className="text-2xl font-black text-slate-800 outfit tracking-tight">Expand Taxonomy</h1>
-            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-0.5">Initialize Content Segment</p>
+          <div className="flex items-center gap-4">
+            <Link href="/dashboard/admin/category" className="p-3.5 bg-white border border-slate-200 rounded-2xl text-slate-500 hover:text-slate-800 hover:border-slate-300 transition-all shadow-sm">
+              <FiArrowLeft size={20} />
+            </Link>
+            <div>
+              <h1 className="text-2xl font-black text-slate-800 outfit tracking-tight">Create Category</h1>
+              <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-0.5">New Classification Segment</p>
+            </div>
           </div>
         </div>
 
-        {/* Form Card */}
+        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/40 p-10 border border-slate-100 space-y-8">
 
-            {/* 1. Basic Identity */}
-            <div className="space-y-5">
+          {/* Parent/Child Toggle */}
+          <div className="bg-white rounded-[2rem] shadow-xl shadow-slate-200/50 p-8 border border-slate-100">
+            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-4">Category Level</label>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, isParent: true, parentCategory: null })}
+                className={`p-5 rounded-2xl border-2 transition-all text-left ${formData.isParent
+                  ? 'border-slate-800 bg-slate-800 text-white shadow-xl'
+                  : 'border-slate-200 bg-white hover:border-slate-300'
+                  }`}
+              >
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 ${formData.isParent ? 'bg-white/20' : 'bg-slate-100'}`}>
+                  <FiFolder size={22} className={formData.isParent ? 'text-white' : 'text-slate-500'} />
+                </div>
+                <p className={`text-sm font-black ${formData.isParent ? 'text-white' : 'text-slate-800'}`}>Parent Category</p>
+                <p className={`text-[10px] font-medium mt-0.5 ${formData.isParent ? 'text-white/80' : 'text-slate-400'}`}>
+                  Main folder (e.g., Web Development)
+                </p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, isParent: false })}
+                className={`p-5 rounded-2xl border-2 transition-all text-left ${!formData.isParent
+                  ? 'border-indigo-500 bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-xl'
+                  : 'border-slate-200 bg-white hover:border-slate-300'
+                  }`}
+              >
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 ${!formData.isParent ? 'bg-white/20' : 'bg-slate-100'}`}>
+                  <FiChevronRight size={22} className={!formData.isParent ? 'text-white' : 'text-slate-500'} />
+                </div>
+                <p className={`text-sm font-black ${!formData.isParent ? 'text-white' : 'text-slate-800'}`}>Sub-Category</p>
+                <p className={`text-[10px] font-medium mt-0.5 ${!formData.isParent ? 'text-white/80' : 'text-slate-400'}`}>
+                  Under a parent (e.g., React, WordPress)
+                </p>
+              </button>
+            </div>
+          </div>
+
+          {/* Main Card */}
+          <div className="bg-white rounded-[2rem] shadow-xl shadow-slate-200/50 p-8 border border-slate-100 space-y-8">
+
+            {/* Type Selection */}
+            <div>
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-4">Category Type *</label>
+              <div className="grid grid-cols-3 gap-4">
+                {typeOptions.map((option) => {
+                  const Icon = option.icon;
+                  const isSelected = formData.type === option.value;
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, type: option.value, parentCategory: null })}
+                      className={`p-5 rounded-2xl border-2 transition-all text-center ${isSelected
+                        ? `border-transparent bg-gradient-to-br ${getTypeColor(option.value)} text-white shadow-xl`
+                        : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-md'
+                        }`}
+                    >
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 mx-auto ${isSelected ? 'bg-white/20' : 'bg-slate-100'}`}>
+                        <Icon size={22} className={isSelected ? 'text-white' : 'text-slate-500'} />
+                      </div>
+                      <p className={`text-sm font-black ${isSelected ? 'text-white' : 'text-slate-700'}`}>{option.label}</p>
+                      <p className={`text-[10px] font-medium mt-0.5 ${isSelected ? 'text-white/80' : 'text-slate-400'}`}>{option.desc}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Parent Category Selector (only for sub-categories) */}
+            {!formData.isParent && (
+              <div className="pt-6 border-t border-slate-100">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-3">Select Parent Category *</label>
+                {filteredParents.length === 0 ? (
+                  <div className="p-6 bg-amber-50 border border-amber-200 rounded-2xl text-center">
+                    <FiFolder className="text-amber-500 mx-auto mb-2" size={24} />
+                    <p className="text-sm font-bold text-amber-700">No parent categories found</p>
+                    <p className="text-xs text-amber-500 mt-1">Create a parent category first for "{formData.type}"</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    {filteredParents.map(parent => (
+                      <button
+                        key={parent._id}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, parentCategory: parent._id })}
+                        className={`p-4 rounded-xl border-2 transition-all text-left flex items-center gap-3 ${formData.parentCategory === parent._id
+                          ? 'border-indigo-500 bg-indigo-50'
+                          : 'border-slate-200 hover:border-slate-300'
+                          }`}
+                      >
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${formData.parentCategory === parent._id ? 'bg-indigo-500 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                          <FiFolder size={18} />
+                        </div>
+                        <div>
+                          <p className={`text-sm font-bold ${formData.parentCategory === parent._id ? 'text-indigo-700' : 'text-slate-700'}`}>{parent.name}</p>
+                          <p className="text-[9px] text-slate-400 uppercase tracking-widest">{parent.type}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Name & Slug */}
+            <div className="space-y-5 pt-6 border-t border-slate-100">
               <div>
-                <label className={labelClass}>Segment Name</label>
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Category Name *</label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Creative Engineering"
+                  placeholder={formData.isParent ? "e.g. Web Development, Motion Graphics..." : "e.g. React, WordPress, After Effects..."}
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className={inputClass}
+                  className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:border-indigo-400 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all"
                 />
               </div>
 
-              <div className="flex gap-4">
-                <div className="flex-1">
-                  <label className={labelClass}>Unique Slug</label>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">URL Slug</label>
                   <div className="relative">
-                    <FiGlobe className="absolute left-5 top-4.5 text-slate-300" />
+                    <FiGlobe className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
                       type="text"
-                      required
                       readOnly
                       value={formData.slug}
-                      className={`${inputClass} pl-12 bg-slate-50 border-transparent`}
+                      className="w-full pl-11 pr-4 py-4 bg-slate-100 border border-transparent rounded-2xl text-sm font-mono text-slate-500"
                     />
                   </div>
                 </div>
-                <div className="w-24">
-                  <label className={labelClass}>Status</label>
+                <div>
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Status</label>
                   <button
                     type="button"
-                    onClick={() => setFormData({ ...formData, isActive: !formData.isActive })}
-                    className={`w-full py-4 rounded-2xl text-[10px] font-black uppercase tracking-tighter transition-all ${formData.isActive ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'}`}
+                    onClick={() => setFormData({ ...formData, status: formData.status === 'active' ? 'inactive' : 'active' })}
+                    className={`w-full py-4 rounded-2xl text-sm font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${formData.status === 'active'
+                      ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30'
+                      : 'bg-slate-200 text-slate-500'
+                      }`}
                   >
-                    {formData.isActive ? 'Active' : 'Draft'}
+                    {formData.status === 'active' ? <><FiCheck size={16} /> Active</> : 'Draft'}
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* 2. Media & Narrative */}
-            <div className="space-y-5 pt-8 border-t border-slate-50">
+            {/* Image & Description */}
+            <div className="space-y-5 pt-6 border-t border-slate-100">
               <div>
-                <label className={labelClass}>Icon / Image URL</label>
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Icon / Image URL</label>
                 <div className="relative">
-                  <FiImage className="absolute left-5 top-4.5 text-slate-300" />
+                  <FiImage className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
                     type="text"
-                    placeholder="https://assets.motionboss.com/..."
+                    placeholder="https://example.com/icon.png"
                     value={formData.image}
                     onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                    className={`${inputClass} pl-12`}
+                    className="w-full pl-11 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold placeholder:text-slate-300 focus:bg-white focus:border-indigo-400 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all"
                   />
                 </div>
               </div>
 
               <div>
-                <label className={labelClass}>Short Description</label>
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Description</label>
                 <textarea
                   rows={3}
-                  placeholder="What kind of content belongs here?"
+                  placeholder="Briefly describe what content belongs in this category..."
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className={`${inputClass} resize-none leading-relaxed`}
+                  className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium placeholder:text-slate-300 focus:bg-white focus:border-indigo-400 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all resize-none leading-relaxed"
                 ></textarea>
               </div>
             </div>
 
-            {/* Submit Action */}
+            {/* Submit */}
             <button
               type="submit"
-              disabled={loading}
-              className={`w-full py-5 rounded-[2rem] text-white font-black text-sm flex items-center justify-center gap-3 transition-all shadow-2xl relative overflow-hidden group ${loading ? 'bg-slate-300' : 'bg-slate-800 hover:bg-slate-900 active:scale-95 shadow-slate-200'}`}
+              disabled={loading || (!formData.isParent && !formData.parentCategory)}
+              className={`w-full py-5 rounded-2xl text-white font-black text-sm flex items-center justify-center gap-3 transition-all shadow-xl relative overflow-hidden ${loading || (!formData.isParent && !formData.parentCategory)
+                ? 'bg-slate-400 cursor-not-allowed'
+                : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-indigo-500/30 active:scale-[0.98]'
+                }`}
             >
               {loading ? (
-                <FiLoader className="animate-spin" />
+                <FiLoader className="animate-spin" size={20} />
               ) : (
                 <>
-                  <FiSave size={20} className="group-hover:translate-y-[-2px] transition-transform" />
-                  <span className="uppercase tracking-[0.2em]">Deploy Segment</span>
+                  <FiSave size={20} />
+                  <span className="uppercase tracking-widest">
+                    Create {formData.isParent ? 'Parent' : 'Sub'} Category
+                  </span>
                 </>
               )}
             </button>
           </div>
 
-          {/* Hint Box */}
-          <div className="flex gap-4 p-6 bg-slate-800 text-white rounded-[2rem] shadow-xl">
-            <div className="w-10 h-10 bg-slate-700 rounded-xl flex items-center justify-center shrink-0">
-              <FiInfo className="text-slate-400" />
+          {/* Info Box */}
+          <div className="flex gap-4 p-6 bg-slate-800 text-white rounded-2xl shadow-xl">
+            <div className="w-12 h-12 bg-slate-700 rounded-xl flex items-center justify-center shrink-0">
+              <FiInfo className="text-slate-400" size={20} />
             </div>
             <div>
-              <h4 className="text-xs font-black uppercase tracking-widest opacity-60">Architect Tip</h4>
-              <p className="text-[11px] font-medium leading-relaxed mt-1 opacity-80 italic">
-                Categories define the top-level filtering for Courses, Softwares, and Websites. Ensure names are descriptive for SEO.
+              <h4 className="text-xs font-black uppercase tracking-widest text-slate-300">Category Types</h4>
+              <p className="text-sm font-medium leading-relaxed mt-1 text-slate-400">
+                <strong className="text-indigo-400">Course:</strong> For LMS courses & tutorials<br />
+                <strong className="text-emerald-400">Website:</strong> For website templates & themes<br />
+                <strong className="text-violet-400">Software:</strong> For plugins, scripts & tools
               </p>
             </div>
           </div>

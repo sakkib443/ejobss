@@ -17,9 +17,12 @@ export const createCategoryValidation = z.object({
         slug: z.string().max(100).optional(),
         description: z.string().max(500).optional(),
         icon: z.string().optional(),
-        image: z.string().url().optional(),
+        image: z.string().url().optional().or(z.literal('')),
+        parentCategory: z.string().nullable().optional(),
         status: z.enum(['active', 'inactive']).optional().default('active'),
+        type: z.enum(['course', 'website', 'software']).optional().default('course'),
         order: z.number().optional().default(0),
+        isParent: z.boolean().optional().default(false),
     }),
 });
 
@@ -32,9 +35,12 @@ export const updateCategoryValidation = z.object({
         slug: z.string().max(100).optional(),
         description: z.string().max(500).optional(),
         icon: z.string().optional(),
-        image: z.string().url().optional(),
+        image: z.string().optional(),
+        parentCategory: z.string().nullable().optional(),
         status: z.enum(['active', 'inactive']).optional(),
+        type: z.enum(['course', 'website', 'software']).optional(),
         order: z.number().optional(),
+        isParent: z.boolean().optional(),
     }),
     params: z.object({
         id: z.string({ required_error: 'Category ID is required' }),

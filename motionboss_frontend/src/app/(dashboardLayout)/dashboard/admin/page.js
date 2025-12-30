@@ -279,6 +279,7 @@ const ActivityItem = ({ icon: Icon, title, description, time, color, isNew }) =>
 export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
   const [dashboardData, setDashboardData] = useState({
     totalRevenue: 0,
     totalEnrollments: 0,
@@ -387,6 +388,7 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
+    setHasMounted(true);
     fetchDashboardData();
   }, []);
 
@@ -473,31 +475,32 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* ==================== WELCOME BANNER ==================== */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-8">
-        <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0)', backgroundSize: '24px 24px' }} />
-        <div className="absolute right-0 top-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute left-0 bottom-0 w-64 h-64 bg-white/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
-
-        <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+      {/* ==================== COMPACT HEADER BAR ==================== */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white rounded-2xl border border-slate-200/60 p-5 shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+            <FiGrid className="text-white text-xl" />
+          </div>
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Welcome back, Admin! 👋</h1>
-            <p className="text-white/80 max-w-lg">Manage your courses, software, and websites. Track your platform performance and grow your business.</p>
+            <h1 className="text-xl font-bold text-slate-800">Dashboard Overview</h1>
+            <p className="text-sm text-slate-500">
+              {hasMounted ? new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'Loading date...'}
+            </p>
           </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={fetchDashboardData}
-              disabled={refreshing}
-              className="flex items-center gap-2 px-5 py-2.5 bg-white/10 backdrop-blur-sm text-white rounded-xl text-sm font-medium hover:bg-white/20 transition-all border border-white/20 disabled:opacity-50"
-            >
-              <FiRefreshCw className={refreshing ? 'animate-spin' : ''} />
-              Sync Data
-            </button>
-            <button className="flex items-center gap-2 px-5 py-2.5 bg-white text-indigo-600 rounded-xl text-sm font-semibold hover:shadow-lg hover:shadow-white/20 transition-all">
-              <FiDownload />
-              Export
-            </button>
-          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={fetchDashboardData}
+            disabled={refreshing}
+            className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-medium transition-all disabled:opacity-50"
+          >
+            <FiRefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
+            {refreshing ? 'Syncing...' : 'Reload'}
+          </button>
+          <button className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl text-sm font-semibold shadow-lg shadow-indigo-500/25 transition-all">
+            <FiDownload size={16} />
+            Export
+          </button>
         </div>
       </div>
 

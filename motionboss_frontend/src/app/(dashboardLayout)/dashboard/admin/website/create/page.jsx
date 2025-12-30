@@ -78,7 +78,7 @@ export default function CreateWebsitePage() {
         const payload = { ...values, author: user._id };
 
         try {
-            const response = await fetch(`${BASE_URL}/websites`, {
+            const response = await fetch(`${BASE_URL}/websites/admin`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -2,13 +2,23 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { FiBook, FiAward, FiClock, FiTrendingUp, FiArrowRight, FiUser, FiMail, FiPhone, FiCalendar, FiLoader, FiShield } from 'react-icons/fi';
+import {
+    FiBook, FiAward, FiClock, FiTrendingUp, FiArrowRight,
+    FiUser, FiMail, FiPhone, FiCalendar, FiLoader,
+    FiShield, FiPlay, FiStar, FiRefreshCw, FiGrid, FiExternalLink,
+    FiCheck, FiChevronRight, FiDownload
+} from 'react-icons/fi';
+import { useTheme } from '@/providers/ThemeProvider';
 
 export default function UserDashboard() {
+    const { isDark } = useTheme();
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [isSyncing, setIsSyncing] = useState(false);
+    const [hasMounted, setHasMounted] = useState(false);
 
     useEffect(() => {
+        setHasMounted(true);
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
             try {
@@ -18,84 +28,58 @@ export default function UserDashboard() {
         setLoading(false);
     }, []);
 
-    // Stats - all 0 because no purchases yet
-    const stats = {
-        enrolledCourses: 0,
-        completedCourses: 0,
-        certificates: 0,
-        hoursLearned: 0,
+    const handleSync = () => {
+        setIsSyncing(true);
+        setTimeout(() => setIsSyncing(false), 1000);
     };
 
-    const statCards = [
-        {
-            title: 'Enrolled Courses',
-            value: stats.enrolledCourses,
-            icon: FiBook,
-            color: '#41bfb8',
-            bg: 'bg-teal-50',
-            border: 'border-teal-200',
-        },
-        {
-            title: 'Completed',
-            value: stats.completedCourses,
-            icon: FiAward,
-            color: '#22C55E',
-            bg: 'bg-green-50',
-            border: 'border-green-200',
-        },
-        {
-            title: 'Certificates',
-            value: stats.certificates,
-            icon: FiAward,
-            color: '#F79952',
-            bg: 'bg-orange-50',
-            border: 'border-orange-200',
-        },
-        {
-            title: 'Hours Learned',
-            value: stats.hoursLearned,
-            icon: FiClock,
-            color: '#8B5CF6',
-            bg: 'bg-purple-50',
-            border: 'border-purple-200',
-        },
-    ];
-
-    // Quick links
-    const quickLinks = [
-        { title: 'My Courses', href: '/dashboard/user/courses', icon: FiBook, color: 'bg-teal-500' },
-        { title: 'Certificates', href: '/dashboard/user/certificates', icon: FiAward, color: 'bg-amber-500' },
-        { title: 'Schedule', href: '/dashboard/user/schedule', icon: FiCalendar, color: 'bg-purple-500' },
-        { title: 'Profile', href: '/dashboard/user/profile', icon: FiUser, color: 'bg-blue-500' },
+    const stats = [
+        { title: 'Enrolled Courses', value: '04', icon: FiBook, gradient: 'from-blue-500 to-indigo-600', trend: '+1 this month' },
+        { title: 'Digital Assets', value: '06', icon: FiDownload, gradient: 'from-pink-500 to-rose-600', trend: 'Softwares & Web' },
+        { title: 'Reward Points', value: '1,250', icon: FiStar, gradient: 'from-amber-500 to-orange-600', trend: 'Top 10%' },
+        { title: 'Certificates', value: '00', icon: FiAward, gradient: 'from-purple-500 to-pink-600', trend: 'Earn your first' },
     ];
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <FiLoader className="text-4xl text-[#41bfb8] animate-spin" />
+            <div className="min-h-[60vh] flex items-center justify-center">
+                <FiLoader className={`text-4xl animate-spin ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`} />
             </div>
         );
     }
 
+    const cardClass = `rounded-2xl border transition-all duration-300 ${isDark ? 'bg-slate-800/50 border-white/5 hover:border-indigo-500/30' : 'bg-white border-slate-200/60 shadow-sm hover:shadow-md'
+        }`;
+
     return (
-        <div className="p-6 lg:p-8 space-y-6 bg-slate-50 min-h-screen">
-            {/* Welcome Header */}
-            <div className="bg-gradient-to-r from-[#41bfb8] to-[#38a89d] rounded-2xl p-6 text-white shadow-lg">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center text-2xl font-bold">
-                            {user?.firstName?.charAt(0) || user?.email?.charAt(0) || 'S'}
-                        </div>
-                        <div>
-                            <h1 className="text-2xl font-bold outfit">
-                                Welcome, {user?.firstName || 'Student'}! 🎓
-                            </h1>
-                            <p className="text-white/80 text-sm">Start your learning journey today</p>
-                        </div>
+        <div className="space-y-6">
+            {/* Professional Compact Header */}
+            <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 ${cardClass}`}>
+                <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+                        <FiGrid size={24} />
                     </div>
+                    <div>
+                        <h1 className={`text-xl font-bold outfit ${isDark ? 'text-white' : 'text-slate-800'}`}>
+                            Student Overview
+                        </h1>
+                        <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                            {hasMounted ? new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'Loading date...'}
+                        </p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={handleSync}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${isDark ? 'bg-slate-700 text-slate-200 hover:bg-slate-600' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                            }`}
+                    >
+                        <FiRefreshCw className={isSyncing ? 'animate-spin' : ''} />
+                        Sync Data
+                    </button>
                     <Link
                         href="/courses"
-                        className="flex items-center gap-2 px-5 py-2.5 bg-white text-[#41bfb8] rounded-xl text-sm font-semibold hover:shadow-lg transition"
+                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-500/25 hover:scale-105 transition-all"
                     >
                         <FiBook />
                         Browse Courses
@@ -103,160 +87,185 @@ export default function UserDashboard() {
                 </div>
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {statCards.map((stat) => {
-                    const Icon = stat.icon;
-                    return (
-                        <div
-                            key={stat.title}
-                            className={`bg-white rounded-xl border ${stat.border} p-5 hover:shadow-lg hover:-translate-y-1 transition-all duration-300`}
-                        >
-                            <div className="flex items-start justify-between">
-                                <div>
-                                    <p className="text-slate-500 text-xs font-medium uppercase tracking-wider">{stat.title}</p>
-                                    <p className="text-3xl font-bold text-slate-800 mt-2 outfit">{stat.value}</p>
-                                </div>
-                                <div className={`${stat.bg} p-3 rounded-xl`}>
-                                    <Icon className="text-xl" style={{ color: stat.color }} />
-                                </div>
-                            </div>
+            {/* Welcome Banner */}
+            <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-800 p-8 shadow-2xl">
+                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+                    <div className="space-y-4 text-center md:text-left">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20 text-white text-xs font-bold uppercase tracking-widest">
+                            <span className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
+                            Ongoing Learning
                         </div>
-                    );
-                })}
+                        <h2 className="text-3xl md:text-4xl font-black text-white outfit">
+                            Welcome Back, {user?.firstName || 'Learner'}! 🚀
+                        </h2>
+                        <p className="text-indigo-50 text-base max-w-lg">
+                            You have completed <span className="font-bold text-white underline">0%</span> of your current learning goals. Pickup where you left off and sharpen your skills.
+                        </p>
+                        <div className="flex flex-wrap gap-3 justify-center md:justify-start pt-2">
+                            <button className="px-6 py-3 bg-white text-indigo-700 rounded-xl font-bold text-sm shadow-xl hover:bg-indigo-50 transition-all active:scale-95">
+                                My Classes
+                            </button>
+                            <button className="px-6 py-3 bg-indigo-500/20 backdrop-blur-md border border-white/20 text-white rounded-xl font-bold text-sm hover:bg-white/10 transition-all">
+                                View Schedule
+                            </button>
+                        </div>
+                    </div>
+                    <div className="relative hidden lg:block">
+                        <div className="w-48 h-48 rounded-3xl bg-white/10 backdrop-blur-3xl border border-white/20 rotate-12 flex items-center justify-center overflow-hidden group">
+                            <FiPlay className="text-white text-6xl group-hover:scale-125 transition-transform duration-500" />
+                        </div>
+                        <div className="absolute -bottom-4 -left-4 w-24 h-24 bg-indigo-400 blur-[50px] opacity-50" />
+                    </div>
+                </div>
+                {/* Decorative Elements */}
+                <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2" />
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-400/10 blur-[100px] rounded-full -translate-x-1/2 translate-y-1/2" />
             </div>
 
-            <div className="grid lg:grid-cols-3 gap-6">
-                {/* Profile Overview */}
-                <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {stats.map((stat, idx) => (
+                    <div key={idx} className={`${cardClass} p-6 relative group overflow-hidden`}>
+                        <div className="relative z-10 flex items-start justify-between">
+                            <div>
+                                <p className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                                    {stat.title}
+                                </p>
+                                <h3 className={`text-2xl font-black mt-2 outfit ${isDark ? 'text-white' : 'text-slate-800'}`}>
+                                    {stat.value}
+                                </h3>
+                                <div className={`inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-lg text-xs font-bold ${isDark ? 'bg-indigo-500/10 text-indigo-400' : 'bg-indigo-50 text-indigo-600'
+                                    }`}>
+                                    <FiTrendingUp /> {stat.trend}
+                                </div>
+                            </div>
+                            <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center text-white shadow-xl group-hover:scale-110 transition-transform duration-300`}>
+                                <stat.icon size={22} />
+                            </div>
+                        </div>
+                        {/* Underline decorative bar */}
+                        <div className={`absolute bottom-0 left-0 h-1 bg-gradient-to-r ${stat.gradient} transition-all duration-300 group-hover:w-full w-0`} />
+                    </div>
+                ))}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Continue Learning Section */}
+                <div className={`lg:col-span-2 ${cardClass} p-6`}>
                     <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                            <FiUser className="text-[#41bfb8]" />
-                            Profile Overview
+                        <h2 className={`text-lg font-black outfit ${isDark ? 'text-white' : 'text-slate-800'}`}>
+                            Continue Learning
                         </h2>
-                        <Link
-                            href="/dashboard/user/profile"
-                            className="text-sm text-[#41bfb8] hover:underline font-medium flex items-center gap-1"
-                        >
-                            Edit Profile <FiArrowRight size={14} />
+                        <Link href="/dashboard/user/courses" className="text-sm font-bold text-indigo-500 hover:text-indigo-400 flex items-center gap-1">
+                            All Courses <FiArrowRight />
                         </Link>
                     </div>
 
-                    <div className="grid md:grid-cols-2 gap-4">
-                        <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl">
-                            <div className="w-10 h-10 bg-[#41bfb8]/10 rounded-lg flex items-center justify-center">
-                                <FiUser className="text-[#41bfb8]" />
-                            </div>
-                            <div>
-                                <p className="text-xs text-slate-500">Full Name</p>
-                                <p className="text-sm font-semibold text-slate-800">
-                                    {user?.firstName} {user?.lastName}
-                                </p>
-                            </div>
+                    {/* Placeholder for no active courses */}
+                    <div className={`rounded-3xl border-2 border-dashed p-12 text-center transition-colors ${isDark ? 'border-slate-700 hover:border-indigo-500/50' : 'border-slate-100 hover:border-indigo-500/30'
+                        }`}>
+                        <div className={`w-20 h-20 mx-auto rounded-3xl flex items-center justify-center mb-4 ${isDark ? 'bg-slate-800' : 'bg-slate-50'
+                            }`}>
+                            <FiBook className={`text-3xl ${isDark ? 'text-slate-600' : 'text-slate-300'}`} />
                         </div>
-
-                        <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl">
-                            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                <FiMail className="text-blue-600" />
-                            </div>
-                            <div>
-                                <p className="text-xs text-slate-500">Email</p>
-                                <p className="text-sm font-semibold text-slate-800 truncate max-w-[200px]">
-                                    {user?.email}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl">
-                            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                                <FiPhone className="text-purple-600" />
-                            </div>
-                            <div>
-                                <p className="text-xs text-slate-500">Phone</p>
-                                <p className="text-sm font-semibold text-slate-800">
-                                    {user?.phoneNumber || 'Not provided'}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-3 p-4 bg-emerald-50 rounded-xl border border-emerald-100">
-                            <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                                <FiShield className="text-emerald-600" />
-                            </div>
-                            <div>
-                                <p className="text-xs text-slate-500">Account Status</p>
-                                <p className="text-sm font-semibold text-emerald-700 capitalize">
-                                    {user?.status || 'Active'}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Processing Notice */}
-                    <div className="mt-6 p-4 bg-amber-50 rounded-xl border border-amber-100">
-                        <div className="flex items-start gap-3">
-                            <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
-                                <FiLoader className="text-amber-600 animate-spin" />
-                            </div>
-                            <div>
-                                <h4 className="font-semibold text-amber-900">Dashboard Processing</h4>
-                                <p className="text-sm text-amber-700 mt-1">
-                                    Course enrollment and learning tracking features are currently being developed.
-                                    Once you enroll in courses, your progress and stats will appear here.
-                                </p>
-                            </div>
-                        </div>
+                        <h3 className={`text-lg font-bold mb-2 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                            Your learning shelf is empty
+                        </h3>
+                        <p className={`text-sm mb-6 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
+                            Expand your skill set. Browse our marketplace to find the perfect professional course for you.
+                        </p>
+                        <Link
+                            href="/courses"
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-500 text-white rounded-xl font-bold text-sm shadow-xl shadow-indigo-500/20 hover:bg-indigo-600 transition-all"
+                        >
+                            Explore Marketplace
+                        </Link>
                     </div>
                 </div>
 
-                {/* Quick Links & Activity */}
+                {/* Right Column: Profile & Schedule */}
                 <div className="space-y-6">
-                    {/* Quick Links */}
-                    <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-                        <h2 className="text-lg font-bold text-slate-800 mb-4">Quick Links</h2>
-                        <div className="grid grid-cols-2 gap-3">
-                            {quickLinks.map((link) => {
-                                const Icon = link.icon;
-                                return (
-                                    <Link
-                                        key={link.href}
-                                        href={link.href}
-                                        className="flex flex-col items-center gap-2 p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition group"
-                                    >
-                                        <div className={`w-10 h-10 ${link.color} rounded-xl flex items-center justify-center text-white group-hover:scale-110 transition`}>
-                                            <Icon size={18} />
+                    {/* Compact Profile Card */}
+                    <div className={`${cardClass} p-6`}>
+                        <h2 className={`text-base font-black outfit mb-5 ${isDark ? 'text-white' : 'text-slate-800'}`}>
+                            Personal Account
+                        </h2>
+                        <div className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-800/50 border border-slate-200/50 dark:border-white/5 mb-4">
+                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 p-0.5">
+                                <div className="w-full h-full rounded-[14px] bg-white dark:bg-slate-800 flex items-center justify-center overflow-hidden">
+                                    <span className="text-xl font-black text-indigo-600">
+                                        {user?.firstName?.[0] || 'S'}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="min-min-0 flex-1">
+                                <h4 className={`font-bold truncate ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+                                    {user?.firstName} {user?.lastName}
+                                </h4>
+                                <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            <div className={`p-3 rounded-xl flex items-center justify-between text-xs font-bold ${isDark ? 'bg-white/5 text-slate-400' : 'bg-slate-50 text-slate-600'}`}>
+                                <span className="flex items-center gap-2 tracking-wide"><FiShield size={14} className="text-indigo-500" /> STATUS</span>
+                                <span className="text-indigo-500">PRO VERIFIED</span>
+                            </div>
+                            <div className={`p-3 rounded-xl flex items-center justify-between text-xs font-bold ${isDark ? 'bg-white/5 text-slate-400' : 'bg-slate-50 text-slate-600'}`}>
+                                <span className="flex items-center gap-2 tracking-wide"><FiCalendar size={14} className="text-blue-500" /> JOINED</span>
+                                <span>JANUARY 2025</span>
+                            </div>
+                        </div>
+
+                        <Link
+                            href="/dashboard/user/profile"
+                            className="mt-5 w-full flex items-center justify-between p-3 rounded-xl bg-indigo-500/10 text-indigo-600 hover:bg-indigo-500 hover:text-white transition-all text-xs font-black outfit uppercase tracking-widest group"
+                        >
+                            Account Settings
+                            <FiChevronRight className="group-hover:translate-x-1 transition-transform" />
+                        </Link>
+                    </div>
+
+                    {/* Weekly Progress Card */}
+                    <div className={`${cardClass} p-6 bg-gradient-to-br from-slate-900 to-slate-800 text-white border-none shadow-xl relative overflow-hidden`}>
+                        <div className="relative z-10">
+                            <h2 className="text-base font-black outfit mb-1">Learning Momentum</h2>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-6">Weekly Activity Tracking</p>
+
+                            <div className="flex items-end justify-between h-20 gap-1 px-2">
+                                {[30, 0, 0, 0, 0, 0, 0].map((h, i) => (
+                                    <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                                        <div
+                                            className="w-full bg-gradient-to-t from-indigo-500 to-purple-400 rounded-lg group transition-all hover:brightness-110"
+                                            style={{ height: `${h || 5}%` }}
+                                        >
+                                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-white text-slate-900 px-2 py-1 rounded text-[10px] font-black opacity-0 group-hover:opacity-100 transition-opacity">
+                                                {h * 12}min
+                                            </div>
                                         </div>
-                                        <span className="text-xs font-medium text-slate-700">{link.title}</span>
-                                    </Link>
-                                );
-                            })}
+                                        <span className="text-[8px] font-bold text-slate-500">
+                                            {['S', 'M', 'T', 'W', 'T', 'F', 'S'][i]}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="mt-6 flex items-center justify-between">
+                                <div>
+                                    <p className="text-[10px] font-bold text-slate-500 tracking-[0.2em] mb-1">THIS WEEK</p>
+                                    <p className="text-xl font-black outfit">0 hrs</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-[10px] font-bold text-slate-500 tracking-[0.2em] mb-1">TOTAL</p>
+                                    <p className="text-xl font-black outfit">0 hrs</p>
+                                </div>
+                            </div>
+                        </div>
+                        {/* Mesh background effect */}
+                        <div className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none">
+                            <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-[radial-gradient(circle_at_center,_rgba(79,70,229,0.15)_0%,_transparent_50%)]" />
                         </div>
                     </div>
-
-                    {/* Learning Activity */}
-                    <div className="bg-gradient-to-br from-[#41bfb8] to-[#38a89d] rounded-2xl p-6 text-white shadow-lg">
-                        <div className="flex items-center gap-2 mb-3">
-                            <FiTrendingUp />
-                            <span className="text-sm font-medium opacity-90">This Week</span>
-                        </div>
-                        <p className="text-4xl font-bold">0 hrs</p>
-                        <p className="text-sm opacity-80 mt-1">of learning completed</p>
-                        <div className="mt-4 pt-4 border-t border-white/20">
-                            <p className="text-xs opacity-70">Enroll in courses to start tracking your progress!</p>
-                        </div>
-                    </div>
-
-                    {/* Quick Action */}
-                    <Link
-                        href="/courses"
-                        className="block bg-white rounded-2xl border-2 border-dashed border-slate-300 p-6 text-center hover:border-[#41bfb8] hover:bg-[#41bfb8]/5 transition group"
-                    >
-                        <div className="w-14 h-14 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:bg-[#41bfb8]/10 transition">
-                            <FiBook className="text-2xl text-slate-400 group-hover:text-[#41bfb8]" />
-                        </div>
-                        <h3 className="font-semibold text-slate-700 group-hover:text-[#41bfb8]">Start Learning</h3>
-                        <p className="text-xs text-slate-500 mt-1">Browse our course catalog</p>
-                    </Link>
                 </div>
             </div>
         </div>

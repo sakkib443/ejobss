@@ -5,7 +5,7 @@
 // ===================================================================
 
 import { Schema, model } from 'mongoose';
-import { ISoftware } from './software.interface';
+import { ISoftware, PLATFORM_OPTIONS, SOFTWARE_TYPE_OPTIONS } from './software.interface';
 
 const softwareSchema = new Schema<ISoftware>(
     {
@@ -28,8 +28,8 @@ const softwareSchema = new Schema<ISoftware>(
             required: [true, 'Author is required'],
         },
         platform: {
-            type: Schema.Types.ObjectId,
-            ref: 'Platform',
+            type: String,
+            enum: PLATFORM_OPTIONS,
             required: [true, 'Platform is required'],
         },
         category: {
@@ -41,8 +41,8 @@ const softwareSchema = new Schema<ISoftware>(
         // ==================== Type & Access ====================
         softwareType: {
             type: String,
+            enum: SOFTWARE_TYPE_OPTIONS,
             required: [true, 'Software type is required'],
-            trim: true,
         },
         accessType: {
             type: String,

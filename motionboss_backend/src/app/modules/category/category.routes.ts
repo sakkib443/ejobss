@@ -1,6 +1,6 @@
 // ===================================================================
 // ExtraWeb Backend - Category Routes
-// API endpoints for Category module
+// API endpoints for Category module with Hierarchical Support
 // ===================================================================
 
 import express from 'express';
@@ -18,6 +18,15 @@ const router = express.Router();
 // GET /api/categories - Get all active categories (for website filter)
 router.get('/', CategoryController.getActiveCategories);
 
+// GET /api/categories/parents - Get parent categories only
+router.get('/parents', CategoryController.getParentCategories);
+
+// GET /api/categories/hierarchical - Get nested categories (parent with children)
+router.get('/hierarchical', CategoryController.getHierarchicalCategories);
+
+// GET /api/categories/children/:parentId - Get child categories
+router.get('/children/:parentId', CategoryController.getChildCategories);
+
 // GET /api/categories/slug/:slug - Get category by slug
 router.get('/slug/:slug', CategoryController.getCategoryBySlug);
 
@@ -31,6 +40,14 @@ router.get(
     authMiddleware,
     authorizeRoles('admin'),
     CategoryController.getAllCategories
+);
+
+// GET /api/categories/admin/parents - Get parent categories (Admin)
+router.get(
+    '/admin/parents',
+    authMiddleware,
+    authorizeRoles('admin'),
+    CategoryController.getParentCategories
 );
 
 // GET /api/categories/admin/:id - Get single category
@@ -68,3 +85,4 @@ router.delete(
 );
 
 export const CategoryRoutes = router;
+

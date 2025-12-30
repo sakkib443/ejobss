@@ -5,7 +5,7 @@ import ProtectedRoute from '@/app/providers/protectedRoutes';
 const MentorLayout = ({ children }) => {
     return (
         <ProtectedRoute allowedRoles={["mentor", "admin"]}>
-            <div className="min-h-screen bg-slate-50">
+            <div className="min-h-screen bg-slate-50 dashboard-fonts">
                 {/* Sidebar */}
                 <MentorSidebar />
 

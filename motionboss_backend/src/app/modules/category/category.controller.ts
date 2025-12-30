@@ -1,6 +1,6 @@
 // ===================================================================
 // ExtraWeb Backend - Category Controller
-// HTTP Request handling for Category CRUD
+// HTTP Request handling for Category CRUD with Hierarchical Support
 // ===================================================================
 
 import { Request, Response } from 'express';
@@ -25,13 +25,52 @@ const CategoryController = {
 
     // ==================== GET ALL (Admin) ====================
     getAllCategories: catchAsync(async (req: Request, res: Response) => {
-        const filters = pick(req.query, ['searchTerm', 'status']) as ICategoryFilters;
+        const filters = pick(req.query, ['searchTerm', 'status', 'type', 'isParent', 'parentCategory']) as ICategoryFilters & { type?: string; isParent?: string; parentCategory?: string };
         const categories = await CategoryService.getAllCategories(filters);
 
         sendResponse(res, {
             statusCode: 200,
             success: true,
             message: 'Categories fetched successfully',
+            data: categories,
+        });
+    }),
+
+    // ==================== GET PARENT CATEGORIES ====================
+    getParentCategories: catchAsync(async (req: Request, res: Response) => {
+        const { type } = req.query;
+        const categories = await CategoryService.getParentCategories(type as string);
+
+        sendResponse(res, {
+            statusCode: 200,
+            success: true,
+            message: 'Parent categories fetched successfully',
+            data: categories,
+        });
+    }),
+
+    // ==================== GET CHILD CATEGORIES ====================
+    getChildCategories: catchAsync(async (req: Request, res: Response) => {
+        const { parentId } = req.params;
+        const categories = await CategoryService.getChildCategories(parentId);
+
+        sendResponse(res, {
+            statusCode: 200,
+            success: true,
+            message: 'Child categories fetched successfully',
+            data: categories,
+        });
+    }),
+
+    // ==================== GET HIERARCHICAL (Nested) ====================
+    getHierarchicalCategories: catchAsync(async (req: Request, res: Response) => {
+        const { type } = req.query;
+        const categories = await CategoryService.getHierarchicalCategories(type as string);
+
+        sendResponse(res, {
+            statusCode: 200,
+            success: true,
+            message: 'Hierarchical categories fetched successfully',
             data: categories,
         });
     }),
@@ -97,3 +136,4 @@ const CategoryController = {
 };
 
 export default CategoryController;
+

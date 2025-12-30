@@ -1,6 +1,6 @@
 // ===================================================================
 // ExtraWeb Backend - Category Service
-// Category CRUD business logic
+// Category CRUD business logic with Hierarchical Support
 // ===================================================================
 
 import AppError from '../../utils/AppError';
@@ -30,8 +30,8 @@ const CategoryService = {
     },
 
     // ==================== GET ALL CATEGORIES ====================
-    async getAllCategories(filters: ICategoryFilters): Promise<ICategory[]> {
-        const { searchTerm, status } = filters;
+    async getAllCategories(filters: ICategoryFilters & { type?: string; isParent?: string; parentCategory?: string }): Promise<ICategory[]> {
+        const { searchTerm, status, type, isParent, parentCategory } = filters;
         const query: any = {};
 
         if (searchTerm) {
@@ -45,18 +45,79 @@ const CategoryService = {
             query.status = status;
         }
 
-        const categories = await Category.find(query).sort({ order: 1, name: 1 });
+        if (type) {
+            query.type = type;
+        }
+
+        // Filter by isParent
+        if (isParent === 'true') {
+            query.isParent = true;
+        } else if (isParent === 'false') {
+            query.isParent = false;
+        }
+
+        // Filter by parentCategory
+        if (parentCategory) {
+            query.parentCategory = parentCategory;
+        }
+
+        const categories = await Category.find(query)
+            .populate('parentCategory', 'name slug type')
+            .sort({ order: 1, name: 1 });
         return categories;
+    },
+
+    // ==================== GET PARENT CATEGORIES ====================
+    async getParentCategories(type?: string): Promise<ICategory[]> {
+        const query: any = { isParent: true };
+        if (type) {
+            query.type = type;
+        }
+        return await Category.find(query).sort({ order: 1, name: 1 });
+    },
+
+    // ==================== GET CHILD CATEGORIES ====================
+    async getChildCategories(parentId: string): Promise<ICategory[]> {
+        return await Category.find({ parentCategory: parentId, status: 'active' })
+            .sort({ order: 1, name: 1 });
+    },
+
+    // ==================== GET HIERARCHICAL CATEGORIES ====================
+    async getHierarchicalCategories(type?: string): Promise<any[]> {
+        const query: any = { isParent: true };
+        if (type) {
+            query.type = type;
+        }
+
+        const parents = await Category.find(query).sort({ order: 1, name: 1 });
+
+        const result = await Promise.all(
+            parents.map(async (parent) => {
+                const children = await Category.find({
+                    parentCategory: parent._id,
+                    status: 'active'
+                }).sort({ order: 1, name: 1 });
+
+                return {
+                    ...parent.toObject(),
+                    children
+                };
+            })
+        );
+
+        return result;
     },
 
     // ==================== GET ACTIVE CATEGORIES (Public) ====================
     async getActiveCategories(): Promise<ICategory[]> {
-        return await Category.find({ status: 'active' }).sort({ order: 1, name: 1 });
+        return await Category.find({ status: 'active' })
+            .populate('parentCategory', 'name slug type')
+            .sort({ order: 1, name: 1 });
     },
 
     // ==================== GET SINGLE CATEGORY ====================
     async getCategoryById(id: string): Promise<ICategory> {
-        const category = await Category.findById(id);
+        const category = await Category.findById(id).populate('parentCategory', 'name slug type');
         if (!category) {
             throw new AppError(404, 'Category not found');
         }
@@ -65,7 +126,8 @@ const CategoryService = {
 
     // ==================== GET BY SLUG ====================
     async getCategoryBySlug(slug: string): Promise<ICategory> {
-        const category = await Category.findOne({ slug, status: 'active' });
+        const category = await Category.findOne({ slug, status: 'active' })
+            .populate('parentCategory', 'name slug type');
         if (!category) {
             throw new AppError(404, 'Category not found');
         }
@@ -86,7 +148,7 @@ const CategoryService = {
             id,
             { $set: payload },
             { new: true, runValidators: true }
-        );
+        ).populate('parentCategory', 'name slug type');
 
         if (!category) {
             throw new AppError(404, 'Category not found');
@@ -107,6 +169,12 @@ const CategoryService = {
             throw new AppError(400, 'Cannot delete category with products. Move products first.');
         }
 
+        // Check if this is a parent with children
+        const childCount = await Category.countDocuments({ parentCategory: id });
+        if (childCount > 0) {
+            throw new AppError(400, 'Cannot delete parent category with sub-categories. Delete children first.');
+        }
+
         await Category.findByIdAndDelete(id);
     },
 
@@ -122,3 +190,4 @@ const CategoryService = {
 };
 
 export default CategoryService;
+

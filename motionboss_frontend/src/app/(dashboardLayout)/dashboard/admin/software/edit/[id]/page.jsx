@@ -91,7 +91,7 @@ export default function EditSoftwarePage() {
         const token = localStorage.getItem('token');
 
         try {
-            const response = await fetch(`${BASE_URL}/software/${id}`, {
+            const response = await fetch(`${BASE_URL}/software/admin/managed/${id}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',

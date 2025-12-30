@@ -10,7 +10,6 @@ import AppError from '../../utils/AppError';
 import { ISoftware, ISoftwareFilters, ISoftwareQuery } from './software.interface';
 import { Software } from './software.model';
 import CategoryService from '../category/category.service';
-import PlatformService from '../platform/platform.service';
 
 interface IPaginatedResult<T> {
     data: T[];
@@ -42,9 +41,10 @@ const SoftwareService = {
             publishDate: new Date(),
         });
 
-        // Increment category and platform product counts
-        await CategoryService.incrementProductCount(payload.category!.toString());
-        await PlatformService.incrementProductCount(payload.platform!.toString());
+        // Increment category product count (platform is now a string enum, not ObjectId)
+        if (payload.category) {
+            await CategoryService.incrementProductCount(payload.category.toString());
+        }
 
         return software;
     },
@@ -79,19 +79,19 @@ const SoftwareService = {
             });
         }
 
-        // Category filter
+        // Category filter (still ObjectId)
         if (category) {
             conditions.push({ category: new Types.ObjectId(category) });
         }
 
-        // Platform filter
+        // Platform filter (now string enum)
         if (platform) {
-            conditions.push({ platform: new Types.ObjectId(platform) });
+            conditions.push({ platform: platform });
         }
 
-        // Software type filter
+        // Software type filter (now string enum)
         if (softwareType) {
-            conditions.push({ softwareType: { $regex: softwareType, $options: 'i' } });
+            conditions.push({ softwareType: softwareType });
         }
 
         // Access type filter
@@ -123,12 +123,11 @@ const SoftwareService = {
         // Pagination
         const skip = (page - 1) * limit;
 
-        // Execute
+        // Execute (removed platform populate since it's now a string)
         const [software, total] = await Promise.all([
             Software.find(whereConditions)
                 .populate('author', 'firstName lastName avatar')
                 .populate('category', 'name slug')
-                .populate('platform', 'name slug icon')
                 .sort(sortConditions)
                 .skip(skip)
                 .limit(limit),
@@ -155,7 +154,6 @@ const SoftwareService = {
         })
             .populate('author', 'firstName lastName')
             .populate('category', 'name slug')
-            .populate('platform', 'name icon')
             .sort({ salesCount: -1 })
             .limit(limit);
     },
@@ -164,8 +162,7 @@ const SoftwareService = {
     async getSoftwareById(id: string): Promise<ISoftware> {
         const software = await Software.findById(id)
             .populate('author', 'firstName lastName avatar')
-            .populate('category', 'name slug')
-            .populate('platform', 'name slug icon');
+            .populate('category', 'name slug');
 
         if (!software) {
             throw new AppError(404, 'Software not found');
@@ -178,8 +175,7 @@ const SoftwareService = {
     async getSoftwareBySlug(slug: string): Promise<ISoftware> {
         const software = await Software.findOne({ slug, status: 'approved', isDeleted: false })
             .populate('author', 'firstName lastName avatar')
-            .populate('category', 'name slug')
-            .populate('platform', 'name slug icon');
+            .populate('category', 'name slug');
 
         if (!software) {
             throw new AppError(404, 'Software not found');
@@ -199,7 +195,6 @@ const SoftwareService = {
         const [software, total] = await Promise.all([
             Software.find({ author: userId, isDeleted: false })
                 .populate('category', 'name')
-                .populate('platform', 'name')
                 .sort(sortConditions)
                 .skip(skip)
                 .limit(limit),
@@ -229,8 +224,7 @@ const SoftwareService = {
 
         const updated = await Software.findByIdAndUpdate(id, { $set: payload }, { new: true, runValidators: true })
             .populate('author', 'firstName lastName')
-            .populate('category', 'name')
-            .populate('platform', 'name');
+            .populate('category', 'name');
 
         return updated!;
     },
@@ -248,9 +242,8 @@ const SoftwareService = {
 
         await Software.findByIdAndUpdate(id, { isDeleted: true });
 
-        // Decrement counts
+        // Decrement category count (platform is now a string, no count needed)
         await CategoryService.decrementProductCount(software.category.toString());
-        await PlatformService.decrementProductCount(software.platform.toString());
     },
 
     // ==================== APPROVE/REJECT SOFTWARE (Admin) ====================
@@ -280,7 +273,7 @@ const SoftwareService = {
 
     // ==================== GET ADMIN SOFTWARE (All with status filter) ====================
     async getAdminSoftware(filters: ISoftwareFilters, query: ISoftwareQuery): Promise<IPaginatedResult<ISoftware>> {
-        const { searchTerm, status, category, platform } = filters;
+        const { searchTerm, status, category, platform, softwareType } = filters;
         const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc' } = query;
 
         const conditions: FilterQuery<ISoftware>[] = [{ isDeleted: false }];
@@ -294,8 +287,13 @@ const SoftwareService = {
         if (category) {
             conditions.push({ category: new Types.ObjectId(category) });
         }
+        // Platform is now string enum
         if (platform) {
-            conditions.push({ platform: new Types.ObjectId(platform) });
+            conditions.push({ platform: platform });
+        }
+        // Software type is now string enum
+        if (softwareType) {
+            conditions.push({ softwareType: softwareType });
         }
 
         const whereConditions = conditions.length > 0 ? { $and: conditions } : {};
@@ -307,7 +305,6 @@ const SoftwareService = {
             Software.find(whereConditions)
                 .populate('author', 'firstName lastName email')
                 .populate('category', 'name')
-                .populate('platform', 'name')
                 .sort(sortConditions)
                 .skip(skip)
                 .limit(limit),

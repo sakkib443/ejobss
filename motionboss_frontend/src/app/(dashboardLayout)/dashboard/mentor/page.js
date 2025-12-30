@@ -7,6 +7,7 @@ import { FiBook, FiUsers, FiCalendar, FiTrendingUp, FiArrowRight, FiClock, FiSta
 export default function MentorDashboard() {
     const [mentorName, setMentorName] = useState('Mentor');
     const [loading, setLoading] = useState(true);
+    const [hasMounted, setHasMounted] = useState(false);
     const [stats, setStats] = useState({
         totalCourses: 0,
         totalStudents: 0,
@@ -15,6 +16,7 @@ export default function MentorDashboard() {
     });
 
     useEffect(() => {
+        setHasMounted(true);
         const user = localStorage.getItem('user');
         if (user) {
             try {
@@ -98,7 +100,7 @@ export default function MentorDashboard() {
                 <div className="flex items-center gap-3">
                     <div className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-600 shadow-sm">
                         <FiClock className="text-[#41bfb8]" />
-                        <span>{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                        <span>{hasMounted ? new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Loading date...'}</span>
                     </div>
                 </div>
             </div>

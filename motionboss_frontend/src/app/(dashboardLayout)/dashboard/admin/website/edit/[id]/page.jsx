@@ -87,7 +87,7 @@ export default function EditWebsitePage() {
         const token = localStorage.getItem('token');
 
         try {
-            const response = await fetch(`${BASE_URL}/websites/${id}`, {
+            const response = await fetch(`${BASE_URL}/websites/admin/managed/${id}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',

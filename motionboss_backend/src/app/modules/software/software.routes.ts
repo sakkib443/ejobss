@@ -28,35 +28,39 @@ router.get('/slug/:slug', SoftwareController.getSoftwareBySlug);
 // ADMIN ROUTES - Software Management (seller removed)
 // ===================================================================
 
-// GET /api/software/seller/my - Get admin's software
+// ===================================================================
+// ADMIN ROUTES - Software Management
+// ===================================================================
+
+// GET /api/software/admin/my - Get admin's software
 router.get(
-    '/seller/my',
+    '/admin/my',
     authMiddleware,
     authorizeRoles('admin'),
     SoftwareController.getMySoftware
 );
 
-// POST /api/software/seller - Create new software
+// POST /api/software/admin - Create new software
 router.post(
-    '/seller',
+    '/admin',
     authMiddleware,
     authorizeRoles('admin'),
     validateRequest(createSoftwareValidation),
     SoftwareController.createSoftware
 );
 
-// PATCH /api/software/seller/:id - Update software
+// PATCH /api/software/admin/managed/:id - Update software
 router.patch(
-    '/seller/:id',
+    '/admin/managed/:id',
     authMiddleware,
     authorizeRoles('admin'),
     validateRequest(updateSoftwareValidation),
     SoftwareController.updateSoftware
 );
 
-// DELETE /api/software/seller/:id - Delete software
+// DELETE /api/software/admin/managed/:id - Delete software
 router.delete(
-    '/seller/:id',
+    '/admin/managed/:id',
     authMiddleware,
     authorizeRoles('admin'),
     SoftwareController.deleteSoftware

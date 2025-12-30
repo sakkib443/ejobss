@@ -7,6 +7,59 @@
 import { Types } from 'mongoose';
 
 /**
+ * Platform Options - Technology/Framework
+ */
+export const PLATFORM_OPTIONS = [
+    'WordPress',
+    'PHP',
+    'JavaScript',
+    'Python',
+    'React',
+    'Next.js',
+    'Vue.js',
+    'Angular',
+    'Node.js',
+    'Laravel',
+    'Django',
+    'Flutter',
+    'React Native',
+    'Android',
+    'iOS',
+    'Unity',
+    'HTML/CSS',
+    'jQuery',
+    'Bootstrap',
+    'Tailwind CSS',
+    'Other'
+] as const;
+
+export type TPlatform = typeof PLATFORM_OPTIONS[number];
+
+/**
+ * Software Type Options
+ */
+export const SOFTWARE_TYPE_OPTIONS = [
+    'Plugin',
+    'Script',
+    'Application',
+    'Tool',
+    'Library',
+    'Framework',
+    'Extension',
+    'Theme',
+    'Template',
+    'Component',
+    'API',
+    'SDK',
+    'CLI Tool',
+    'Desktop App',
+    'Mobile App',
+    'Other'
+] as const;
+
+export type TSoftwareType = typeof SOFTWARE_TYPE_OPTIONS[number];
+
+/**
  * ISoftware - Main software product data structure
  * Software/Scripts that are sold on the marketplace
  */
@@ -17,11 +70,11 @@ export interface ISoftware {
     title: string;
     slug: string;
     author: Types.ObjectId;          // User (seller) reference
-    platform: Types.ObjectId;        // Platform reference (PHP, Python, JavaScript etc.)
+    platform: TPlatform;             // Platform enum (PHP, React, etc.)
     category: Types.ObjectId;        // Category reference
 
     // Type & Access
-    softwareType: string;            // Plugin, Script, Application, Tool, etc.
+    softwareType: TSoftwareType;     // Software type enum
     accessType: 'free' | 'paid';
 
     // Pricing
@@ -75,11 +128,11 @@ export interface ISoftware {
 export interface ISoftwareFilters {
     searchTerm?: string;
     category?: string;
-    platform?: string;
+    platform?: TPlatform;
     author?: string;
     accessType?: 'free' | 'paid';
     status?: string;
-    softwareType?: string;
+    softwareType?: TSoftwareType;
     minPrice?: number;
     maxPrice?: number;
     minRating?: number;
@@ -95,3 +148,4 @@ export interface ISoftwareQuery {
     sortBy?: string;
     sortOrder?: 'asc' | 'desc';
 }
+
