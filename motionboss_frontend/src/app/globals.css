@@ -1,0 +1,262 @@
+@import "tailwindcss";
+
+
+/* Poppins Font */
+
+.font-poppins {
+  font-family: "Poppins", sans-serif;
+  font-size: 24px;
+}
+
+/* Roboto Font */
+.font-roboto {
+  font-family: "Roboto", sans-serif;
+  font-size: 20px;
+}
+
+.lobster-regular {
+  font-family: "Lobster", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.caveat {
+  font-family: "Caveat", cursive;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.work {
+  font-family: "Work Sans", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.outfit {
+  font-family: "Outfit", sans-serif;
+  font-weight: 800;
+  font-style: normal;
+}
+
+.outfit-semibold {
+  font-family: "Outfit", sans-serif;
+  font-weight: 600;
+  font-style: normal;
+}
+
+/* Hind Siliguri for Bengali Text */
+.hind-siliguri {
+  font-family: var(--font-hind-siliguri), "Hind Siliguri", sans-serif;
+  font-style: normal;
+  /* font-weight inherits from parent - allows headings to stay bold */
+}
+
+/* Custom Animations */
+@layer utilities {
+  .animated-bg {
+    background: linear-gradient(270deg, #f79952, #41bfb8, #f79952);
+    background-size: 600% 600%;
+    animation: gradientMove 20s ease infinite;
+  }
+
+  .animate-flip {
+    animation: flip 0.3s ease-in-out;
+  }
+}
+
+/* Keyframes should be outside @layer */
+@keyframes gradientMove {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes flip {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+
+  50% {
+    transform: translateY(10%);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: translateY(0%);
+    opacity: 1;
+  }
+}
+
+/* Hero Section Animations */
+@keyframes blob {
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  25% {
+    transform: translate(20px, -30px) scale(1.05);
+  }
+
+  50% {
+    transform: translate(-20px, 20px) scale(0.95);
+  }
+
+  75% {
+    transform: translate(30px, 10px) scale(1.02);
+  }
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-20px) rotate(10deg);
+  }
+}
+
+@keyframes particle {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  90% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(100px, -100px);
+    opacity: 0;
+  }
+}
+
+@keyframes sparkle {
+
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 0.3;
+  }
+
+  50% {
+    transform: scale(1.3) rotate(180deg);
+    opacity: 0.8;
+  }
+}
+
+@keyframes grid-flow {
+  0% {
+    background-position: 0 0;
+  }
+
+  100% {
+    background-position: 50px 50px;
+  }
+}
+
+/* Animation Classes */
+.animate-blob {
+  animation: blob 8s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-particle {
+  animation: particle 8s linear infinite;
+}
+
+.animate-sparkle {
+  animation: sparkle 3s ease-in-out infinite;
+}
+
+.animate-grid-flow {
+  animation: grid-flow 20s linear infinite;
+}
+
+/* Animation Delays */
+.animation-delay-1000 {
+  animation-delay: 1s;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-3000 {
+  animation-delay: 3s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+/* Custom Colors */
+.cpr {
+  color: #f79952;
+}
+
+.csd {
+  color: #41bfb8;
+}
+
+.crd {
+  color: #414042;
+}
+
+.tw {
+  color: white;
+}
+
+/* Custom Gradient Classes */
+.btn-gradient {
+  background: linear-gradient(135deg, #f79952 0%, #41bfb8 100%);
+}
+
+.btn-gradient:hover {
+  filter: brightness(0.95);
+}
+
+.text-cpr {
+  color: #f79952;
+}
+
+.text-csd {
+  color: #41bfb8;
+}
+
+.bg-cpr {
+  background-color: #f79952;
+}
+
+.bg-csd {
+  background-color: #41bfb8;
+}
+
+.border-cpr {
+  border-color: #f79952;
+}
+
+.border-csd {
+  border-color: #41bfb8;
+}
