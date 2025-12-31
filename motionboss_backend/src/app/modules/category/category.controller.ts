@@ -77,7 +77,8 @@ const CategoryController = {
 
     // ==================== GET ACTIVE (Public) ====================
     getActiveCategories: catchAsync(async (req: Request, res: Response) => {
-        const categories = await CategoryService.getActiveCategories();
+        const { type } = req.query;
+        const categories = await CategoryService.getActiveCategories(type as string);
 
         sendResponse(res, {
             statusCode: 200,

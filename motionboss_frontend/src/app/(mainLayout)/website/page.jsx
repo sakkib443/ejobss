@@ -1,120 +1,148 @@
 "use client";
-
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchWebsites } from "@/redux/websiteSlice";
-import ProductCard from "@/components/sheard/ProductCard";
+import { fetchCategories } from "@/redux/categorySlice";
+import LeftWebsiteFilter from "@/components/websitepage/LeftWebsiteFilter";
+import dynamic from "next/dynamic";
+import { LuGlobe, LuFilter, LuPlus } from "react-icons/lu";
 import { useLanguage } from "@/context/LanguageContext";
-import { LuSearch, LuGlobe, LuLayoutGrid, LuList } from "react-icons/lu";
 
-const WebsitePage = () => {
+const RightWebsiteDetails = dynamic(
+    () => import("@/components/websitepage/RightWebsiteDetails"),
+    { ssr: false }
+);
+
+// Loading fallback component
+const LoadingFallback = () => (
+    <div className="flex items-center justify-center py-20">
+        <div className="w-8 h-8 border-4 border-[#41bfb8] border-t-transparent rounded-full animate-spin"></div>
+    </div>
+);
+
+const WebsiteContent = () => {
     const dispatch = useDispatch();
-    const { websiteList = [], loading, error } = useSelector((state) => state.websites || {});
-    const { t, language } = useLanguage();
+    const { websiteList = [], loading } = useSelector((state) => state.websites || {});
     const [searchQuery, setSearchQuery] = useState("");
+    const [selectedType, setSelectedType] = useState("All");
+    const [showMobileFilter, setShowMobileFilter] = useState(false);
+    const [mounted, setMounted] = useState(false);
+    const { t, language } = useLanguage();
     const bengaliClass = language === "bn" ? "hind-siliguri" : "";
 
     useEffect(() => {
+        setMounted(true);
         dispatch(fetchWebsites());
+        dispatch(fetchCategories({ type: 'website' }));
     }, [dispatch]);
 
-    const filteredWebsites = websiteList.filter((item) =>
-        (item.title || item.name || "").toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    if (!mounted) return <LoadingFallback />;
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-20">
-            {/* Hero Header */}
-            <section className="relative bg-[#0f172a] py-20 overflow-hidden">
-                <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#41bfb8_1px,transparent_1px)] [background-size:20px_20px]"></div>
-                <div className="container mx-auto px-4 lg:px-16 relative z-10 text-center">
-                    <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-[#41bfb8]/10 border border-[#41bfb8]/20 rounded-full">
-                        <LuGlobe className="text-[#41bfb8]" />
-                        <span className="text-[#41bfb8] text-sm font-bold tracking-wider uppercase">Premium Ready-made Websites</span>
-                    </div>
-                    <h1 className={`text-4xl lg:text-6xl font-black text-white mb-6 uppercase tracking-tight ${bengaliClass}`}>
-                        {language === 'bn' ? 'আমাদের ওয়েবসাইট মার্কেটপ্লেস' : 'Our Website Marketplace'}
-                    </h1>
-                    <p className="text-gray-400 max-w-2xl mx-auto text-lg mb-10">
-                        Fully functional, ready-to-deploy websites for startups and enterprises. Get online in minutes.
-                    </p>
+        <div className="min-h-screen bg-gray-50 relative">
+            {/* Hero Header Section (Synced with Course/Software Hero - Compact) */}
+            <section className="relative bg-gradient-to-br from-[#e8f9f9] via-white to-[#e8f9f9] overflow-hidden border-b border-gray-200">
+                {/* Background Pattern */}
+                <div className="absolute inset-0 bg-[linear-gradient(rgba(65,191,184,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(65,191,184,0.03)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
 
-                    {/* Search Bar */}
-                    <div className="max-w-xl mx-auto relative group">
-                        <LuSearch className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-[#41bfb8] transition-colors" />
-                        <input
-                            type="text"
-                            placeholder={language === 'bn' ? 'ওয়েবসাইট খুঁজুন...' : 'Search websites...'}
-                            className="w-full pl-14 pr-6 py-4 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#41bfb8]/50 transition-all font-medium"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </div>
-                </div>
-            </section>
+                {/* Gradient Orbs */}
+                <div className="absolute top-10 left-10 w-60 h-60 bg-[#41bfb8]/10 rounded-full blur-3xl"></div>
+                <div className="absolute bottom-10 right-10 w-60 h-60 bg-[#F79952]/10 rounded-full blur-3xl"></div>
 
-            {/* Content Section */}
-            <section className="container mx-auto px-4 lg:px-16 -translate-y-10">
-                <div className="flex justify-between items-center mb-10 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2 p-1 bg-gray-100 rounded-lg">
-                            <button className="p-2 bg-white rounded-md shadow-sm text-[#41bfb8]">
-                                <LuLayoutGrid size={20} />
-                            </button>
-                            <button className="p-2 text-gray-400 hover:text-gray-600">
-                                <LuList size={20} />
-                            </button>
+                <div className="container mx-auto px-4 lg:px-16 py-10 lg:py-12 relative z-10">
+                    <div className="text-center max-w-3xl mx-auto">
+                        {/* Badge */}
+                        <div className="inline-flex items-center gap-2 mb-3 px-3 py-1.5 bg-[#41bfb8]/10 border border-[#41bfb8]/20 rounded-full">
+                            <LuGlobe className="text-[#41bfb8] text-base" />
+                            <span className={`text-xs font-medium text-gray-700 work ${bengaliClass}`}>
+                                {language === 'bn' ? 'প্রিমিয়াম ওয়েবসাইট' : 'Premium Websites'}
+                            </span>
                         </div>
-                        <span className="text-gray-500 text-sm font-medium">
-                            Showing {filteredWebsites.length} results
-                        </span>
-                    </div>
 
-                    <div className="flex items-center gap-3">
-                        <select className="bg-gray-50 border-none text-sm font-bold text-gray-700 py-2.5 px-4 rounded-xl focus:ring-0 cursor-pointer">
-                            <option>Newest First</option>
-                            <option>Price: Low to High</option>
-                            <option>Price: High to Low</option>
-                            <option>Most Popular</option>
-                        </select>
-                    </div>
-                </div>
+                        {/* Title */}
+                        <h1 className={`text-2xl sm:text-3xl lg:text-4xl font-bold outfit text-gray-800 mb-2 ${bengaliClass}`}>
+                            {language === 'bn' ? 'আমাদের' : 'Our Website '}<span className="text-[#41bfb8]">{language === 'bn' ? ' ওয়েবসাইট মার্কেটপ্লেস' : 'Marketplace'}</span>
+                        </h1>
 
-                {loading ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                        {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                            <div key={i} className="bg-white rounded-xl h-[400px] animate-pulse">
-                                <div className="bg-gray-200 h-[200px] w-full rounded-t-xl"></div>
-                                <div className="p-5 space-y-4">
-                                    <div className="h-6 bg-gray-200 rounded w-3/4"></div>
-                                    <div className="h-4 bg-gray-200 rounded w-full"></div>
-                                    <div className="h-10 bg-gray-200 rounded w-full mt-4"></div>
+                        {/* Description */}
+                        <p className={`text-gray-500 work text-sm leading-relaxed mb-6 max-w-xl mx-auto ${bengaliClass}`}>
+                            {language === 'bn'
+                                ? 'রেডি-মেড ওয়েবসাইট সমাধান যা আপনার ব্যবসাকে দ্রুত অনলাইনে নিয়ে আসবে।'
+                                : 'Fully functional, ready-to-deploy websites for startups and enterprises. Get online in minutes.'}
+                        </p>
+
+                        {/* Stats */}
+                        <div className="flex flex-wrap justify-center gap-6">
+                            <div className="flex items-center gap-2">
+                                <div className="w-9 h-9 bg-[#41bfb8]/10 rounded-md flex items-center justify-center">
+                                    <LuGlobe className="text-[#41bfb8] text-base" />
+                                </div>
+                                <div className="text-left">
+                                    <p className="text-lg font-bold text-gray-800 outfit">{websiteList.length || '30'}+</p>
+                                    <p className={`text-xs text-gray-500 work ${bengaliClass}`}>{language === 'bn' ? 'ওয়েবসাইট' : 'Websites'}</p>
                                 </div>
                             </div>
-                        ))}
-                    </div>
-                ) : error ? (
-                    <div className="text-center py-20 bg-red-50 rounded-3xl border border-red-100">
-                        <h3 className="text-xl font-bold text-red-600 mb-2">Error Loading Websites</h3>
-                        <p className="text-red-500">{error}</p>
-                    </div>
-                ) : filteredWebsites.length === 0 ? (
-                    <div className="text-center py-24 bg-white rounded-3xl border border-gray-100 shadow-sm">
-                        <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <LuSearch className="text-gray-300 text-3xl" />
+                            <div className="w-px h-10 bg-gray-200 hidden sm:block"></div>
+                            <div className="flex items-center gap-2">
+                                <div className="w-9 h-9 bg-[#F79952]/10 rounded-md flex items-center justify-center">
+                                    <LuPlus className="text-[#F79952] text-base" />
+                                </div>
+                                <div className="text-left">
+                                    <p className="text-lg font-bold text-gray-800 outfit">24/7</p>
+                                    <p className={`text-xs text-gray-500 work ${bengaliClass}`}>{language === 'bn' ? 'সাপোর্ট' : 'Support'}</p>
+                                </div>
+                            </div>
                         </div>
-                        <h3 className="text-2xl font-bold text-gray-800 mb-2">No items found</h3>
-                        <p className="text-gray-500">We couldn't find any website matching your search query.</p>
                     </div>
-                ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                        {filteredWebsites.map((item) => (
-                            <ProductCard key={item._id} product={item} type="website" />
-                        ))}
+                </div>
+            </section>
+
+            {/* Main Content */}
+            <section className="container mx-auto px-4 lg:px-16 py-8 lg:py-12">
+                {/* Mobile Filter Toggle */}
+                <button
+                    onClick={() => setShowMobileFilter(!showMobileFilter)}
+                    className={`lg:hidden flex items-center gap-2 mb-4 px-4 py-2 bg-white border border-gray-200 rounded-md shadow-sm w-full justify-center ${bengaliClass}`}
+                >
+                    <LuFilter className="text-[#41bfb8]" />
+                    <span className="work text-gray-700">{language === 'bn' ? 'ফিল্টার ও ক্যাটাগরি' : 'Filters & Categories'}</span>
+                </button>
+
+                <div className="flex flex-col lg:flex-row gap-8">
+                    {/* Left Sidebar - Filters */}
+                    <div className={`lg:w-[280px] shrink-0 ${showMobileFilter ? 'block' : 'hidden lg:block'}`}>
+                        <div className="lg:sticky lg:top-24">
+                            <Suspense fallback={<LoadingFallback />}>
+                                <LeftWebsiteFilter
+                                    searchQuery={searchQuery}
+                                    setSearchQuery={setSearchQuery}
+                                    selectedType={selectedType}
+                                    setSelectedType={setSelectedType}
+                                />
+                            </Suspense>
+                        </div>
                     </div>
-                )}
+
+                    {/* Right - Product Grid */}
+                    <div className="flex-1 min-w-0">
+                        <Suspense fallback={<LoadingFallback />}>
+                            <RightWebsiteDetails
+                                searchQuery={searchQuery}
+                                selectedType={selectedType}
+                            />
+                        </Suspense>
+                    </div>
+                </div>
             </section>
         </div>
+    );
+};
+
+const WebsitePage = () => {
+    return (
+        <Suspense fallback={<LoadingFallback />}>
+            <WebsiteContent />
+        </Suspense>
     );
 };
 

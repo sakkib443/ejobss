@@ -109,8 +109,12 @@ const CategoryService = {
     },
 
     // ==================== GET ACTIVE CATEGORIES (Public) ====================
-    async getActiveCategories(): Promise<ICategory[]> {
-        return await Category.find({ status: 'active' })
+    async getActiveCategories(type?: string): Promise<ICategory[]> {
+        const query: any = { status: 'active' };
+        if (type) {
+            query.type = type;
+        }
+        return await Category.find(query)
             .populate('parentCategory', 'name slug type')
             .sort({ order: 1, name: 1 });
     },
