@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
-    FiPlay, FiArrowLeft, FiSave, FiUpload, FiClock, FiBook
+    FiPlay, FiArrowLeft, FiSave, FiUpload, FiClock, FiBook, FiLayers
 } from 'react-icons/fi';
 
 export default function CreateLessonPage() {
@@ -74,7 +75,7 @@ export default function CreateLessonPage() {
 
         if (name === 'course') {
             fetchModules(value);
-            setFormData(prev => ({ ...prev, module: '' })); // Reset module when course changes
+            setFormData(prev => ({ ...prev, module: '' }));
         }
     };
 
@@ -99,7 +100,6 @@ export default function CreateLessonPage() {
                 alert('Lesson Created Successfully! ✅');
                 router.push('/dashboard/admin/lesson');
             } else {
-                // Detailed error reporting
                 const errorMsg = result.errorMessages
                     ? result.errorMessages.map(err => `${err.path.split('.').pop()}: ${err.message}`).join('\n')
                     : result.message;
@@ -113,28 +113,41 @@ export default function CreateLessonPage() {
         }
     };
 
+    const inputClass = "w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 outline-none text-sm transition-all bg-white text-slate-700 placeholder:text-slate-400";
+    const labelClass = "block text-sm font-medium text-slate-700 mb-2";
+
     return (
         <div className="max-w-4xl mx-auto space-y-6">
             {/* Header */}
-            <div className="flex items-center gap-4">
-                <button
-                    onClick={() => router.back()}
-                    className="p-2 rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors"
-                >
-                    <FiArrowLeft size={20} />
-                </button>
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-800">Create New Lesson</h1>
-                    <p className="text-slate-500 text-sm mt-1">Add a new lesson to your course</p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white rounded-2xl border border-slate-200/60 p-5 shadow-sm">
+                <div className="flex items-center gap-4">
+                    <Link href="/dashboard/admin/lesson" className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition-all">
+                        <FiArrowLeft size={18} />
+                    </Link>
+                    <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-rose-500 to-pink-500 flex items-center justify-center shadow-lg shadow-rose-500/25">
+                        <FiPlay className="text-white text-lg" />
+                    </div>
+                    <div>
+                        <h1 className="text-lg font-bold text-slate-800">Create New Lesson</h1>
+                        <p className="text-sm text-slate-500">Add a new lesson to your course</p>
+                    </div>
                 </div>
+                <button
+                    onClick={handleSubmit}
+                    disabled={loading}
+                    className="flex items-center gap-2 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white px-5 py-2.5 rounded-xl font-semibold text-sm shadow-lg shadow-rose-500/25 transition-all disabled:opacity-50"
+                >
+                    <FiSave size={16} />
+                    {loading ? 'Creating...' : 'Create Lesson'}
+                </button>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-slate-200 p-6 space-y-6">
+            <form onSubmit={handleSubmit} className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-5">
                 {/* Titles */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-2">Lesson Title (English) *</label>
+                        <label className={labelClass}>Lesson Title (English) *</label>
                         <input
                             type="text"
                             name="title"
@@ -142,18 +155,18 @@ export default function CreateLessonPage() {
                             onChange={handleChange}
                             required
                             placeholder="e.g. Introduction to React"
-                            className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+                            className={inputClass}
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-2">Lesson Title (বাংলা)</label>
+                        <label className={labelClass}>Lesson Title (বাংলা)</label>
                         <input
                             type="text"
                             name="titleBn"
                             value={formData.titleBn}
                             onChange={handleChange}
                             placeholder="যেমনঃ রিঅ্যাক্ট পরিচিতি"
-                            className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+                            className={inputClass}
                         />
                     </div>
                 </div>
@@ -161,13 +174,16 @@ export default function CreateLessonPage() {
                 {/* Course & Module Selection */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-2">Select Course *</label>
+                        <label className={labelClass}>
+                            <FiBook className="inline-block mr-2" size={14} />
+                            Select Course *
+                        </label>
                         <select
                             name="course"
                             value={formData.course}
                             onChange={handleChange}
                             required
-                            className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all appearance-none bg-white"
+                            className={inputClass}
                         >
                             <option value="">Choose a course</option>
                             {courses.map(course => (
@@ -176,14 +192,17 @@ export default function CreateLessonPage() {
                         </select>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-2">Select Module *</label>
+                        <label className={labelClass}>
+                            <FiLayers className="inline-block mr-2" size={14} />
+                            Select Module *
+                        </label>
                         <select
                             name="module"
                             value={formData.module}
                             onChange={handleChange}
                             required
                             disabled={!formData.course || fetchingModules}
-                            className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all appearance-none bg-white disabled:bg-slate-50 disabled:text-slate-400"
+                            className={`${inputClass} disabled:bg-slate-50 disabled:text-slate-400`}
                         >
                             <option value="">{fetchingModules ? 'Loading modules...' : (formData.course ? 'Choose a module' : 'Select a course first')}</option>
                             {modules.map(mod => (
@@ -199,67 +218,70 @@ export default function CreateLessonPage() {
                 {/* Descriptions */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-2">Description (English)</label>
+                        <label className={labelClass}>Description (English)</label>
                         <textarea
                             name="description"
                             value={formData.description}
                             onChange={handleChange}
                             rows={4}
                             placeholder="Describe the lesson content..."
-                            className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all resize-none"
+                            className={`${inputClass} resize-none`}
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-2">Description (বাংলা)</label>
+                        <label className={labelClass}>Description (বাংলা)</label>
                         <textarea
                             name="descriptionBn"
                             value={formData.descriptionBn}
                             onChange={handleChange}
                             rows={4}
                             placeholder="লেসনের বর্ণনা লিখুন..."
-                            className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all resize-none"
+                            className={`${inputClass} resize-none`}
                         />
                     </div>
                 </div>
 
                 {/* Video Info */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-2">Video URL *</label>
-                        <div className="relative">
-                            <FiPlay className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                            <input
-                                type="url"
-                                name="videoUrl"
-                                value={formData.videoUrl}
-                                onChange={handleChange}
-                                required
-                                placeholder="https://youtube.com/watch?v=..."
-                                className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
-                            />
+                <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-4">
+                    <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">Video Configuration</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className={labelClass}>Video URL *</label>
+                            <div className="relative">
+                                <FiPlay className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                                <input
+                                    type="url"
+                                    name="videoUrl"
+                                    value={formData.videoUrl}
+                                    onChange={handleChange}
+                                    required
+                                    placeholder="https://youtube.com/watch?v=..."
+                                    className={`${inputClass} pl-11`}
+                                />
+                            </div>
                         </div>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-2">Video Provider</label>
-                        <select
-                            name="videoProvider"
-                            value={formData.videoProvider}
-                            onChange={handleChange}
-                            className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
-                        >
-                            <option value="youtube">YouTube</option>
-                            <option value="vimeo">Vimeo</option>
-                            <option value="bunny">Bunny</option>
-                            <option value="cloudinary">Cloudinary</option>
-                            <option value="custom">Custom</option>
-                        </select>
+                        <div>
+                            <label className={labelClass}>Video Provider</label>
+                            <select
+                                name="videoProvider"
+                                value={formData.videoProvider}
+                                onChange={handleChange}
+                                className={inputClass}
+                            >
+                                <option value="youtube">YouTube</option>
+                                <option value="vimeo">Vimeo</option>
+                                <option value="bunny">Bunny</option>
+                                <option value="cloudinary">Cloudinary</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
                 {/* Duration & Order */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-2">Duration (minutes) *</label>
+                        <label className={labelClass}>Duration (minutes) *</label>
                         <div className="relative">
                             <FiClock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                             <input
@@ -269,44 +291,44 @@ export default function CreateLessonPage() {
                                 onChange={handleChange}
                                 required
                                 placeholder="e.g. 15"
-                                className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+                                className={`${inputClass} pl-11`}
                             />
                         </div>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-2">Order</label>
+                        <label className={labelClass}>Order</label>
                         <input
                             type="number"
                             name="order"
                             value={formData.order}
                             onChange={handleChange}
                             min="1"
-                            className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+                            className={inputClass}
                         />
                     </div>
                 </div>
 
                 {/* Checkboxes */}
-                <div className="flex flex-wrap gap-6">
-                    <label className="flex items-center gap-3 cursor-pointer">
+                <div className="flex flex-wrap gap-4">
+                    <label className="flex items-center gap-3 cursor-pointer p-4 bg-slate-50 rounded-2xl border border-slate-200 flex-1">
                         <input
                             type="checkbox"
                             name="isPublished"
                             checked={formData.isPublished}
                             onChange={handleChange}
-                            className="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                            className="w-5 h-5 rounded-lg border-slate-300 text-rose-600 focus:ring-rose-500"
                         />
-                        <span className="text-sm text-slate-700">Publish this lesson</span>
+                        <span className="text-sm font-bold text-slate-700">Publish this lesson</span>
                     </label>
-                    <label className="flex items-center gap-3 cursor-pointer">
+                    <label className="flex items-center gap-3 cursor-pointer p-4 bg-slate-50 rounded-2xl border border-slate-200 flex-1">
                         <input
                             type="checkbox"
                             name="isFree"
                             checked={formData.isFree}
                             onChange={handleChange}
-                            className="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                            className="w-5 h-5 rounded-lg border-slate-300 text-emerald-600 focus:ring-emerald-500"
                         />
-                        <span className="text-sm text-slate-700">Free preview lesson</span>
+                        <span className="text-sm font-bold text-slate-700">Free preview lesson</span>
                     </label>
                 </div>
 
@@ -315,14 +337,14 @@ export default function CreateLessonPage() {
                     <button
                         type="button"
                         onClick={() => router.back()}
-                        className="px-6 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+                        className="px-6 py-3 rounded-2xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-sm transition-colors"
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
                         disabled={loading}
-                        className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium hover:shadow-lg hover:shadow-indigo-500/30 transition-all disabled:opacity-50"
+                        className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-rose-500 to-pink-600 text-white font-bold text-sm hover:shadow-lg hover:shadow-rose-500/30 transition-all disabled:opacity-50"
                     >
                         <FiSave size={18} />
                         {loading ? 'Creating...' : 'Create Lesson'}
@@ -332,3 +354,4 @@ export default function CreateLessonPage() {
         </div>
     );
 }
+

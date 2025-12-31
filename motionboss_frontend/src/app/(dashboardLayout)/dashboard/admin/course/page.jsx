@@ -15,6 +15,10 @@ import {
   FiList,
   FiUsers,
   FiLayers,
+  FiRefreshCw,
+  FiCheckCircle,
+  FiClock,
+  FiDollarSign,
 } from 'react-icons/fi';
 
 export default function CoursesPage() {
@@ -68,57 +72,150 @@ export default function CoursesPage() {
     c.instructorName?.toLowerCase().includes(search.toLowerCase())
   );
 
+  // Stats
+  const stats = {
+    total: courses.length,
+    published: courses.filter(c => c.status === 'published').length,
+    draft: courses.filter(c => c.status === 'draft').length,
+    totalEnrollments: courses.reduce((sum, c) => sum + (c.totalEnrollments || 0), 0),
+  };
+
   // Loading Skeleton
   const CourseSkeleton = () => (
-    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-      <div className="h-40 bg-slate-200 animate-pulse"></div>
-      <div className="p-4 space-y-3">
-        <div className="h-4 bg-slate-200 rounded animate-pulse w-3/4"></div>
-        <div className="h-3 bg-slate-200 rounded animate-pulse w-1/2"></div>
+    <div className="bg-white rounded-2xl border border-slate-200/60 overflow-hidden">
+      <div className="h-44 bg-slate-100 animate-pulse"></div>
+      <div className="p-5 space-y-3">
+        <div className="h-4 bg-slate-100 rounded animate-pulse w-3/4"></div>
+        <div className="h-3 bg-slate-100 rounded animate-pulse w-1/2"></div>
         <div className="flex gap-2 pt-2">
-          <div className="h-8 bg-slate-200 rounded animate-pulse flex-1"></div>
-          <div className="h-8 bg-slate-200 rounded animate-pulse flex-1"></div>
+          <div className="h-8 bg-slate-100 rounded-xl animate-pulse flex-1"></div>
+          <div className="h-8 bg-slate-100 rounded-xl animate-pulse flex-1"></div>
         </div>
       </div>
     </div>
   );
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800 outfit">Course Central</h1>
-          <p className="text-slate-500 text-sm work">Create, edit and manage platform curriculum</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white rounded-2xl border border-slate-200/60 p-5 shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/25">
+            <FiBook className="text-white text-xl" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-slate-800">Course Central</h1>
+            <p className="text-sm text-slate-500">Create, edit and manage platform curriculum</p>
+          </div>
         </div>
-        <Link href="/dashboard/admin/course/create">
-          <button className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-medium text-sm rounded-xl shadow-lg transition-all hover:scale-105">
-            <FiPlus size={16} />
-            Publish New Course
+        <div className="flex items-center gap-2">
+          <button
+            onClick={loadCourses}
+            disabled={loading}
+            className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-medium transition-all disabled:opacity-50"
+          >
+            <FiRefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+            Reload
           </button>
-        </Link>
+          <Link href="/dashboard/admin/course/create">
+            <button className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl text-sm font-semibold shadow-lg shadow-amber-500/25 transition-all">
+              <FiPlus size={16} />
+              New Course
+            </button>
+          </Link>
+        </div>
+      </div>
+
+      {/* Stats Cards - matching Dashboard Home StatsCard pattern */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        {/* Total Courses */}
+        <div className="relative group">
+          <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-orange-500/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className="relative bg-white rounded-2xl border border-slate-200/60 p-6 hover:shadow-2xl hover:shadow-slate-200/50 hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+            <div className="absolute -right-8 -top-8 w-32 h-32 bg-gradient-to-br from-amber-500 to-orange-500 opacity-10 rounded-full blur-2xl" />
+            <div className="relative flex items-start justify-between">
+              <div className="flex-1">
+                <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">Total Courses</p>
+                <p className="text-3xl font-bold text-slate-800 mb-1">{stats.total}</p>
+                <p className="text-xs text-slate-400 mb-2">All registered courses</p>
+              </div>
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                <FiBook className="text-2xl text-white" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Published */}
+        <div className="relative group">
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className="relative bg-white rounded-2xl border border-slate-200/60 p-6 hover:shadow-2xl hover:shadow-slate-200/50 hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+            <div className="absolute -right-8 -top-8 w-32 h-32 bg-gradient-to-br from-emerald-500 to-teal-500 opacity-10 rounded-full blur-2xl" />
+            <div className="relative flex items-start justify-between">
+              <div className="flex-1">
+                <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">Published</p>
+                <p className="text-3xl font-bold text-slate-800 mb-1">{stats.published}</p>
+                <p className="text-xs text-slate-400 mb-2">Live courses</p>
+              </div>
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                <FiCheckCircle className="text-2xl text-white" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Draft */}
+        <div className="relative group">
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-500/20 to-slate-600/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className="relative bg-white rounded-2xl border border-slate-200/60 p-6 hover:shadow-2xl hover:shadow-slate-200/50 hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+            <div className="absolute -right-8 -top-8 w-32 h-32 bg-gradient-to-br from-slate-500 to-slate-600 opacity-10 rounded-full blur-2xl" />
+            <div className="relative flex items-start justify-between">
+              <div className="flex-1">
+                <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">Draft</p>
+                <p className="text-3xl font-bold text-slate-800 mb-1">{stats.draft}</p>
+                <p className="text-xs text-slate-400 mb-2">Unpublished</p>
+              </div>
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                <FiClock className="text-2xl text-white" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Total Enrollments */}
+        <div className="relative group">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className="relative bg-white rounded-2xl border border-slate-200/60 p-6 hover:shadow-2xl hover:shadow-slate-200/50 hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+            <div className="absolute -right-8 -top-8 w-32 h-32 bg-gradient-to-br from-blue-500 to-indigo-500 opacity-10 rounded-full blur-2xl" />
+            <div className="relative flex items-start justify-between">
+              <div className="flex-1">
+                <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">Enrollments</p>
+                <p className="text-3xl font-bold text-slate-800 mb-1">{stats.totalEnrollments}</p>
+                <p className="text-xs text-slate-400 mb-2">Active learners</p>
+              </div>
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                <FiUsers className="text-2xl text-white" />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Filters Bar */}
-      <div className="flex flex-col md:flex-row md:items-center gap-4 bg-white p-4 rounded-xl border border-slate-200">
+      <div className="flex flex-col md:flex-row md:items-center gap-4 bg-white p-4 rounded-2xl border border-slate-200/60 shadow-sm">
         <div className="relative flex-1">
           <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             placeholder="Search courses..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 focus:ring-2 focus:ring-slate-100 outline-none text-sm transition-all"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-amber-300 focus:ring-2 focus:ring-amber-100 outline-none text-sm transition-all"
           />
         </div>
 
         <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-lg">
           <button onClick={() => setViewMode('grid')} className={`p-2 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500'}`}><FiGrid size={18} /></button>
           <button onClick={() => setViewMode('list')} className={`p-2 rounded-md transition-all ${viewMode === 'list' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500'}`}><FiList size={18} /></button>
-        </div>
-
-        <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-lg">
-          <FiBook className="text-slate-400" />
-          <span className="text-sm font-medium text-slate-700">{courses.length} Live Courses</span>
         </div>
       </div>
 

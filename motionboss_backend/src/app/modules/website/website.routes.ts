@@ -32,12 +32,12 @@ router.get('/slug/:slug', WebsiteController.getWebsiteBySlug);
 // ADMIN ROUTES - Website Management
 // ===================================================================
 
-// GET /api/websites/admin/my - Get admin's websites
+// GET /api/websites/admin/all-list - Get all websites for admin dashboard
 router.get(
-    '/admin/my',
+    '/admin/all-list',
     authMiddleware,
     authorizeRoles('admin'),
-    WebsiteController.getMyWebsites
+    WebsiteController.getAdminAllWebsites
 );
 
 // POST /api/websites/admin - Create new website

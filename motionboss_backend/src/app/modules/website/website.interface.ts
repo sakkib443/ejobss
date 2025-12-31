@@ -6,6 +6,13 @@
 
 import { Types } from 'mongoose';
 
+// Platform options enum
+export type TPlatform = 'WordPress' | 'React' | 'Next.js' | 'PHP' | 'HTML/CSS' | 'Vue.js' | 'Angular' | 'Laravel' | 'Other';
+
+export const PLATFORM_OPTIONS: TPlatform[] = [
+    'WordPress', 'React', 'Next.js', 'PHP', 'HTML/CSS', 'Vue.js', 'Angular', 'Laravel', 'Other'
+];
+
 /**
  * IWebsite - Main product data structure
  * Website templates/themes that are sold on the marketplace
@@ -16,20 +23,18 @@ export interface IWebsite {
     // Basic Info
     title: string;
     slug: string;
-    author: Types.ObjectId;          // User (seller) reference
-    platform: Types.ObjectId;        // Platform reference (WordPress, React etc.)
+    platform: TPlatform;             // Platform enum (WordPress, React etc.)
     category: Types.ObjectId;        // Category reference
     subCategory?: string;
 
-    // Type & Access
-    projectType: string;             // Ecommerce, Blog, LMS, Dashboard etc.
+    // Access Type
     accessType: 'free' | 'paid';
 
     // Pricing
     price: number;
     offerPrice?: number;
 
-    // Ratings & Sales
+    // Ratings & Sales (real-time counters, default 0)
     rating: number;                  // Average rating (1-5)
     reviewCount: number;
     salesCount: number;
@@ -66,7 +71,6 @@ export interface IWebsiteFilters {
     searchTerm?: string;
     category?: string;
     platform?: string;
-    author?: string;
     accessType?: 'free' | 'paid';
     status?: string;
     minPrice?: number;
@@ -84,3 +88,4 @@ export interface IWebsiteQuery {
     sortBy?: string;
     sortOrder?: 'asc' | 'desc';
 }
+

@@ -10,7 +10,6 @@ import AppError from '../../utils/AppError';
 import { IWebsite, IWebsiteFilters, IWebsiteQuery } from './website.interface';
 import { Website } from './website.model';
 import CategoryService from '../category/category.service';
-import PlatformService from '../platform/platform.service';
 
 interface IPaginatedResult<T> {
     data: T[];
@@ -19,7 +18,7 @@ interface IPaginatedResult<T> {
 
 const WebsiteService = {
     // ==================== CREATE WEBSITE ====================
-    async createWebsite(payload: Partial<IWebsite>, authorId: string): Promise<IWebsite> {
+    async createWebsite(payload: Partial<IWebsite>): Promise<IWebsite> {
         // Generate slug if not provided
         if (!payload.slug) {
             payload.slug = payload.title!
@@ -38,13 +37,11 @@ const WebsiteService = {
         // Create website
         const website = await Website.create({
             ...payload,
-            author: authorId,
             publishDate: new Date(),
         });
 
-        // Increment category and platform product counts
+        // Increment category product count
         await CategoryService.incrementProductCount(payload.category!.toString());
-        await PlatformService.incrementProductCount(payload.platform!.toString());
 
         return website;
     },
@@ -84,9 +81,9 @@ const WebsiteService = {
             conditions.push({ category: new Types.ObjectId(category) });
         }
 
-        // Platform filter
+        // Platform filter (now string match)
         if (platform) {
-            conditions.push({ platform: new Types.ObjectId(platform) });
+            conditions.push({ platform });
         }
 
         // Access type filter
@@ -121,9 +118,7 @@ const WebsiteService = {
         // Execute
         const [websites, total] = await Promise.all([
             Website.find(whereConditions)
-                .populate('author', 'firstName lastName avatar')
                 .populate('category', 'name slug')
-                .populate('platform', 'name slug icon')
                 .sort(sortConditions)
                 .skip(skip)
                 .limit(limit),
@@ -148,9 +143,7 @@ const WebsiteService = {
             isDeleted: false,
             isFeatured: true,
         })
-            .populate('author', 'firstName lastName')
             .populate('category', 'name slug')
-            .populate('platform', 'name icon')
             .sort({ salesCount: -1 })
             .limit(limit);
     },
@@ -158,9 +151,7 @@ const WebsiteService = {
     // ==================== GET SINGLE WEBSITE ====================
     async getWebsiteById(id: string): Promise<IWebsite> {
         const website = await Website.findById(id)
-            .populate('author', 'firstName lastName avatar')
-            .populate('category', 'name slug')
-            .populate('platform', 'name slug icon');
+            .populate('category', 'name slug');
 
         if (!website) {
             throw new AppError(404, 'Website not found');
@@ -172,9 +163,7 @@ const WebsiteService = {
     // ==================== GET BY SLUG (Public) ====================
     async getWebsiteBySlug(slug: string): Promise<IWebsite> {
         const website = await Website.findOne({ slug, status: 'approved', isDeleted: false })
-            .populate('author', 'firstName lastName avatar')
-            .populate('category', 'name slug')
-            .populate('platform', 'name slug icon');
+            .populate('category', 'name slug');
 
         if (!website) {
             throw new AppError(404, 'Website not found');
@@ -183,8 +172,8 @@ const WebsiteService = {
         return website;
     },
 
-    // ==================== GET USER'S WEBSITES (Seller) ====================
-    async getUserWebsites(userId: string, query: IWebsiteQuery): Promise<IPaginatedResult<IWebsite>> {
+    // ==================== GET ALL WEBSITES FOR ADMIN ====================
+    async getAdminAllWebsites(query: IWebsiteQuery): Promise<IPaginatedResult<IWebsite>> {
         const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc' } = query;
 
         const skip = (page - 1) * limit;
@@ -192,13 +181,12 @@ const WebsiteService = {
         sortConditions[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
         const [websites, total] = await Promise.all([
-            Website.find({ author: userId, isDeleted: false })
+            Website.find({ isDeleted: false })
                 .populate('category', 'name')
-                .populate('platform', 'name')
                 .sort(sortConditions)
                 .skip(skip)
                 .limit(limit),
-            Website.countDocuments({ author: userId, isDeleted: false }),
+            Website.countDocuments({ isDeleted: false }),
         ]);
 
         return {
@@ -208,44 +196,32 @@ const WebsiteService = {
     },
 
     // ==================== UPDATE WEBSITE ====================
-    async updateWebsite(id: string, payload: Partial<IWebsite>, userId: string, isAdmin: boolean): Promise<IWebsite> {
+    async updateWebsite(id: string, payload: Partial<IWebsite>, isAdmin: boolean): Promise<IWebsite> {
         const website = await Website.findById(id);
         if (!website) {
             throw new AppError(404, 'Website not found');
-        }
-
-        // Check ownership (unless admin)
-        if (!isAdmin && website.author.toString() !== userId) {
-            throw new AppError(403, 'You can only update your own websites');
         }
 
         // Update lastUpdate
         payload.lastUpdate = new Date();
 
         const updated = await Website.findByIdAndUpdate(id, { $set: payload }, { new: true, runValidators: true })
-            .populate('author', 'firstName lastName')
-            .populate('category', 'name')
-            .populate('platform', 'name');
+            .populate('category', 'name');
 
         return updated!;
     },
 
     // ==================== DELETE WEBSITE (Soft Delete) ====================
-    async deleteWebsite(id: string, userId: string, isAdmin: boolean): Promise<void> {
+    async deleteWebsite(id: string, isAdmin: boolean): Promise<void> {
         const website = await Website.findById(id);
         if (!website) {
             throw new AppError(404, 'Website not found');
         }
 
-        if (!isAdmin && website.author.toString() !== userId) {
-            throw new AppError(403, 'You can only delete your own websites');
-        }
-
         await Website.findByIdAndUpdate(id, { isDeleted: true });
 
-        // Decrement counts
+        // Decrement category count
         await CategoryService.decrementProductCount(website.category.toString());
-        await PlatformService.decrementProductCount(website.platform.toString());
     },
 
     // ==================== APPROVE/REJECT WEBSITE (Admin) ====================
@@ -290,7 +266,7 @@ const WebsiteService = {
             conditions.push({ category: new Types.ObjectId(category) });
         }
         if (platform) {
-            conditions.push({ platform: new Types.ObjectId(platform) });
+            conditions.push({ platform });
         }
 
         const whereConditions = conditions.length > 0 ? { $and: conditions } : {};
@@ -300,9 +276,7 @@ const WebsiteService = {
 
         const [websites, total] = await Promise.all([
             Website.find(whereConditions)
-                .populate('author', 'firstName lastName email')
                 .populate('category', 'name')
-                .populate('platform', 'name')
                 .sort(sortConditions)
                 .skip(skip)
                 .limit(limit),

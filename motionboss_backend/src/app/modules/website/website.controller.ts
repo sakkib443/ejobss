@@ -11,14 +11,14 @@ import pick from '../../utils/pick';
 import { IWebsiteFilters, IWebsiteQuery } from './website.interface';
 
 const WebsiteController = {
-    // ==================== CREATE (Seller/Admin) ====================
+    // ==================== CREATE (Admin) ====================
     createWebsite: catchAsync(async (req: Request, res: Response) => {
-        const website = await WebsiteService.createWebsite(req.body, req.user!.userId);
+        const website = await WebsiteService.createWebsite(req.body);
 
         sendResponse(res, {
             statusCode: 201,
             success: true,
-            message: 'Website created successfully. Pending approval.',
+            message: 'Website created successfully.',
             data: website,
         });
     }),
@@ -89,8 +89,8 @@ const WebsiteController = {
         });
     }),
 
-    // ==================== GET MY WEBSITES (Seller) ====================
-    getMyWebsites: catchAsync(async (req: Request, res: Response) => {
+    // ==================== GET ALL FOR ADMIN ====================
+    getAdminAllWebsites: catchAsync(async (req: Request, res: Response) => {
         const query: IWebsiteQuery = {
             page: req.query.page ? Number(req.query.page) : 1,
             limit: req.query.limit ? Number(req.query.limit) : 10,
@@ -98,12 +98,12 @@ const WebsiteController = {
             sortOrder: req.query.sortOrder as 'asc' | 'desc',
         };
 
-        const result = await WebsiteService.getUserWebsites(req.user!.userId, query);
+        const result = await WebsiteService.getAdminAllWebsites(query);
 
         sendResponse(res, {
             statusCode: 200,
             success: true,
-            message: 'Your websites fetched',
+            message: 'All websites fetched',
             meta: result.meta,
             data: result.data,
         });
@@ -115,7 +115,6 @@ const WebsiteController = {
         const website = await WebsiteService.updateWebsite(
             req.params.id,
             req.body,
-            req.user!.userId,
             isAdmin
         );
 
@@ -130,7 +129,7 @@ const WebsiteController = {
     // ==================== DELETE ====================
     deleteWebsite: catchAsync(async (req: Request, res: Response) => {
         const isAdmin = req.user!.role === 'admin';
-        await WebsiteService.deleteWebsite(req.params.id, req.user!.userId, isAdmin);
+        await WebsiteService.deleteWebsite(req.params.id, isAdmin);
 
         sendResponse(res, {
             statusCode: 200,

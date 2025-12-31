@@ -5,7 +5,7 @@
 // ===================================================================
 
 import { Schema, model } from 'mongoose';
-import { IWebsite } from './website.interface';
+import { IWebsite, PLATFORM_OPTIONS } from './website.interface';
 
 const websiteSchema = new Schema<IWebsite>(
     {
@@ -22,14 +22,9 @@ const websiteSchema = new Schema<IWebsite>(
             unique: true,
             lowercase: true,
         },
-        author: {
-            type: Schema.Types.ObjectId,
-            ref: 'User',
-            required: [true, 'Author is required'],
-        },
         platform: {
-            type: Schema.Types.ObjectId,
-            ref: 'Platform',
+            type: String,
+            enum: PLATFORM_OPTIONS,
             required: [true, 'Platform is required'],
         },
         category: {
@@ -39,12 +34,7 @@ const websiteSchema = new Schema<IWebsite>(
         },
         subCategory: { type: String },
 
-        // ==================== Type & Access ====================
-        projectType: {
-            type: String,
-            required: [true, 'Project type is required'],
-            trim: true,
-        },
+        // ==================== Access Type ====================
         accessType: {
             type: String,
             enum: ['free', 'paid'],
@@ -62,7 +52,7 @@ const websiteSchema = new Schema<IWebsite>(
             min: [0, 'Offer price cannot be negative'],
         },
 
-        // ==================== Ratings & Sales ====================
+        // ==================== Ratings & Sales (Real-time counters) ====================
         rating: {
             type: Number,
             default: 0,
@@ -113,7 +103,6 @@ const websiteSchema = new Schema<IWebsite>(
 
 // ==================== Indexes ====================
 websiteSchema.index({ slug: 1 });
-websiteSchema.index({ author: 1 });
 websiteSchema.index({ category: 1 });
 websiteSchema.index({ platform: 1 });
 websiteSchema.index({ status: 1, isDeleted: 1 });
@@ -151,3 +140,4 @@ websiteSchema.virtual('effectivePrice').get(function () {
 });
 
 export const Website = model<IWebsite>('Website', websiteSchema);
+

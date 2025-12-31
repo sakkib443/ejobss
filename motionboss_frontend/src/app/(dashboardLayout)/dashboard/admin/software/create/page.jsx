@@ -207,10 +207,10 @@ export default function CreateSoftwarePage() {
         finally { setLoading(false); }
     };
 
-    const inputClass = "w-full px-4 py-3.5 rounded-2xl border border-slate-200 focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 outline-none text-sm transition-all bg-white font-medium text-slate-700 placeholder:text-slate-400";
-    const labelClass = "block text-[11px] font-bold text-slate-500 mb-2 uppercase tracking-wider";
-    const cardClass = "bg-white p-6 rounded-2xl border border-slate-200 shadow-sm";
-    const sectionTitle = "text-sm font-black text-slate-700 mb-4 flex items-center gap-2 uppercase tracking-wide";
+    const inputClass = "w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-violet-400 focus:ring-2 focus:ring-violet-100 outline-none text-sm transition-all bg-white text-slate-700 placeholder:text-slate-400";
+    const labelClass = "block text-sm font-medium text-slate-700 mb-2";
+    const cardClass = "bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm";
+    const sectionTitle = "text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2";
 
     if (fetchingData) {
         return (

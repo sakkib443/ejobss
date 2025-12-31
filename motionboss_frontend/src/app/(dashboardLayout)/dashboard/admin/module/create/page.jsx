@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
-    FiLayers, FiArrowLeft, FiSave, FiBook
+    FiLayers, FiArrowLeft, FiSave, FiBook, FiRefreshCw
 } from 'react-icons/fi';
 
 export default function CreateModulePage() {
@@ -79,28 +80,42 @@ export default function CreateModulePage() {
         }
     };
 
+    const inputClass = "w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none text-sm transition-all bg-white text-slate-700 placeholder:text-slate-400";
+    const labelClass = "block text-sm font-medium text-slate-700 mb-2";
+
     return (
         <div className="max-w-3xl mx-auto space-y-6">
             {/* Header */}
-            <div className="flex items-center gap-4">
-                <button
-                    onClick={() => router.back()}
-                    className="p-2 rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors"
-                >
-                    <FiArrowLeft size={20} />
-                </button>
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-800">Create New Module</h1>
-                    <p className="text-slate-500 text-sm mt-1">Add a new section to your course</p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white rounded-2xl border border-slate-200/60 p-5 shadow-sm">
+                <div className="flex items-center gap-4">
+                    <Link href="/dashboard/admin/module" className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition-all">
+                        <FiArrowLeft size={18} />
+                    </Link>
+                    <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+                        <FiLayers className="text-white text-lg" />
+                    </div>
+                    <div>
+                        <h1 className="text-lg font-bold text-slate-800">Create New Module</h1>
+                        <p className="text-sm text-slate-500">Add a new section to your course</p>
+                    </div>
                 </div>
+                <button
+                    onClick={handleSubmit}
+                    disabled={loading}
+                    className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-5 py-2.5 rounded-xl font-semibold text-sm shadow-lg shadow-indigo-500/25 transition-all disabled:opacity-50"
+                >
+                    <FiSave size={16} />
+                    {loading ? 'Creating...' : 'Create Module'}
+                </button>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-slate-200 p-6 space-y-6">
+            <form onSubmit={handleSubmit} className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-5">
+
                 {/* Course Selection */}
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                        <FiBook className="inline-block mr-2" size={16} />
+                    <label className={labelClass}>
+                        <FiBook className="inline-block mr-2" size={14} />
                         Select Course *
                     </label>
                     <select
@@ -108,7 +123,7 @@ export default function CreateModulePage() {
                         value={formData.course}
                         onChange={handleChange}
                         required
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all appearance-none bg-white"
+                        className={inputClass}
                     >
                         <option value="">Choose a course</option>
                         {courses.map(course => (
@@ -120,7 +135,7 @@ export default function CreateModulePage() {
                 {/* Titles */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-2">Module Title (English) *</label>
+                        <label className={labelClass}>Module Title (English) *</label>
                         <input
                             type="text"
                             name="title"
@@ -128,39 +143,39 @@ export default function CreateModulePage() {
                             onChange={handleChange}
                             required
                             placeholder="e.g. Getting Started"
-                            className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+                            className={inputClass}
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-2">Module Title (বাংলা)</label>
+                        <label className={labelClass}>Module Title (বাংলা)</label>
                         <input
                             type="text"
                             name="titleBn"
                             value={formData.titleBn}
                             onChange={handleChange}
                             placeholder="যেমনঃ শুরু করা যাক"
-                            className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+                            className={inputClass}
                         />
                     </div>
                 </div>
 
                 {/* Description */}
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Description</label>
+                    <label className={labelClass}>Description</label>
                     <textarea
                         name="description"
                         value={formData.description}
                         onChange={handleChange}
                         rows={3}
                         placeholder="Brief description of this module..."
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all resize-none"
+                        className={`${inputClass} resize-none`}
                     />
                 </div>
 
                 {/* Order & Published */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-2">Order *</label>
+                        <label className={labelClass}>Order *</label>
                         <input
                             type="number"
                             name="order"
@@ -168,11 +183,11 @@ export default function CreateModulePage() {
                             onChange={handleChange}
                             required
                             min="1"
-                            className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+                            className={inputClass}
                         />
                         <p className="text-xs text-slate-400 mt-1">Position of this module in the course</p>
                     </div>
-                    <div className="flex items-center pt-8">
+                    <div className="flex items-center pt-6">
                         <label className="flex items-center gap-3 cursor-pointer">
                             <input
                                 type="checkbox"
@@ -191,29 +206,29 @@ export default function CreateModulePage() {
                     <button
                         type="button"
                         onClick={() => router.back()}
-                        className="px-6 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+                        className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-medium transition-colors"
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
                         disabled={loading}
-                        className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium hover:shadow-lg hover:shadow-indigo-500/30 transition-all disabled:opacity-50"
+                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold text-sm hover:shadow-lg hover:shadow-indigo-500/25 transition-all disabled:opacity-50"
                     >
-                        <FiSave size={18} />
+                        <FiSave size={16} />
                         {loading ? 'Creating...' : 'Create Module'}
                     </button>
                 </div>
             </form>
 
             {/* Info Card */}
-            <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border border-amber-100 p-6">
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-5 rounded-2xl border border-amber-100">
                 <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-white shrink-0">
-                        <FiLayers size={24} />
+                    <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-amber-500/25">
+                        <FiLayers size={20} />
                     </div>
                     <div>
-                        <h3 className="font-bold text-slate-800 mb-1">What are Modules?</h3>
+                        <h3 className="font-semibold text-slate-800 mb-1">What are Modules?</h3>
                         <p className="text-sm text-slate-600">
                             Modules are sections within a course that group related lessons together.
                             For example, a "Web Development" course might have modules like "HTML Basics", "CSS Fundamentals", and "JavaScript Introduction".
@@ -224,3 +239,4 @@ export default function CreateModulePage() {
         </div>
     );
 }
+

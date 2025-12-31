@@ -127,81 +127,120 @@ const SoftwarePage = () => {
     });
 
     return (
-        <div className="p-6 md:p-10 space-y-8 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+        <div className="space-y-6">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-                <div>
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-violet-500/30">
-                            <FiCode className="text-white" size={22} />
-                        </div>
-                        <div>
-                            <h1 className="text-2xl font-black text-slate-800 outfit tracking-tight">Software Manager</h1>
-                            <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">Scripts, Plugins & Tools</p>
-                        </div>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white rounded-2xl border border-slate-200/60 p-5 shadow-sm">
+                <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center shadow-lg shadow-violet-500/25">
+                        <FiCode className="text-white text-xl" />
+                    </div>
+                    <div>
+                        <h1 className="text-xl font-bold text-slate-800">Software Manager</h1>
+                        <p className="text-sm text-slate-500">Scripts, plugins & tools</p>
                     </div>
                 </div>
-                <div className="flex items-center gap-3">
-                    <button onClick={fetchSoftware} className="p-3.5 bg-white hover:bg-slate-50 text-slate-600 rounded-2xl border border-slate-200 shadow-sm transition-all hover:scale-105">
-                        <FiRefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={fetchSoftware}
+                        disabled={loading}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-medium transition-all disabled:opacity-50"
+                    >
+                        <FiRefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+                        Reload
                     </button>
                     <Link href="/dashboard/admin/software/create">
-                        <button className="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white font-bold text-sm rounded-2xl shadow-xl shadow-violet-500/30 transition-all hover:scale-105 active:scale-95">
-                            <FiPlus size={18} /> Add Software
+                        <button className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600 text-white rounded-xl text-sm font-semibold shadow-lg shadow-violet-500/25 transition-all">
+                            <FiPlus size={16} />
+                            Add Software
                         </button>
                     </Link>
                 </div>
             </div>
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                    <div className="flex items-center justify-between mb-3">
-                        <div className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center">
-                            <FiPackage className="text-white" size={18} />
+            {/* Stats Cards - matching Dashboard Home StatsCard pattern */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {/* Total Software */}
+                <div className="relative group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-violet-500/20 to-purple-500/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    <div className="relative bg-white rounded-2xl border border-slate-200/60 p-6 hover:shadow-2xl hover:shadow-slate-200/50 hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+                        <div className="absolute -right-8 -top-8 w-32 h-32 bg-gradient-to-br from-slate-700 to-slate-800 opacity-10 rounded-full blur-2xl" />
+                        <div className="relative flex items-start justify-between">
+                            <div className="flex-1">
+                                <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">Total Software</p>
+                                <p className="text-3xl font-bold text-slate-800 mb-1">{stats.total}</p>
+                                <p className="text-xs text-slate-400 mb-2">All software</p>
+                            </div>
+                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                                <FiPackage className="text-2xl text-white" />
+                            </div>
                         </div>
-                        <span className="text-2xl font-black text-slate-800">{stats.total}</span>
                     </div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Software</p>
                 </div>
-                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                    <div className="flex items-center justify-between mb-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
-                            <FiCheck className="text-white" size={18} />
+
+                {/* Approved */}
+                <div className="relative group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-green-500/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    <div className="relative bg-white rounded-2xl border border-slate-200/60 p-6 hover:shadow-2xl hover:shadow-slate-200/50 hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+                        <div className="absolute -right-8 -top-8 w-32 h-32 bg-gradient-to-br from-emerald-500 to-green-500 opacity-10 rounded-full blur-2xl" />
+                        <div className="relative flex items-start justify-between">
+                            <div className="flex-1">
+                                <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">Approved</p>
+                                <p className="text-3xl font-bold text-slate-800 mb-1">{stats.approved}</p>
+                                <p className="text-xs text-slate-400 mb-2">Live software</p>
+                            </div>
+                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                                <FiCheck className="text-2xl text-white" />
+                            </div>
                         </div>
-                        <span className="text-2xl font-black text-slate-800">{stats.approved}</span>
                     </div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Approved</p>
                 </div>
-                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                    <div className="flex items-center justify-between mb-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30">
-                            <FiLoader className="text-white" size={18} />
+
+                {/* Pending */}
+                <div className="relative group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-orange-500/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    <div className="relative bg-white rounded-2xl border border-slate-200/60 p-6 hover:shadow-2xl hover:shadow-slate-200/50 hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+                        <div className="absolute -right-8 -top-8 w-32 h-32 bg-gradient-to-br from-amber-500 to-orange-500 opacity-10 rounded-full blur-2xl" />
+                        <div className="relative flex items-start justify-between">
+                            <div className="flex-1">
+                                <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">Pending</p>
+                                <p className="text-3xl font-bold text-slate-800 mb-1">{stats.pending}</p>
+                                <p className="text-xs text-slate-400 mb-2">Awaiting review</p>
+                            </div>
+                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                                <FiLoader className="text-2xl text-white" />
+                            </div>
                         </div>
-                        <span className="text-2xl font-black text-slate-800">{stats.pending}</span>
                     </div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pending</p>
                 </div>
-                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                    <div className="flex items-center justify-between mb-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-amber-500 rounded-xl flex items-center justify-center shadow-lg shadow-yellow-500/30">
-                            <FiStar className="text-white" size={18} />
+
+                {/* Featured */}
+                <div className="relative group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/20 to-amber-500/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    <div className="relative bg-white rounded-2xl border border-slate-200/60 p-6 hover:shadow-2xl hover:shadow-slate-200/50 hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+                        <div className="absolute -right-8 -top-8 w-32 h-32 bg-gradient-to-br from-yellow-500 to-amber-500 opacity-10 rounded-full blur-2xl" />
+                        <div className="relative flex items-start justify-between">
+                            <div className="flex-1">
+                                <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">Featured</p>
+                                <p className="text-3xl font-bold text-slate-800 mb-1">{stats.featured}</p>
+                                <p className="text-xs text-slate-400 mb-2">Highlighted</p>
+                            </div>
+                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-yellow-500 to-amber-500 flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                                <FiStar className="text-2xl text-white" />
+                            </div>
                         </div>
-                        <span className="text-2xl font-black text-slate-800">{stats.featured}</span>
                     </div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Featured</p>
                 </div>
             </div>
 
             {/* Filters Bar */}
-            <div className="flex flex-col lg:flex-row lg:items-center gap-4 bg-white p-5 rounded-[2rem] border border-slate-200 shadow-sm">
+            <div className="flex flex-col lg:flex-row lg:items-center gap-4 bg-white p-4 rounded-2xl border border-slate-200/60 shadow-sm">
                 <div className="relative flex-1">
-                    <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
-                        placeholder="Search software by title..."
+                        placeholder="Search software..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-slate-50 border border-slate-100 focus:bg-white focus:border-violet-300 focus:ring-4 focus:ring-violet-500/10 outline-none text-sm font-medium transition-all"
+                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-violet-300 focus:ring-2 focus:ring-violet-100 outline-none text-sm transition-all"
                     />
                 </div>
                 <div className="flex items-center gap-2 overflow-x-auto">
@@ -209,8 +248,8 @@ const SoftwarePage = () => {
                         <button
                             key={status}
                             onClick={() => setStatusFilter(status)}
-                            className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${statusFilter === status
-                                ? 'bg-slate-800 text-white shadow-lg shadow-slate-800/20'
+                            className={`px-3 py-2 rounded-lg text-xs font-semibold uppercase tracking-wide transition-all whitespace-nowrap ${statusFilter === status
+                                ? 'bg-slate-800 text-white shadow-sm'
                                 : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                                 }`}
                         >
