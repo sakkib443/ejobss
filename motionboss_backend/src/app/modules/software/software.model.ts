@@ -87,6 +87,11 @@ const softwareSchema = new Schema<ISoftware>(
         reviewCount: { type: Number, default: 0 },
         salesCount: { type: Number, default: 0 },
 
+        // ==================== Analytics & Engagement ====================
+        viewCount: { type: Number, default: 0 },
+        likeCount: { type: Number, default: 0 },
+        likedBy: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+
         // ==================== Details ====================
         version: {
             type: String,
@@ -144,6 +149,8 @@ softwareSchema.index({ status: 1, isDeleted: 1 });
 softwareSchema.index({ price: 1 });
 softwareSchema.index({ rating: -1 });
 softwareSchema.index({ salesCount: -1 });
+softwareSchema.index({ viewCount: -1 });
+softwareSchema.index({ likeCount: -1 });
 softwareSchema.index({ title: 'text', description: 'text' });
 
 // ==================== Pre-find Middleware ====================

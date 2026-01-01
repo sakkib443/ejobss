@@ -321,6 +321,27 @@ const updateCourseStats = async (
     await Course.findByIdAndUpdate(courseId, { $set: stats });
 };
 
+/**
+ * Get full course content (modules + lessons) for an enrolled student
+ */
+const getCourseContentForStudent = async (courseId: string) => {
+    const course = await Course.findById(courseId)
+        .populate({
+            path: 'modules',
+            options: { sort: { order: 1 } }
+        })
+        .populate({
+            path: 'lessons',
+            options: { sort: { order: 1 } }
+        });
+
+    if (!course) {
+        throw new AppError(404, 'Course not found');
+    }
+
+    return course;
+};
+
 export const CourseService = {
     createCourse,
     getAllCourses,
@@ -332,4 +353,5 @@ export const CourseService = {
     getPopularCourses,
     getCoursesByCategory,
     updateCourseStats,
+    getCourseContentForStudent,
 };

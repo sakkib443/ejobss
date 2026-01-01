@@ -354,6 +354,37 @@ const WebsiteService = {
             salesCount: website.salesCount || 0,
         };
     },
+
+    // ==================== TOGGLE LIKE ====================
+    async toggleLike(id: string, userId: string): Promise<{ isLiked: boolean; likeCount: number }> {
+        const website = await Website.findById(id);
+
+        if (!website) {
+            throw new AppError(404, 'Website not found');
+        }
+
+        const userObjectId = new Types.ObjectId(userId);
+        const likedBy = website.likedBy || [];
+        const isAlreadyLiked = likedBy.some(likedUserId => likedUserId.equals(userObjectId));
+
+        if (isAlreadyLiked) {
+            // Unlike
+            await Website.findByIdAndUpdate(id, {
+                $pull: { likedBy: userObjectId },
+                $inc: { likeCount: -1 }
+            });
+            const updated = await Website.findById(id).select('likeCount');
+            return { isLiked: false, likeCount: Math.max(0, updated?.likeCount || 0) };
+        } else {
+            // Like
+            await Website.findByIdAndUpdate(id, {
+                $addToSet: { likedBy: userObjectId },
+                $inc: { likeCount: 1 }
+            });
+            const updated = await Website.findById(id).select('likeCount');
+            return { isLiked: true, likeCount: updated?.likeCount || 0 };
+        }
+    },
 };
 
 export default WebsiteService;

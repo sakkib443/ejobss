@@ -69,11 +69,18 @@ const WebsiteController = {
     getWebsiteById: catchAsync(async (req: Request, res: Response) => {
         const website = await WebsiteService.getWebsiteById(req.params.id);
 
+        // Increment view count
+        await WebsiteService.incrementViewCount(req.params.id);
+
+        // Check if user has liked
+        const userId = req.user?._id?.toString();
+        const isLiked = userId && website.likedBy?.some(id => id.toString() === userId);
+
         sendResponse(res, {
             statusCode: 200,
             success: true,
             message: 'Website fetched successfully',
-            data: website,
+            data: { ...JSON.parse(JSON.stringify(website)), isLiked: !!isLiked },
         });
     }),
 
@@ -216,6 +223,19 @@ const WebsiteController = {
             statusCode: 200,
             success: true,
             message: 'Website stats fetched',
+            data: result,
+        });
+    }),
+
+    // ==================== TOGGLE LIKE ====================
+    toggleLike: catchAsync(async (req: Request, res: Response) => {
+        const userId = req.user!._id.toString();
+        const result = await WebsiteService.toggleLike(req.params.id, userId);
+
+        sendResponse(res, {
+            statusCode: 200,
+            success: true,
+            message: result.isLiked ? 'Website liked' : 'Website unliked',
             data: result,
         });
     }),

@@ -19,7 +19,7 @@ import { User } from '../user/user.model';
 // ==================== INTERFACE ====================
 export interface IOrderItem {
     product: Types.ObjectId;
-    productType: 'website' | 'software';
+    productType: 'website' | 'software' | 'course';
     title: string;
     price: number;
     image?: string;
@@ -47,7 +47,7 @@ const orderSchema = new Schema<IOrder>(
         items: [
             {
                 product: { type: Schema.Types.ObjectId, required: true },
-                productType: { type: String, enum: ['website', 'software'], required: true },
+                productType: { type: String, enum: ['website', 'software', 'course'], required: true },
                 title: { type: String, required: true },
                 price: { type: Number, required: true },
                 image: { type: String },
@@ -78,7 +78,7 @@ export const createOrderValidation = z.object({
         items: z.array(
             z.object({
                 productId: z.string(),
-                productType: z.enum(['website', 'software']),
+                productType: z.enum(['website', 'software', 'course']),
                 title: z.string(),
                 price: z.number(),
                 image: z.string().optional(),
@@ -97,10 +97,67 @@ const generateOrderNumber = (): string => {
     return `EW-${timestamp}-${random}`;
 };
 
+const deliverOrderItems = async (order: any, rawItems?: any[]): Promise<void> => {
+    const userId = order.user.toString();
+    const itemsToDeliver = rawItems || order.items;
+
+    for (const item of itemsToDeliver) {
+        try {
+            const productId = item.productId || item.product;
+
+            if (item.productType === 'course') {
+                const { EnrollmentService } = await import('../enrollment/enrollment.service');
+                try {
+                    await EnrollmentService.enrollStudent(userId, productId, order._id!.toString());
+                    console.log(`Enrolled user ${userId} in course ${productId}`);
+                } catch (enrollError: any) {
+                    // Ignore "already enrolled" errors but log others
+                    if (enrollError.statusCode !== 400) {
+                        console.error(`Enrollment failed for ${productId}:`, enrollError);
+                    }
+                }
+            } else {
+                await DownloadService.createDownloadRecord(
+                    userId,
+                    order._id!.toString(),
+                    productId,
+                    item.productType,
+                    item.title
+                );
+            }
+        } catch (error) {
+            console.error(`Failed to deliver ${item.title}:`, error);
+        }
+    }
+
+    // Send invoice email
+    try {
+        const user = await User.findById(userId);
+        if (user) {
+            EmailService.sendInvoiceEmail(user.email, {
+                firstName: user.firstName,
+                email: user.email,
+                orderId: order._id!.toString(),
+                items: itemsToDeliver.map((item: any) => ({
+                    title: item.title,
+                    price: item.price,
+                    productType: item.productType
+                })),
+                totalAmount: order.totalAmount,
+                paymentMethod: order.paymentMethod,
+                transactionId: order.transactionId,
+                orderDate: order.orderDate
+            }).catch(err => console.error('Invoice email error:', err));
+        }
+    } catch (error) {
+        console.error('Failed to send invoice email:', error);
+    }
+};
+
 const OrderService = {
     async createOrder(
         userId: string,
-        items: Array<{ productId: string; productType: 'website' | 'software'; title: string; price: number; image?: string }>,
+        items: Array<{ productId: string; productType: 'website' | 'software' | 'course'; title: string; price: number; image?: string }>,
         paymentMethod: string = 'stripe',
         paymentStatus: 'pending' | 'completed' | 'failed' | 'refunded' = 'pending'
     ): Promise<IOrder> {
@@ -126,44 +183,9 @@ const OrderService = {
             orderDate: new Date(),
         });
 
-        // If payment is completed, create download records for all items
+        // If payment is completed, handle delivery (downloads or enrollments)
         if (paymentStatus === 'completed') {
-            for (const item of items) {
-                try {
-                    await DownloadService.createDownloadRecord(
-                        userId,
-                        order._id!.toString(),
-                        item.productId,
-                        item.productType,
-                        item.title
-                    );
-                } catch (error) {
-                    console.error(`Failed to create download record for ${item.title}:`, error);
-                }
-            }
-
-            // Send invoice email
-            try {
-                const user = await User.findById(userId);
-                if (user) {
-                    EmailService.sendInvoiceEmail(user.email, {
-                        firstName: user.firstName,
-                        email: user.email,
-                        orderId: order._id!.toString(),
-                        items: items.map(item => ({
-                            title: item.title,
-                            price: item.price,
-                            productType: item.productType
-                        })),
-                        totalAmount,
-                        paymentMethod,
-                        transactionId: order.transactionId,
-                        orderDate: order.orderDate
-                    }).catch(err => console.error('Invoice email error:', err));
-                }
-            } catch (error) {
-                console.error('Failed to send invoice email:', error);
-            }
+            await deliverOrderItems(order, items);
         }
 
         return order;
@@ -191,6 +213,12 @@ const OrderService = {
             { new: true }
         );
         if (!order) throw new AppError(404, 'Order not found');
+
+        // If transitioning to completed, trigger delivery
+        if (status === 'completed') {
+            await deliverOrderItems(order);
+        }
+
         return order;
     },
 

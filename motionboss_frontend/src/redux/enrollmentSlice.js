@@ -14,9 +14,14 @@ export const fetchMyEnrollments = createAsyncThunk(
             });
 
             const data = await response.json();
-            if (!response.ok) return rejectWithValue(data.message || 'Failed to fetch enrollments');
+            if (!response.ok) {
+                console.error('Enrollment fetch error:', data.message);
+                return rejectWithValue(data.message || 'Failed to fetch enrollments');
+            }
+            console.log('Enrollments fetched successfully:', data.data?.length, 'found');
             return data.data;
         } catch (error) {
+            console.error('Enrollment fetch exception:', error.message);
             return rejectWithValue(error.message);
         }
     }

@@ -40,6 +40,7 @@ export interface IWebsite {
     salesCount: number;
     viewCount: number;               // Total views
     likeCount: number;               // Total likes/loves
+    likedBy?: Types.ObjectId[];       // Users who liked
 
     // Details
     features: string[];              // Feature list

@@ -98,8 +98,8 @@ router.delete(
 // DYNAMIC ID ROUTES (Must be LAST to avoid matching specific routes)
 // ===================================================================
 
-// GET /api/websites/:id - Get by ID
-router.get('/:id', WebsiteController.getWebsiteById);
+// GET /api/websites/:id - Get by ID (with optional auth for like status)
+router.get('/:id', optionalAuth, WebsiteController.getWebsiteById);
 
 // GET /api/websites/:id/stats - Get stats
 router.get('/:id/stats', WebsiteController.getStats);
@@ -112,6 +112,9 @@ router.post('/:id/like', WebsiteController.likeWebsite);
 
 // POST /api/websites/:id/unlike - Unlike a website
 router.post('/:id/unlike', WebsiteController.unlikeWebsite);
+
+// POST /api/websites/:id/toggle-like - Toggle like (authenticated)
+router.post('/:id/toggle-like', authMiddleware, WebsiteController.toggleLike);
 
 export const WebsiteRoutes = router;
 

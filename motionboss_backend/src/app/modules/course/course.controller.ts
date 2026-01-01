@@ -7,6 +7,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { CourseService } from './course.service';
 import { ICourseFilters } from './course.interface';
+import AppError from '../../utils/AppError';
+import { Enrollment } from '../enrollment/enrollment.model';
 
 /**
  * Create a new course
@@ -227,6 +229,41 @@ const getCoursesByCategory = async (req: Request, res: Response, next: NextFunct
     }
 };
 
+/**
+ * Get full course content for enrolled student
+ * GET /api/courses/:id/content
+ */
+// GET /api/courses/:id/content (Private - Enrolled Students Only)
+const getCourseContentForStudent = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user?._id;
+
+        // Verify enrollment
+        const enrolled = await Enrollment.findOne({
+            student: userId,
+            course: id,
+            status: { $in: ['active', 'completed'] }
+        });
+
+        if (!enrolled) {
+            throw new AppError(403, 'You are not enrolled in this course');
+        }
+
+        const course = await CourseService.getCourseContentForStudent(id);
+
+        res.status(200).json({
+            success: true,
+            message: 'Course content retrieved successfully',
+            data: course,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+
 export const CourseController = {
     createCourse,
     getAllCourses,
@@ -237,4 +274,5 @@ export const CourseController = {
     getFeaturedCourses,
     getPopularCourses,
     getCoursesByCategory,
+    getCourseContentForStudent,
 };

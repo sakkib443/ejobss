@@ -51,6 +51,15 @@ router.get(
     CourseController.getCourseById
 );
 
+// ==================== Student Routes ====================
+
+// Get full course content for enrolled student
+router.get(
+    '/:id/content',
+    authMiddleware,
+    CourseController.getCourseContentForStudent
+);
+
 // ==================== Admin Only Routes ====================
 // শুধুমাত্র Admin এই routes access করতে পারবে
 

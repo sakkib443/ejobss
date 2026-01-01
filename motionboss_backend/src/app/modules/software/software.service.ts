@@ -271,6 +271,38 @@ const SoftwareService = {
         await Software.findByIdAndUpdate(id, { rating: newRating, reviewCount });
     },
 
+    // ==================== INCREMENT VIEW COUNT ====================
+    async incrementViewCount(id: string): Promise<void> {
+        await Software.findByIdAndUpdate(id, { $inc: { viewCount: 1 } });
+    },
+
+    // ==================== TOGGLE LIKE ====================
+    async toggleLike(id: string, userId: string): Promise<{ liked: boolean; likeCount: number }> {
+        const software = await Software.findById(id);
+        if (!software) {
+            throw new AppError(404, 'Software not found');
+        }
+
+        const userObjectId = new Types.ObjectId(userId);
+        const isLiked = software.likedBy?.some((likedUserId) => likedUserId.equals(userObjectId));
+
+        if (isLiked) {
+            // Unlike
+            await Software.findByIdAndUpdate(id, {
+                $pull: { likedBy: userObjectId },
+                $inc: { likeCount: -1 },
+            });
+            return { liked: false, likeCount: Math.max(0, (software.likeCount || 0) - 1) };
+        } else {
+            // Like
+            await Software.findByIdAndUpdate(id, {
+                $addToSet: { likedBy: userObjectId },
+                $inc: { likeCount: 1 },
+            });
+            return { liked: true, likeCount: (software.likeCount || 0) + 1 };
+        }
+    },
+
     // ==================== GET ADMIN SOFTWARE (All with status filter) ====================
     async getAdminSoftware(filters: ISoftwareFilters, query: ISoftwareQuery): Promise<IPaginatedResult<ISoftware>> {
         const { searchTerm, status, category, platform, softwareType } = filters;

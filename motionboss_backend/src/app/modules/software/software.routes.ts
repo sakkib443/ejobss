@@ -98,6 +98,13 @@ router.delete(
 // DYNAMIC ID ROUTES (Must be LAST to avoid matching specific routes)
 // ===================================================================
 
+// POST /api/software/:id/like - Toggle like (requires auth)
+router.post(
+    '/:id/like',
+    authMiddleware,
+    SoftwareController.toggleLike
+);
+
 // GET /api/software/:id - Get by ID
 router.get('/:id', SoftwareController.getSoftwareById);
 

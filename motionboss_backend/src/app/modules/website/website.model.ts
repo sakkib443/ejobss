@@ -63,6 +63,7 @@ const websiteSchema = new Schema<IWebsite>(
         salesCount: { type: Number, default: 0 },
         viewCount: { type: Number, default: 0 },
         likeCount: { type: Number, default: 0 },
+        likedBy: [{ type: Schema.Types.ObjectId, ref: 'User' }],
 
         // ==================== Details ====================
         features: [{ type: String }],

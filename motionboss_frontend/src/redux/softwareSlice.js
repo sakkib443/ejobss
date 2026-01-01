@@ -26,6 +26,25 @@ export const fetchSoftwareById = createAsyncThunk(
     }
 );
 
+export const toggleSoftwareLike = createAsyncThunk(
+    "software/toggleLike",
+    async (id, { getState }) => {
+        const token = localStorage.getItem("token");
+        if (!token) throw new Error("Please login to like");
+
+        const response = await fetch(`${API_BASE_URL}/software/${id}/like`, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json",
+            },
+        });
+        if (!response.ok) throw new Error("Failed to toggle like");
+        const result = await response.json();
+        return { id, ...result.data };
+    }
+);
+
 const softwareSlice = createSlice({
     name: "software",
     initialState: {
@@ -54,6 +73,13 @@ const softwareSlice = createSlice({
             .addCase(fetchSoftwareById.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.error.message;
+            })
+            // Toggle Like
+            .addCase(toggleSoftwareLike.fulfilled, (state, action) => {
+                if (state.singleSoftware && state.singleSoftware._id === action.payload.id) {
+                    state.singleSoftware.likeCount = action.payload.likeCount;
+                    state.singleSoftware.isLiked = action.payload.liked;
+                }
             });
     },
 });

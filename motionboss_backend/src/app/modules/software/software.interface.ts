@@ -91,6 +91,11 @@ export interface ISoftware {
     reviewCount: number;
     salesCount: number;
 
+    // Analytics & Engagement
+    viewCount: number;               // Page view count
+    likeCount: number;               // Total likes
+    likedBy: Types.ObjectId[];       // Users who liked this software
+
     // Details
     version: string;                 // Software version (e.g., "1.0.0")
     features: string[];              // Feature list

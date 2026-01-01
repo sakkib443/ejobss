@@ -3,16 +3,46 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchSoftwareById, fetchSoftware } from "@/redux/softwareSlice";
+import { fetchSoftwareById, fetchSoftware, toggleSoftwareLike } from "@/redux/softwareSlice";
 import { useLanguage } from "@/context/LanguageContext";
 import { addToCart } from "@/redux/cartSlice";
 import {
-    LuDownload, LuExternalLink, LuBadgeCheck, LuCpu, LuClock,
-    LuShieldCheck, LuShoppingCart, LuStar, LuShare2, LuCalendar, LuLayers, LuPlus, LuArrowRight,
-    LuLayoutGrid, LuInfo, LuMessageSquare, LuChevronRight
+    LuDownload, LuExternalLink, LuClock, LuTrophy,
+    LuLayoutGrid, LuEye, LuPackage, LuShieldCheck,
+    LuSettings, LuFileCode, LuGlobe, LuCheck, LuSparkles, LuCode, LuZap
 } from "react-icons/lu";
+import { FaHeart, FaRegHeart, FaStar, FaArrowRight } from "react-icons/fa";
+import { MdVerified, MdOutlineMenuBook, MdPlayCircleOutline } from "react-icons/md";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+
+// Animated Counter - smoother animation
+const AnimatedCounter = ({ value }) => {
+    const [count, setCount] = useState(0);
+    useEffect(() => {
+        if (value === 0) { setCount(0); return; }
+        const duration = 1200;
+        const steps = 50;
+        const increment = value / steps;
+        let current = 0;
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= value) {
+                setCount(value);
+                clearInterval(timer);
+            } else {
+                setCount(Math.floor(current));
+            }
+        }, duration / steps);
+        return () => clearInterval(timer);
+    }, [value]);
+
+    const formatNumber = (num) => {
+        if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+        return num.toLocaleString();
+    };
+    return <span className="tabular-nums">{formatNumber(count)}</span>;
+};
 
 const SoftwareDetailsPage = () => {
     const { id } = useParams();
@@ -21,19 +51,18 @@ const SoftwareDetailsPage = () => {
     const { singleSoftware: software, softwareList = [], loading, error } = useSelector((state) => state.software || {});
     const { language } = useLanguage();
     const [activeTab, setActiveTab] = useState("overview");
-    const [recommended, setRecommended] = useState([]);
+    const [popularSoftware, setPopularSoftware] = useState([]);
+    const [isLiking, setIsLiking] = useState(false);
     const bengaliClass = language === "bn" ? "hind-siliguri" : "";
 
     useEffect(() => {
-        if (id) {
-            dispatch(fetchSoftwareById(id));
-        }
+        if (id) dispatch(fetchSoftwareById(id));
         dispatch(fetchSoftware());
     }, [id, dispatch]);
 
     useEffect(() => {
         if (softwareList.length > 0 && id) {
-            setRecommended(softwareList.filter(item => item._id !== id).slice(0, 4));
+            setPopularSoftware(softwareList.filter(item => item._id !== id).slice(0, 3));
         }
     }, [softwareList, id]);
 
@@ -43,7 +72,7 @@ const SoftwareDetailsPage = () => {
             id: software._id,
             title: software.title,
             price: software.price,
-            image: software.images?.[0] || software.image || "/images/placeholder.png",
+            image: software.images?.[0] || "/images/placeholder.png",
             type: 'software'
         }));
     };
@@ -53,371 +82,496 @@ const SoftwareDetailsPage = () => {
         router.push('/cart');
     };
 
+    const handleToggleLike = async () => {
+        if (isLiking) return;
+        setIsLiking(true);
+        try {
+            await dispatch(toggleSoftwareLike(id)).unwrap();
+        } catch (err) {
+            console.error("Like error:", err);
+        } finally {
+            setIsLiking(false);
+        }
+    };
+
+    // Loading State - Professional skeleton
     if (loading) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen bg-white">
-                <div className="relative w-20 h-20">
-                    <div className="absolute inset-0 border-4 border-[#41bfb8]/20 rounded-full"></div>
-                    <div className="absolute inset-0 border-4 border-[#41bfb8] border-t-transparent rounded-full animate-spin"></div>
+            <div className="flex items-center justify-center min-h-[60vh] bg-gradient-to-br from-gray-50 to-white">
+                <div className="text-center">
+                    <div className="w-12 h-12 border-3 border-gray-200 border-t-teal-500 rounded-full animate-spin mx-auto"></div>
+                    <p className="mt-4 text-gray-400 text-sm font-medium tracking-wide">Loading software...</p>
                 </div>
-                <p className="mt-6 text-gray-400 font-black uppercase tracking-[0.3em] text-[10px] animate-pulse">Synchronizing Core...</p>
             </div>
         );
     }
 
+    // Error State - Professional design
     if (error || !software) {
         return (
-            <div className="text-center py-20 min-h-screen flex flex-col items-center justify-center bg-slate-50">
-                <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-xl mb-8">
-                    <LuCpu className="text-gray-200 text-4xl" />
+            <div className="min-h-[70vh] flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-white px-4">
+                <div className="w-20 h-20 bg-gray-100 rounded-md flex items-center justify-center mb-6">
+                    <LuCode className="text-gray-300 text-3xl" />
                 </div>
-                <h3 className="text-3xl font-bold text-gray-900 mb-4 outfit">System Sync Failure</h3>
-                <p className="text-gray-500 mb-8 max-w-sm mx-auto font-medium">{error || "The requested software interface could not be initialized."}</p>
+                <h3 className="text-xl font-bold text-gray-800 outfit mb-2">Software Not Found</h3>
+                <p className="text-gray-500 poppins text-sm mb-6 text-center max-w-sm">The software you're looking for doesn't exist or has been removed.</p>
                 <button
                     onClick={() => router.push('/software')}
-                    className="px-10 py-4 bg-gray-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-[#41bfb8] transition-all shadow-xl"
+                    className="px-6 py-2.5 bg-gray-900 text-white text-sm font-semibold rounded-md hover:bg-teal-600 transition-colors"
                 >
-                    Back to Marketplace
+                    Browse Software
                 </button>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-white relative">
-            {/* Advanced Atmosphere Background */}
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+        <div className="min-h-screen bg-[#FAFBFC]">
+            {/* Hero Section */}
+            <section className="relative overflow-hidden bg-gradient-to-br from-[#f0fffe] via-[#e8f9f8] to-[#f5f5ff] pt-12 pb-28 lg:pt-16 lg:pb-36">
+                {/* Background Effects - Subtle */}
+                <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-teal-400/10 to-transparent blur-3xl pointer-events-none"></div>
+                <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-amber-400/8 rounded-full blur-3xl pointer-events-none"></div>
+
+                {/* Floating Elements - Refined */}
                 <motion.div
-                    animate={{ y: [0, -30, 0], x: [0, 20, 0] }}
-                    transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute top-[-5%] right-[-5%] w-[800px] h-[800px] bg-[#41bfb8]/5 rounded-full blur-[120px]"
+                    animate={{ y: [0, -15, 0] }}
+                    transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute top-28 right-1/4 w-16 h-16 bg-gradient-to-br from-teal-400/20 to-cyan-400/10 rounded-md blur-sm pointer-events-none"
                 ></motion.div>
                 <motion.div
-                    animate={{ y: [0, 40, 0], x: [0, -20, 0] }}
-                    transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                    className="absolute top-[30%] left-[-10%] w-[600px] h-[600px] bg-[#F79952]/5 rounded-full blur-[100px]"
+                    animate={{ y: [0, 12, 0] }}
+                    transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                    className="absolute bottom-32 right-1/3 w-12 h-12 bg-gradient-to-br from-amber-400/15 to-orange-300/10 rounded-full blur-sm pointer-events-none"
                 ></motion.div>
-                <div className="absolute inset-0 bg-[linear-gradient(rgba(65,191,184,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(65,191,184,0.03)_1px,transparent_1px)] bg-[size:50px_50px]"></div>
-            </div>
 
-            {/* Product Hero */}
-            <section className="relative pt-36 pb-24 lg:pb-32 overflow-hidden">
-                <div className="container mx-auto px-4 lg:px-16 container-max-width-8xl">
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
+                {/* Grid Pattern - Lighter */}
+                <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.015)_1px,transparent_1px)] bg-[size:48px_48px] pointer-events-none"></div>
 
-                        {/* Left: Interactive Showcase */}
-                        <div className="lg:col-span-7 space-y-8">
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                className="group relative p-4 bg-white/40 backdrop-blur-3xl border border-white rounded-[3rem] shadow-2xl shadow-[#41bfb8]/10 overflow-hidden"
-                            >
-                                <img
-                                    src={software.images?.[0] || software.image || "/images/placeholder.png"}
-                                    alt={software.title}
-                                    className="w-full aspect-[16/10] object-cover rounded-[2.5rem] shadow-sm transform transition-transform duration-1000 group-hover:scale-[1.03]"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-gray-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-12">
-                                    <button className="px-8 py-3 bg-white/90 backdrop-blur text-gray-900 rounded-2xl font-black uppercase tracking-widest text-xs shadow-2xl flex items-center gap-2">
-                                        <LuLayers /> View All Screenshots
-                                    </button>
-                                </div>
-                            </motion.div>
-
-                            {/* Gallery Gird */}
-                            <div className="grid grid-cols-4 gap-6">
-                                {software.images?.slice(1, 5).map((img, idx) => (
-                                    <motion.div
-                                        key={idx}
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.1 * idx }}
-                                        className="group relative aspect-square bg-white rounded-[1.5rem] border border-gray-100 overflow-hidden cursor-pointer shadow-sm hover:border-[#41bfb8] transition-all"
-                                    >
-                                        <img src={img} alt="Shot" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                                    </motion.div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Right: Info Architecture */}
-                        <div className="lg:col-span-5 space-y-10 relative">
-                            <div className="space-y-6">
-                                <motion.div
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    className="inline-flex items-center gap-2.5 px-4 py-2 bg-[#41bfb8]/10 text-[#26a69a] rounded-xl text-xs font-black uppercase tracking-[0.2em] work"
-                                >
-                                    <LuCpu className="animate-pulse" size={14} /> {software.softwareType}
-                                </motion.div>
-                                <motion.h1
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.1 }}
-                                    className={`text-4xl lg:text-6xl font-black text-gray-900 outfit leading-[1] tracking-tighter ${bengaliClass}`}
-                                >
-                                    {software.title}
-                                </motion.h1>
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: 0.2 }}
-                                    className="flex flex-wrap items-center gap-8"
-                                >
-                                    <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl">
-                                        <div className="flex text-amber-400">
-                                            {[1, 2, 3, 4, 5].map((s) => <LuStar key={s} size={14} className="fill-current" />)}
-                                        </div>
-                                        <span className="font-extrabold text-gray-900 text-sm outfit">{software.rating || '5.0'}</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-2.5 h-2.5 bg-[#41bfb8] rounded-full animate-ping"></div>
-                                        <span className="text-sm font-black text-[#41bfb8] uppercase tracking-widest work">{software.salesCount || '1.2k'}+ Active Licenses</span>
-                                    </div>
-                                </motion.div>
-                            </div>
-
-                            {/* Sticky Price Hub */}
-                            <div className="sticky top-24">
-                                <motion.div
-                                    initial={{ opacity: 0, y: 30 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.3 }}
-                                    className="relative group"
-                                >
-                                    <div className="absolute -inset-1 bg-gradient-to-r from-[#41bfb8] to-[#F79952] rounded-[3rem] blur-xl opacity-10 group-hover:opacity-20 transition-opacity duration-1000"></div>
-                                    <div className="relative bg-white/70 backdrop-blur-3xl p-10 rounded-[3rem] border border-white shadow-2xl space-y-8">
-                                        <div className="flex justify-between items-end">
-                                            <div>
-                                                <div className="flex items-end gap-3 mb-1">
-                                                    <span className="text-5xl font-black text-gray-900 outfit tracking-tighter">৳{software.price?.toLocaleString()}</span>
-                                                    {software.offerPrice && (
-                                                        <span className="text-xl text-gray-400 line-through font-bold pb-1">৳{software.offerPrice.toLocaleString()}</span>
-                                                    )}
-                                                </div>
-                                                <p className="text-[10px] font-black text-[#41bfb8] uppercase tracking-[0.3em] work">Unlimited Access License</p>
-                                            </div>
-                                            <div className="text-right pb-1">
-                                                <div className="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center text-[#41bfb8] mx-auto mb-1">
-                                                    <LuShieldCheck size={20} />
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-4">
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                <button
-                                                    onClick={handleBuyNow}
-                                                    className="group relative flex items-center justify-center gap-3 py-6 bg-gradient-to-r from-[#41bfb8] to-[#26a69a] text-white rounded-[1.5rem] font-black uppercase tracking-widest text-xs shadow-xl shadow-[#41bfb8]/20 transition-all active:scale-[0.98] overflow-hidden"
-                                                >
-                                                    <LuArrowRight className="group-hover:translate-x-1 transition-transform" />
-                                                    <span>Instant Deploy</span>
-                                                    <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                                                </button>
-                                                <button
-                                                    onClick={handleAddToCart}
-                                                    className="group flex items-center justify-center gap-3 py-6 bg-gray-900 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-xs shadow-xl shadow-gray-900/10 transition-all hover:bg-black active:scale-[0.98]"
-                                                >
-                                                    <LuPlus size={16} /> Add to Core
-                                                </button>
-                                            </div>
-                                            {software.previewUrl && (
-                                                <a
-                                                    href={software.previewUrl}
-                                                    target="_blank"
-                                                    className="w-full flex items-center justify-center gap-3 py-5 bg-white border-2 border-slate-100 text-gray-800 rounded-[1.5rem] font-black uppercase tracking-widest text-xs hover:border-[#41bfb8] hover:text-[#41bfb8] transition-all"
-                                                >
-                                                    <LuExternalLink /> Operational Preview
-                                                </a>
-                                            )}
-                                        </div>
-
-                                        <div className="pt-8 border-t border-slate-100">
-                                            <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-6">What's in the box:</h4>
-                                            <ul className="space-y-4">
-                                                {[
-                                                    'Full Source Code Access',
-                                                    '12 Months Free Updates',
-                                                    'Deployment Documentation',
-                                                    'Community Support'
-                                                ].map((item, i) => (
-                                                    <li key={i} className="flex items-center gap-3 text-sm font-bold text-gray-700 work">
-                                                        <LuBadgeCheck className="text-[#41bfb8]" size={18} />
-                                                        {item}
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* Premium Tabbed Navigation */}
-            <section className="py-24 container mx-auto px-4 lg:px-16 relative z-10 border-t border-slate-50">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-20">
-                    <div className="lg:col-span-8">
-                        {/* Tabs Header */}
-                        <div className="flex gap-10 border-b border-slate-100 mb-12">
-                            {[
-                                { id: 'overview', label: 'System Overview', icon: LuInfo },
-                                { id: 'features', label: 'Technical Spec', icon: LuLayoutGrid },
-                                { id: 'support', label: 'License & Support', icon: LuShieldCheck }
-                            ].map((tab) => (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => setActiveTab(tab.id)}
-                                    className={`flex items-center gap-2.5 pb-6 text-xs font-black uppercase tracking-[0.2em] transition-all relative ${activeTab === tab.id ? 'text-[#41bfb8]' : 'text-gray-400 hover:text-gray-900'}`}
-                                >
-                                    <tab.icon size={16} />
-                                    {tab.label}
-                                    {activeTab === tab.id && (
-                                        <motion.div layoutId="activeTabSoftware" className="absolute bottom-0 left-0 right-0 h-1 bg-[#41bfb8] rounded-full" />
-                                    )}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* Tabs Content */}
-                        <AnimatePresence mode="wait">
-                            <motion.div
-                                key={activeTab}
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -20 }}
-                                transition={{ duration: 0.3 }}
-                            >
-                                {activeTab === 'overview' && (
-                                    <div className="space-y-12">
-                                        <div className="prose prose-xl max-w-none text-gray-600 work leading-relaxed font-medium">
-                                            {software.description}
-                                        </div>
-                                        {software.longDescription && (
-                                            <div className="p-10 bg-slate-50/50 rounded-[3rem] border border-slate-100 text-gray-700 work text-lg leading-relaxed shadow-inner">
-                                                {software.longDescription}
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-
-                                {activeTab === 'features' && (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        {software.features?.map((feature, idx) => (
-                                            <div key={idx} className="group flex items-center gap-5 p-8 bg-white border border-slate-100 rounded-[2rem] shadow-sm hover:shadow-2xl hover:border-[#41bfb8]/20 transition-all">
-                                                <div className="w-14 h-14 rounded-2xl bg-[#41bfb8]/10 text-[#41bfb8] flex items-center justify-center group-hover:scale-110 transition-transform">
-                                                    <LuBadgeCheck size={28} />
-                                                </div>
-                                                <span className="text-gray-800 font-extrabold text-base tracking-tight">{feature}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-
-                                {activeTab === 'support' && (
-                                    <div className="space-y-8">
-                                        <div className="bg-emerald-50/30 p-12 rounded-[3rem] border border-emerald-100/50 space-y-6">
-                                            <h3 className="text-2xl font-black text-emerald-800 outfit tracking-tighter uppercase">Deployment Promise</h3>
-                                            <p className="text-emerald-700 work font-medium text-lg leading-relaxed">
-                                                Our team provides full technical assistance for the initial deployment. Every license includes a guaranteed integrity check and 24/7 disaster recovery support for the first 30 days.
-                                            </p>
-                                        </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                            {software.requirements?.map((req, idx) => (
-                                                <div key={idx} className="flex items-start gap-4 p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                                                    <div className="w-2 h-2 bg-[#F79952] rounded-full mt-2 flex-shrink-0"></div>
-                                                    <span className="text-gray-600 work font-bold">{req}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </motion.div>
-                        </AnimatePresence>
-                    </div>
-
-                    {/* Sidebar: Registry Analysis */}
-                    <div className="lg:col-span-4 space-y-10">
+                <div className="container mx-auto px-4 lg:px-24 relative z-10">
+                    <div className="max-w-3xl">
+                        {/* Breadcrumb */}
                         <motion.div
-                            initial={{ opacity: 0, x: 20 }}
-                            whileInView={{ opacity: 1, x: 0 }}
-                            className="bg-gray-900 p-10 rounded-[3rem] shadow-2xl space-y-10 relative overflow-hidden"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="flex items-center gap-2 text-sm text-gray-500 mb-6"
                         >
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-[#41bfb8]/10 blur-3xl rounded-full"></div>
-                            <h3 className="text-xl font-black text-white outfit uppercase tracking-widest relative z-10">System Registry</h3>
-                            <div className="space-y-6 relative z-10">
-                                {[
-                                    { label: 'Core Version', val: software.version, type: 'badge' },
-                                    { label: 'Initial Release', val: new Date(software.publishDate || software.createdAt).toLocaleDateString() },
-                                    { label: 'Last Update', val: new Date(software.lastUpdate).toLocaleDateString() },
-                                    { label: 'Code Status', val: 'Verified Integrity', color: 'text-[#41bfb8]' }
-                                ].map((item, i) => (
-                                    <div key={i} className="flex justify-between items-center py-2 border-b border-white/5 last:border-0">
-                                        <span className="text-gray-500 text-[10px] font-black uppercase tracking-widest">{item.label}</span>
-                                        {item.type === 'badge' ? (
-                                            <span className="bg-[#41bfb8] text-white px-3 py-1 rounded-lg text-[10px] font-black tracking-widest">{item.val}</span>
-                                        ) : (
-                                            <span className={`text-sm font-extrabold outfit ${item.color || 'text-white'}`}>{item.val}</span>
-                                        )}
-                                    </div>
-                                ))}
+                            <Link href="/" className="hover:text-teal-600 transition-colors">Home</Link>
+                            <span>/</span>
+                            <Link href="/software" className="hover:text-teal-600 transition-colors">Software</Link>
+                            <span>/</span>
+                            <span className="text-gray-700 font-medium truncate max-w-[200px]">{software.title}</span>
+                        </motion.div>
+
+                        {/* Badges - Refined spacing */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="flex flex-wrap items-center gap-2 mb-5"
+                        >
+                            <span className="px-3 py-1 bg-gradient-to-r from-teal-500 to-teal-600 rounded text-white text-[11px] font-bold uppercase tracking-wider">
+                                {software.softwareType || 'Software'}
+                            </span>
+                            <span className="px-3 py-1 bg-white/90 border border-gray-200 rounded text-gray-600 text-[11px] font-bold uppercase tracking-wider">
+                                v{software.version || '1.0'}
+                            </span>
+                            {software.isFeatured && (
+                                <span className="px-3 py-1 bg-gradient-to-r from-amber-500 to-orange-500 rounded text-white text-[11px] font-bold uppercase tracking-wider flex items-center gap-1">
+                                    <LuSparkles size={10} /> Featured
+                                </span>
+                            )}
+                        </motion.div>
+
+                        {/* Title - Better typography */}
+                        <motion.h1
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.05 }}
+                            className="text-2xl sm:text-3xl lg:text-4xl font-bold outfit leading-[1.2] tracking-tight text-gray-900 mb-4"
+                        >
+                            {software.title}
+                        </motion.h1>
+
+                        {/* Description - Better readability */}
+                        <motion.p
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.1 }}
+                            className="text-[15px] lg:text-base text-gray-600 poppins leading-relaxed mb-6 max-w-2xl"
+                        >
+                            {software.description?.substring(0, 160)}...
+                        </motion.p>
+
+                        {/* Stats Row - Cleaner design */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.15 }}
+                            className="flex flex-wrap items-center gap-3 mb-5"
+                        >
+                            {/* Rating */}
+                            <div className="flex items-center gap-2 bg-white px-8 py-2.5 rounded-md border border-gray-200">
+                                <div className="flex text-amber-400 gap-0.5">
+                                    {[1, 2, 3, 4, 5].map((s) => <FaStar key={s} size={12} />)}
+                                </div>
+                                <span className="font-bold outfit text-gray-900">{software.rating || '5.0'}</span>
+                                <span className="text-gray-400 text-xs">({software.reviewCount || 0})</span>
                             </div>
 
-                            <div className="space-y-4 pt-4 relative z-10">
-                                <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Environment Ecosystem</p>
-                                <div className="flex flex-wrap gap-2">
-                                    {software.technologies?.map((tech, idx) => (
-                                        <span key={idx} className="px-5 py-2 bg-white/5 border border-white/10 rounded-xl text-[10px] font-bold text-gray-400 uppercase tracking-widest group hover:bg-[#41bfb8]/20 hover:text-white transition-all cursor-default">
-                                            {tech}
-                                        </span>
-                                    ))}
+                            {/* Sales */}
+                            <div className="flex items-center gap-3 bg-white px-8 py-2.5 rounded-md border border-gray-200">
+                                <div className="w-7 h-7 rounded bg-emerald-50 flex items-center justify-center">
+                                    <LuPackage className="text-emerald-600" size={14} />
                                 </div>
+                                <span className="text-gray-700 font-medium text-sm">
+                                    <AnimatedCounter value={software.salesCount || 0} />
+                                    <span className="text-gray-400 ml-1">sold</span>
+                                </span>
                             </div>
+
+                            {/* Views */}
+                            <div className="flex items-center gap-3 bg-white px-8 py-2.5 rounded-md border border-gray-200">
+                                <div className="w-7 h-7 rounded bg-blue-50 flex items-center justify-center">
+                                    <LuEye className="text-blue-600" size={14} />
+                                </div>
+                                <span className="text-gray-700 font-medium text-sm">
+                                    <AnimatedCounter value={software.viewCount || 0} />
+                                    <span className="text-gray-400 ml-1">views</span>
+                                </span>
+                            </div>
+                        </motion.div>
+
+                        {/* Platform & Like - Better interaction states */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="flex items-center gap-3"
+                        >
+                            <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-md border border-gray-200">
+                                <span className="text-gray-400 text-sm">Platform</span>
+                                <span className="text-teal-600 font-semibold text-sm outfit">{software.platform}</span>
+                                <MdVerified className="text-blue-500" size={16} />
+                            </div>
+
+                            <button
+                                onClick={handleToggleLike}
+                                disabled={isLiking}
+                                className={`flex items-center gap-2 px-3 py-2 rounded-md border transition-all ${software.isLiked
+                                    ? 'bg-rose-50 border-rose-200 text-rose-600'
+                                    : 'bg-white border-gray-150 text-gray-600 hover:border-rose-200 hover:text-rose-500'
+                                    }`}
+                            >
+                                {software.isLiked ? <FaHeart size={14} /> : <FaRegHeart size={14} />}
+                                <span className="font-semibold text-sm">
+                                    <AnimatedCounter value={software.likeCount || 0} />
+                                </span>
+                            </button>
                         </motion.div>
                     </div>
                 </div>
             </section>
 
-            {/* Recommended Systems */}
-            <section className="py-24 bg-slate-50 border-y border-slate-100">
-                <div className="container mx-auto px-4 lg:px-16">
-                    <div className="flex items-center justify-between mb-16 px-4">
-                        <div className="space-y-2">
-                            <h2 className="text-3xl lg:text-5xl font-black text-gray-900 outfit tracking-tighter uppercase">Related Systems</h2>
-                            <p className="text-gray-500 work font-bold text-lg">Recommended for your ecosystem</p>
+            {/* Main Content */}
+            <section className="container mx-auto px-4 lg:px-24 pb-20 relative z-20">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+                    {/* Left Content */}
+                    <div className="lg:col-span-8 space-y-6">
+                        {/* Mobile Pricing Card */}
+                        <div className="lg:hidden bg-white rounded-md border border-gray-200 overflow-hidden">
+                            <img src={software.images?.[0] || "/images/placeholder.png"} alt={software.title} className="w-full aspect-video object-cover" />
+                            <div className="p-5">
+                                <div className="flex items-baseline gap-2 mb-4">
+                                    <span className="text-2xl font-bold text-gray-900 outfit">৳{software.price?.toLocaleString()}</span>
+                                    {software.offerPrice && <span className="text-gray-400 line-through text-sm">৳{software.offerPrice?.toLocaleString()}</span>}
+                                </div>
+                                <button onClick={handleBuyNow} className="w-full py-3 bg-teal-500 text-white font-semibold rounded-md active:scale-[0.98] transition-transform">
+                                    Buy Now
+                                </button>
+                            </div>
                         </div>
-                        <button
-                            onClick={() => router.push('/software')}
-                            className="hidden sm:flex items-center gap-3 px-8 py-4 bg-white border border-slate-200 rounded-2xl text-xs font-black uppercase tracking-widest hover:border-[#41bfb8] transition-all group"
-                        >
-                            Explore All <LuChevronRight className="group-hover:translate-x-1 transition-transform" />
-                        </button>
+
+                        {/* Tabs */}
+                        <div className="bg-white rounded-md border border-gray-200 overflow-hidden">
+                            {/* Tab Headers */}
+                            <div className="flex border-b border-gray-100 bg-gray-50/80">
+                                {[
+                                    { id: "overview", label: "Overview", icon: LuLayoutGrid },
+                                    { id: "features", label: "Features", icon: LuZap },
+                                    { id: "requirements", label: "Requirements", icon: LuSettings },
+                                ].map((tab) => (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setActiveTab(tab.id)}
+                                        className={`flex-1 flex items-center justify-center gap-2 py-4 text-sm font-semibold transition-all border-b-2 -mb-[1px] ${activeTab === tab.id
+                                            ? "text-teal-600 border-teal-500 bg-white"
+                                            : "text-gray-500 border-transparent hover:text-gray-700"
+                                            }`}
+                                    >
+                                        <tab.icon size={16} />
+                                        <span className="hidden sm:inline">{tab.label}</span>
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Tab Content */}
+                            <div className="p-6 lg:p-8">
+                                <AnimatePresence mode="wait">
+                                    {activeTab === "overview" && (
+                                        <motion.div
+                                            key="overview"
+                                            initial={{ opacity: 0, y: 12 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -12 }}
+                                            transition={{ duration: 0.2 }}
+                                            className="space-y-8"
+                                        >
+                                            {/* About */}
+                                            <div>
+                                                <h2 className="text-lg font-bold outfit text-gray-900 mb-4 flex items-center gap-2">
+                                                    <span className="w-1 h-5 bg-teal-500 rounded-full"></span>
+                                                    About This Software
+                                                </h2>
+                                                <p className="text-gray-600 poppins text-[15px] leading-7">
+                                                    {software.description}
+                                                </p>
+                                                {software.longDescription && (
+                                                    <div className="mt-4 p-4 bg-gray-50 rounded-md border border-gray-100 text-gray-600 poppins text-sm leading-6">
+                                                        {software.longDescription}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Tech Stack */}
+                                            {software.technologies?.length > 0 && (
+                                                <div>
+                                                    <h3 className="text-base font-bold outfit text-gray-900 mb-4 flex items-center gap-2">
+                                                        <span className="w-1 h-5 bg-amber-500 rounded-full"></span>
+                                                        Technologies Used
+                                                    </h3>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {software.technologies.map((tech, idx) => (
+                                                            <span
+                                                                key={idx}
+                                                                className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded text-gray-700 font-medium text-sm hover:border-teal-300 hover:bg-teal-50 transition-colors cursor-default"
+                                                            >
+                                                                {tech}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </motion.div>
+                                    )}
+
+                                    {activeTab === "features" && (
+                                        <motion.div
+                                            key="features"
+                                            initial={{ opacity: 0, y: 12 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -12 }}
+                                            transition={{ duration: 0.2 }}
+                                        >
+                                            <h2 className="text-lg font-bold outfit text-gray-900 mb-5 flex items-center gap-2">
+                                                <span className="w-1 h-5 bg-teal-500 rounded-full"></span>
+                                                Key Features
+                                            </h2>
+
+                                            {software.features?.length > 0 ? (
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                    {software.features.map((feature, idx) => (
+                                                        <div
+                                                            key={idx}
+                                                            className="flex items-start gap-3 p-4 bg-gray-50 border border-gray-100 rounded-md hover:border-teal-200 hover:bg-teal-50/30 transition-colors"
+                                                        >
+                                                            <div className="w-8 h-8 rounded bg-teal-100 flex items-center justify-center flex-shrink-0">
+                                                                <LuCheck className="text-teal-600" size={16} strokeWidth={3} />
+                                                            </div>
+                                                            <span className="text-gray-700 font-medium text-sm leading-relaxed pt-1">{feature}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="text-center py-12 bg-gray-50 rounded-md border border-dashed border-gray-200">
+                                                    <LuLayoutGrid className="mx-auto text-2xl text-gray-300 mb-2" />
+                                                    <p className="text-gray-400 text-sm">No features added yet</p>
+                                                </div>
+                                            )}
+                                        </motion.div>
+                                    )}
+
+                                    {activeTab === "requirements" && (
+                                        <motion.div
+                                            key="requirements"
+                                            initial={{ opacity: 0, y: 12 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -12 }}
+                                            transition={{ duration: 0.2 }}
+                                            className="space-y-8"
+                                        >
+                                            {/* Requirements */}
+                                            <div>
+                                                <h2 className="text-lg font-bold outfit text-gray-900 mb-5 flex items-center gap-2">
+                                                    <span className="w-1 h-5 bg-teal-500 rounded-full"></span>
+                                                    System Requirements
+                                                </h2>
+
+                                                {software.requirements?.length > 0 ? (
+                                                    <div className="space-y-2">
+                                                        {software.requirements.map((req, idx) => (
+                                                            <div
+                                                                key={idx}
+                                                                className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-100 rounded-md"
+                                                            >
+                                                                <span className="w-6 h-6 rounded bg-white border border-gray-200 flex items-center justify-center text-xs font-bold text-teal-600 outfit">
+                                                                    {idx + 1}
+                                                                </span>
+                                                                <span className="text-gray-700 text-sm">{req}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-center py-12 bg-gray-50 rounded-md border border-dashed border-gray-200">
+                                                        <LuSettings className="mx-auto text-2xl text-gray-300 mb-2" />
+                                                        <p className="text-gray-400 text-sm">No requirements specified</p>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Browser Compatibility */}
+                                            {software.browserCompatibility?.length > 0 && (
+                                                <div>
+                                                    <h3 className="text-base font-bold outfit text-gray-900 mb-4 flex items-center gap-2">
+                                                        <span className="w-1 h-5 bg-amber-500 rounded-full"></span>
+                                                        Browser Support
+                                                    </h3>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {software.browserCompatibility.map((browser, idx) => (
+                                                            <span
+                                                                key={idx}
+                                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-100 rounded text-emerald-700 font-medium text-sm"
+                                                            >
+                                                                <LuGlobe size={12} /> {browser}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                        {recommended.map((item) => (
-                            <Link
-                                key={item._id}
-                                href={`/software/${item._id}`}
-                                className="group bg-white rounded-[2.5rem] p-4 border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-500"
-                            >
-                                <div className="aspect-[4/3] rounded-[1.8rem] overflow-hidden mb-6 relative">
-                                    <img src={item.images?.[0] || item.image || "/images/placeholder.png"} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                                    <div className="absolute top-4 left-4 px-3 py-1.5 bg-white/90 backdrop-blur rounded-xl text-[9px] font-black uppercase tracking-widest">{item.softwareType}</div>
-                                </div>
-                                <div className="px-2 space-y-3">
-                                    <h3 className="text-lg font-black text-gray-900 outfit line-clamp-1 group-hover:text-[#41bfb8] transition-colors">{item.title}</h3>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-xl font-black text-gray-900 outfit tracking-tighter">৳{item.price?.toLocaleString()}</span>
-                                        <div className="flex items-center gap-1 text-amber-500 text-xs font-bold">
-                                            <LuStar className="fill-current" /> {item.rating || '5.0'}
-                                        </div>
+                    {/* Right Sidebar */}
+                    <div className="lg:col-span-4 hidden lg:block">
+                        <div className="sticky top-24 -mt-[28rem] space-y-5">
+                            {/* Pricing Card */}
+                            <div className="bg-white rounded-md border border-gray-200 shadow-sm overflow-hidden">
+                                {/* Image */}
+                                <div className="relative aspect-video group cursor-pointer overflow-hidden bg-gray-100">
+                                    <img
+                                        src={software.images?.[0] || "/images/placeholder.png"}
+                                        alt={software.title}
+                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                    />
+                                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <MdPlayCircleOutline className="text-white text-5xl" />
                                     </div>
                                 </div>
-                            </Link>
-                        ))}
+
+                                {/* Content */}
+                                <div className="p-5 space-y-5">
+                                    {/* Price */}
+                                    <div>
+                                        <div className="flex items-baseline gap-2">
+                                            <span className="text-2xl font-bold text-gray-900 outfit">৳{software.price?.toLocaleString()}</span>
+                                            {software.offerPrice && (
+                                                <span className="text-gray-400 line-through text-sm">৳{software.offerPrice?.toLocaleString()}</span>
+                                            )}
+                                        </div>
+                                        <p className="text-teal-600 text-xs font-semibold uppercase tracking-wide mt-1 poppins">Lifetime License</p>
+                                    </div>
+
+                                    {/* Buttons */}
+                                    <div className="space-y-2.5">
+                                        <button
+                                            onClick={handleBuyNow}
+                                            className="w-full py-3 bg-teal-500 hover:bg-teal-600 text-white font-semibold rounded-md transition-colors flex items-center justify-center gap-2"
+                                        >
+                                            Buy Now <FaArrowRight size={12} />
+                                        </button>
+                                        <button
+                                            onClick={handleAddToCart}
+                                            className="w-full py-2.5 bg-white border border-gray-200 text-gray-700 font-semibold rounded-md hover:border-teal-400 hover:text-teal-600 transition-colors"
+                                        >
+                                            Add to Cart
+                                        </button>
+                                        {software.previewUrl && (
+                                            <a
+                                                href={software.previewUrl}
+                                                target="_blank"
+                                                className="w-full py-2.5 bg-gray-50 border border-gray-200 text-gray-600 font-medium rounded-md hover:border-teal-400 hover:text-teal-600 transition-colors flex items-center justify-center gap-2 text-sm"
+                                            >
+                                                <LuExternalLink size={14} /> Live Preview
+                                            </a>
+                                        )}
+                                    </div>
+
+                                    {/* What's Included */}
+                                    <div className="pt-4 border-t border-gray-100">
+                                        <h5 className="text-sm font-bold text-gray-900 mb-3 outfit">What's Included</h5>
+                                        <ul className="space-y-2.5">
+                                            {[
+                                                { icon: LuFileCode, text: 'Full Source Code' },
+                                                { icon: LuDownload, text: 'Instant Download' },
+                                                { icon: LuClock, text: '6 Months Updates' },
+                                                { icon: LuShieldCheck, text: 'Premium Support' },
+                                            ].map((item, i) => (
+                                                <li key={i} className="flex items-center gap-2.5 text-gray-600 text-sm poppins">
+                                                    <item.icon className="text-teal-500" size={15} />
+                                                    <span>{item.text}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Recommended */}
+                            <div className="bg-white rounded-md p-5 border border-gray-200 shadow-sm">
+                                <h3 className="text-sm font-bold text-gray-900 mb-4 outfit">You May Also Like</h3>
+                                <div className="space-y-4">
+                                    {popularSoftware.map(item => (
+                                        <Link href={`/software/${item._id}`} key={item._id} className="flex gap-3 group">
+                                            <div className="w-14 h-14 rounded overflow-hidden flex-shrink-0 bg-gray-100 border border-gray-100">
+                                                <img
+                                                    src={item.images?.[0] || "/images/placeholder.png"}
+                                                    alt={item.title}
+                                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                                />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="text-sm font-semibold text-gray-900 group-hover:text-teal-600 transition-colors line-clamp-1 outfit">{item.title}</h4>
+                                                <div className="flex items-center gap-1 text-amber-400 mt-0.5">
+                                                    <FaStar size={10} />
+                                                    <span className="text-gray-600 text-xs font-medium poppins">{item.rating || '5.0'}</span>
+                                                </div>
+                                                <span className="text-teal-600 font-bold text-xs poppins">৳{item.price?.toLocaleString()}</span>
+                                            </div>
+                                        </Link>
+                                    ))}
+                                </div>
+                                <Link
+                                    href="/software"
+                                    className="flex items-center justify-center w-full py-2.5 mt-4 text-teal-600 font-semibold text-sm border border-dashed border-teal-200 rounded-md hover:bg-teal-50 transition-colors poppins"
+                                >
+                                    View All Software
+                                </Link>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>

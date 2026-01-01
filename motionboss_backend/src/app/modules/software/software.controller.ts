@@ -69,6 +69,9 @@ const SoftwareController = {
     getSoftwareById: catchAsync(async (req: Request, res: Response) => {
         const software = await SoftwareService.getSoftwareById(req.params.id);
 
+        // Increment view count (fire and forget)
+        SoftwareService.incrementViewCount(req.params.id).catch(() => { });
+
         sendResponse(res, {
             statusCode: 200,
             success: true,
@@ -170,6 +173,18 @@ const SoftwareController = {
             success: true,
             message: `Software ${status} successfully`,
             data: software,
+        });
+    }),
+
+    // ==================== TOGGLE LIKE ====================
+    toggleLike: catchAsync(async (req: Request, res: Response) => {
+        const result = await SoftwareService.toggleLike(req.params.id, req.user!.userId);
+
+        sendResponse(res, {
+            statusCode: 200,
+            success: true,
+            message: result.liked ? 'Software liked' : 'Software unliked',
+            data: result,
         });
     }),
 };

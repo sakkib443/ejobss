@@ -5,28 +5,25 @@ import { useSelector, useDispatch } from "react-redux";
 import { useSearchParams } from "next/navigation";
 import { fetchCoursesData } from "../../redux/CourseSlice";
 import CourseCard from "../sheard/CourseCard";
-import { LuLayoutGrid, LuList, LuArrowUpDown } from "react-icons/lu";
+import { LuLayoutGrid, LuList, LuArrowUpDown, LuLoader } from "react-icons/lu";
 import { HiOutlineSparkles } from "react-icons/hi2";
 
 // Loading Skeleton
 const CourseCardSkeleton = () => (
   <div className="w-full animate-pulse">
-    <div className="bg-white rounded-md border border-gray-100 overflow-hidden">
-      <div className="h-48 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_100%] animate-shimmer"></div>
-      <div className="p-4 space-y-3">
-        <div className="h-4 bg-gray-200 rounded w-1/3"></div>
-        <div className="h-6 bg-gray-200 rounded w-3/4"></div>
-        <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-        <div className="h-px bg-gray-100"></div>
-        <div className="flex justify-between">
-          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-          <div className="flex gap-1">
-            {[1, 2, 3, 4, 5].map(i => <div key={i} className="w-4 h-4 bg-gray-200 rounded-full"></div>)}
-          </div>
+    <div className="bg-white rounded-[2.5rem] border border-slate-100 overflow-hidden h-[500px]">
+      <div className="h-52 bg-slate-100"></div>
+      <div className="p-6 space-y-4">
+        <div className="h-4 bg-slate-100 rounded-full w-1/4"></div>
+        <div className="h-8 bg-slate-100 rounded-2xl w-3/4"></div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="h-10 bg-slate-100 rounded-xl"></div>
+          <div className="h-10 bg-slate-100 rounded-xl"></div>
         </div>
-        <div className="flex gap-2 pt-2">
-          <div className="flex-1 h-10 bg-gray-200 rounded-md"></div>
-          <div className="w-24 h-10 bg-gray-200 rounded-md"></div>
+        <div className="h-px bg-slate-50"></div>
+        <div className="flex justify-between items-center pt-4">
+          <div className="h-10 bg-slate-100 rounded-xl w-24"></div>
+          <div className="h-12 bg-slate-100 rounded-2xl w-32"></div>
         </div>
       </div>
     </div>
@@ -51,15 +48,16 @@ const RightCoursesDetalis = ({ searchQuery }) => {
 
   useEffect(() => {
     if (urlType && ["Online", "Offline", "Recorded"].includes(urlType)) {
-      setTimeout(() => setSelectedType(urlType), 0);
+      setSelectedType(urlType);
     } else {
-      setTimeout(() => setSelectedType("All"), 0);
+      setSelectedType("All");
     }
   }, [urlType]);
 
   // Get category name from ID
   const getCategoryName = (categoryId) => {
     if (!categoryId) return "";
+    if (typeof categoryId === "object" && categoryId.name) return categoryId.name;
     if (typeof categoryId === "string" && categoryId.length < 20) return categoryId;
     const category = categories.find(cat => cat._id === categoryId || cat.id === categoryId);
     return category?.name || "";
@@ -70,9 +68,10 @@ const RightCoursesDetalis = ({ searchQuery }) => {
     if (!course) return false;
 
     // Type filter
-    const typeMatch = selectedType === "All" || course?.type === selectedType;
+    const cType = course?.courseType || course?.type || "Recorded";
+    const typeMatch = selectedType === "All" || cType === selectedType;
 
-    // Category filter - check if course category matches any selected category
+    // Category filter
     let categoryMatch = true;
     if (selectedCategories.length > 0) {
       const courseCategoryName = getCategoryName(course.category);
@@ -92,44 +91,51 @@ const RightCoursesDetalis = ({ searchQuery }) => {
 
   // Sort courses
   const sortedCourses = [...filteredCourses].sort((a, b) => {
+    const aPrice = a.price || (parseInt(a.fee?.replace(/[^\d]/g, '') || 0));
+    const bPrice = b.price || (parseInt(b.fee?.replace(/[^\d]/g, '') || 0));
+    const aRating = a.averageRating || a.rating || 5;
+    const bRating = b.averageRating || b.rating || 5;
+    const aStudents = a.totalEnrollments || a.totalStudentsEnroll || 0;
+    const bStudents = b.totalEnrollments || b.totalStudentsEnroll || 0;
+
     switch (sortBy) {
       case "rating":
-        return (b.rating || 0) - (a.rating || 0);
+        return bRating - aRating;
       case "price-low":
-        return parseInt(a.fee?.replace(/[^\d]/g, '') || 0) - parseInt(b.fee?.replace(/[^\d]/g, '') || 0);
+        return aPrice - bPrice;
       case "price-high":
-        return parseInt(b.fee?.replace(/[^\d]/g, '') || 0) - parseInt(a.fee?.replace(/[^\d]/g, '') || 0);
+        return bPrice - aPrice;
       case "students":
-        return (b.totalStudentsEnroll || 0) - (a.totalStudentsEnroll || 0);
+        return bStudents - aStudents;
       default:
         return 0;
     }
   });
 
-  const typeButtons = ["All", "Online", "Offline"];
+  const typeButtons = ["All", "Online", "Offline", "Recorded"];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Top Bar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white border border-gray-200 rounded-md p-4 shadow-sm">
+      <div className="flex flex-col lg:flex-row items-center justify-between gap-6 bg-white border border-slate-100 rounded-[2rem] p-6 shadow-sm">
         {/* Left - Course Count & Type Filters */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-center gap-6 w-full lg:w-auto">
+          <div className="flex items-center gap-3 px-4 py-2 bg-[#41bfb8]/10 rounded-xl">
             <HiOutlineSparkles className="text-[#41bfb8]" />
-            <span className="text-gray-800 font-semibold outfit">
-              {sortedCourses.length} <span className="text-gray-500 font-normal">courses found</span>
+            <span className="text-slate-800 font-black outfit uppercase tracking-tight text-xs">
+              {sortedCourses.length} <span className="text-slate-400 font-bold ml-1">Courses</span>
             </span>
           </div>
 
           {/* Type Buttons */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 p-1.5 bg-slate-50 rounded-2xl overflow-x-auto w-full sm:w-auto no-scrollbar">
             {typeButtons.map((type) => (
               <button
                 key={type}
                 onClick={() => setSelectedType(type)}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium work transition-all duration-200 ${selectedType === type
-                  ? "bg-[#41bfb8] text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${selectedType === type
+                  ? "bg-slate-900 text-white shadow-lg shadow-slate-200"
+                  : "text-slate-400 hover:text-slate-600"
                   }`}
               >
                 {type}
@@ -139,36 +145,36 @@ const RightCoursesDetalis = ({ searchQuery }) => {
         </div>
 
         {/* Right - Sort & View Toggle */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4 w-full lg:w-auto justify-end">
           {/* Sort Dropdown */}
-          <div className="relative">
+          <div className="relative group">
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="appearance-none pl-8 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-700 work focus:outline-none focus:border-[#41bfb8] cursor-pointer"
+              className="appearance-none pl-10 pr-10 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-600 focus:outline-none focus:ring-4 focus:ring-[#41bfb8]/10 focus:border-[#41bfb8] cursor-pointer transition-all"
             >
-              <option value="default">Sort By</option>
+              <option value="default">Sort Options</option>
               <option value="rating">Top Rated</option>
               <option value="students">Most Popular</option>
               <option value="price-low">Price: Low to High</option>
               <option value="price-high">Price: High to Low</option>
             </select>
-            <LuArrowUpDown className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+            <LuArrowUpDown className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />
           </div>
 
           {/* View Toggle */}
-          <div className="hidden sm:flex items-center border border-gray-200 rounded-md overflow-hidden">
+          <div className="flex items-center p-1 bg-slate-50 rounded-2xl">
             <button
               onClick={() => setIsGridView(true)}
-              className={`p-2 ${isGridView ? 'bg-[#41bfb8] text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
+              className={`p-2.5 rounded-xl transition-all ${isGridView ? 'bg-white text-[#41bfb8] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
             >
-              <LuLayoutGrid className="text-lg" />
+              <LuLayoutGrid size={18} />
             </button>
             <button
               onClick={() => setIsGridView(false)}
-              className={`p-2 ${!isGridView ? 'bg-[#41bfb8] text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
+              className={`p-2.5 rounded-xl transition-all ${!isGridView ? 'bg-white text-[#41bfb8] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
             >
-              <LuList className="text-lg" />
+              <LuList size={18} />
             </button>
           </div>
         </div>
@@ -176,37 +182,26 @@ const RightCoursesDetalis = ({ searchQuery }) => {
 
       {/* Courses Grid */}
       {loading ? (
-        <div className={`grid gap-6 ${isGridView ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3' : 'grid-cols-1'}`}>
+        <div className={`grid gap-8 ${isGridView ? 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3' : 'grid-cols-1'}`}>
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <CourseCardSkeleton key={i} />
           ))}
         </div>
       ) : sortedCourses.length > 0 ? (
-        <div className={`grid gap-6 ${isGridView ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3' : 'grid-cols-1'}`}>
+        <div className={`grid gap-8 ${isGridView ? 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3' : 'grid-cols-1'}`}>
           {sortedCourses.map((course) => (
             <CourseCard key={course?._id || course?.id} course={course} />
           ))}
         </div>
       ) : (
-        <div className="text-center py-16 bg-white border border-gray-200 rounded-md">
-          <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <HiOutlineSparkles className="w-10 h-10 text-gray-400" />
+        <div className="text-center py-20 bg-white border border-slate-100 rounded-[3rem] shadow-sm">
+          <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <HiOutlineSparkles className="w-12 h-12 text-slate-300" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-800 outfit mb-2">No courses found</h3>
-          <p className="text-gray-500 work text-sm">Try adjusting your search or filter criteria</p>
+          <h3 className="text-2xl font-black text-slate-800 outfit uppercase tracking-tight mb-2">No courses matching</h3>
+          <p className="text-slate-400 font-bold text-sm uppercase tracking-widest">Try adjusting your filters or search query</p>
         </div>
       )}
-
-      {/* Shimmer Animation Style */}
-      <style jsx>{`
-        @keyframes shimmer {
-          0% { background-position: 200% 0; }
-          100% { background-position: -200% 0; }
-        }
-        .animate-shimmer {
-          animation: shimmer 1.5s infinite linear;
-        }
-      `}</style>
     </div>
   );
 };

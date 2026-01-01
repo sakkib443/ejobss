@@ -3,16 +3,46 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchWebsiteById, fetchWebsites } from "@/redux/websiteSlice";
+import { fetchWebsiteById, fetchWebsites, toggleWebsiteLike } from "@/redux/websiteSlice";
 import { useLanguage } from "@/context/LanguageContext";
 import { addToCart } from "@/redux/cartSlice";
 import {
-    LuExternalLink, LuBadgeCheck, LuGlobe, LuClock,
-    LuShieldCheck, LuShoppingCart, LuStar, LuShare2, LuCalendar, LuLayers, LuPlus, LuArrowRight,
-    LuLayoutGrid, LuInfo, LuSettings, LuChevronRight
+    LuDownload, LuExternalLink, LuClock, LuTrophy,
+    LuLayoutGrid, LuEye, LuPackage, LuShieldCheck,
+    LuSettings, LuFileCode, LuGlobe, LuCheck, LuSparkles, LuCode, LuZap, LuImage, LuX
 } from "react-icons/lu";
+import { FaHeart, FaRegHeart, FaStar, FaArrowRight } from "react-icons/fa";
+import { MdVerified, MdOutlineMenuBook, MdPlayCircleOutline } from "react-icons/md";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+
+// Animated Counter - smoother animation
+const AnimatedCounter = ({ value }) => {
+    const [count, setCount] = useState(0);
+    useEffect(() => {
+        if (value === 0) { setCount(0); return; }
+        const duration = 1200;
+        const steps = 50;
+        const increment = value / steps;
+        let current = 0;
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= value) {
+                setCount(value);
+                clearInterval(timer);
+            } else {
+                setCount(Math.floor(current));
+            }
+        }, duration / steps);
+        return () => clearInterval(timer);
+    }, [value]);
+
+    const formatNumber = (num) => {
+        if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+        return num.toLocaleString();
+    };
+    return <span className="tabular-nums">{formatNumber(count)}</span>;
+};
 
 const WebsiteDetailsPage = () => {
     const { id } = useParams();
@@ -21,19 +51,19 @@ const WebsiteDetailsPage = () => {
     const { singleWebsite: website, websiteList = [], loading, error } = useSelector((state) => state.websites || {});
     const { language } = useLanguage();
     const [activeTab, setActiveTab] = useState("overview");
-    const [recommended, setRecommended] = useState([]);
+    const [popularWebsites, setPopularWebsites] = useState([]);
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [isLiking, setIsLiking] = useState(false);
     const bengaliClass = language === "bn" ? "hind-siliguri" : "";
 
     useEffect(() => {
-        if (id) {
-            dispatch(fetchWebsiteById(id));
-        }
+        if (id) dispatch(fetchWebsiteById(id));
         dispatch(fetchWebsites());
     }, [id, dispatch]);
 
     useEffect(() => {
         if (websiteList.length > 0 && id) {
-            setRecommended(websiteList.filter(item => item._id !== id).slice(0, 4));
+            setPopularWebsites(websiteList.filter(item => item._id !== id).slice(0, 3));
         }
     }, [websiteList, id]);
 
@@ -53,381 +83,584 @@ const WebsiteDetailsPage = () => {
         router.push('/cart');
     };
 
+    const handleToggleLike = async () => {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            alert("Please login to like this website");
+            router.push('/login');
+            return;
+        }
+        if (isLiking) return;
+        setIsLiking(true);
+        try {
+            await dispatch(toggleWebsiteLike(id)).unwrap();
+        } catch (err) {
+            console.error("Like error:", err);
+            alert("Failed to like. Please try again.");
+        } finally {
+            setIsLiking(false);
+        }
+    };
+
+    // Loading State
     if (loading) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen bg-white">
-                <div className="relative w-20 h-20">
-                    <div className="absolute inset-0 border-4 border-[#41bfb8]/20 rounded-full"></div>
-                    <div className="absolute inset-0 border-4 border-[#41bfb8] border-t-transparent rounded-full animate-spin"></div>
+            <div className="flex items-center justify-center min-h-[60vh] bg-gradient-to-br from-gray-50 to-white">
+                <div className="text-center">
+                    <div className="w-12 h-12 border-3 border-gray-200 border-t-teal-500 rounded-full animate-spin mx-auto"></div>
+                    <p className="mt-4 text-gray-400 text-sm font-medium tracking-wide poppins">Loading website...</p>
                 </div>
-                <p className="mt-6 text-gray-400 font-black uppercase tracking-[0.3em] text-[10px] animate-pulse">Assembling Interface...</p>
             </div>
         );
     }
 
+    // Error State
     if (error || !website) {
         return (
-            <div className="text-center py-20 min-h-screen flex flex-col items-center justify-center bg-slate-50">
-                <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-xl mb-8">
-                    <LuGlobe className="text-gray-200 text-4xl" />
+            <div className="min-h-[70vh] flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-white px-4">
+                <div className="w-20 h-20 bg-gray-100 rounded-md flex items-center justify-center mb-6">
+                    <LuGlobe className="text-gray-300 text-3xl" />
                 </div>
-                <h3 className="text-3xl font-bold text-gray-900 mb-4 outfit">Resource Unavailable</h3>
-                <p className="text-gray-500 mb-8 max-w-sm mx-auto font-medium">{error || "The requested website project could not be located in our secure database."}</p>
+                <h3 className="text-xl font-bold text-gray-800 outfit mb-2">Website Not Found</h3>
+                <p className="text-gray-500 poppins text-sm mb-6 text-center max-w-sm">The website you're looking for doesn't exist or has been removed.</p>
                 <button
                     onClick={() => router.push('/website')}
-                    className="px-10 py-4 bg-gray-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-[#41bfb8] transition-all shadow-xl"
+                    className="px-6 py-2.5 bg-gray-900 text-white text-sm font-semibold rounded-md hover:bg-teal-600 transition-colors"
                 >
-                    Back to Marketplace
+                    Browse Websites
                 </button>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-white relative">
-            {/* Advanced Atmosphere Background */}
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+        <div className="min-h-screen bg-[#FAFBFC]">
+            {/* Hero Section */}
+            <section className="relative overflow-hidden bg-gradient-to-br from-[#f0fffe] via-[#e8f9f8] to-[#f5f5ff] pt-12 pb-28 lg:pt-16 lg:pb-36">
+                {/* Background Effects */}
+                <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-teal-400/10 to-transparent blur-3xl pointer-events-none"></div>
+                <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-amber-400/8 rounded-full blur-3xl pointer-events-none"></div>
+
+                {/* Floating Elements */}
                 <motion.div
-                    animate={{ y: [0, -40, 0], x: [0, 30, 0] }}
-                    transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute top-[-10%] right-[-5%] w-[900px] h-[900px] bg-[#41bfb8]/5 rounded-full blur-[140px]"
+                    animate={{ y: [0, -15, 0] }}
+                    transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute top-28 right-1/4 w-16 h-16 bg-gradient-to-br from-teal-400/20 to-cyan-400/10 rounded-md blur-sm pointer-events-none"
                 ></motion.div>
                 <motion.div
-                    animate={{ y: [0, 50, 0], x: [0, -30, 0] }}
-                    transition={{ duration: 14, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-                    className="absolute top-[40%] left-[-15%] w-[700px] h-[700px] bg-[#F79952]/5 rounded-full blur-[120px]"
+                    animate={{ y: [0, 12, 0] }}
+                    transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                    className="absolute bottom-32 right-1/3 w-12 h-12 bg-gradient-to-br from-amber-400/15 to-orange-300/10 rounded-full blur-sm pointer-events-none"
                 ></motion.div>
-                <div className="absolute inset-0 bg-[linear-gradient(rgba(65,191,184,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(65,191,184,0.03)_1px,transparent_1px)] bg-[size:45px_45px]"></div>
-            </div>
 
-            {/* Product Hero */}
-            <section className="relative pt-36 pb-24 lg:pb-32 overflow-hidden">
-                <div className="container mx-auto px-4 lg:px-16 container-max-width-8xl">
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
+                {/* Grid Pattern */}
+                <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.015)_1px,transparent_1px)] bg-[size:48px_48px] pointer-events-none"></div>
 
-                        {/* Left: Interactive Showcase */}
-                        <div className="lg:col-span-7 space-y-8">
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.98 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                className="group relative p-4 bg-white/50 backdrop-blur-3xl border border-white rounded-[3.5rem] shadow-2xl shadow-[#41bfb8]/10 overflow-hidden"
-                            >
-                                <img
-                                    src={website.images?.[0] || website.image || "/images/placeholder.png"}
-                                    alt={website.title}
-                                    className="w-full aspect-[16/10] object-cover rounded-[3rem] shadow-sm transform transition-transform duration-1000 group-hover:scale-[1.03]"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-12">
-                                    <div className="flex gap-4">
-                                        <button className="px-8 py-3 bg-white text-gray-900 rounded-2xl font-black uppercase tracking-widest text-xs shadow-2xl flex items-center gap-2 hover:bg-[#41bfb8] hover:text-white transition-all">
-                                            <LuLayers /> Explore Gallery
-                                        </button>
-                                        {website.previewUrl && (
-                                            <a href={website.previewUrl} target="_blank" className="px-8 py-3 bg-[#41bfb8] text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-2xl flex items-center gap-2 hover:scale-105 transition-transform">
-                                                <LuExternalLink /> Live Demo
-                                            </a>
-                                        )}
-                                    </div>
-                                </div>
-                            </motion.div>
-
-                            {/* Gallery Gird */}
-                            <div className="grid grid-cols-4 gap-6">
-                                {website.images?.slice(1, 5).map((img, idx) => (
-                                    <motion.div
-                                        key={idx}
-                                        initial={{ opacity: 0, y: 30 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.1 * idx }}
-                                        className="group relative aspect-square bg-white rounded-[2rem] border border-gray-100 overflow-hidden cursor-pointer shadow-sm hover:border-[#41bfb8] transition-all"
-                                    >
-                                        <img src={img} alt="Shot" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                                    </motion.div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Right: Info Architecture */}
-                        <div className="lg:col-span-5 space-y-10 relative">
-                            <div className="space-y-6">
-                                <motion.div
-                                    initial={{ opacity: 0, x: -30 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    className="inline-flex items-center gap-2.5 px-5 py-2.5 bg-[#41bfb8]/10 text-[#26a69a] rounded-xl text-xs font-black uppercase tracking-[0.2em] work"
-                                >
-                                    <LuGlobe className="animate-pulse" size={14} /> {website.projectType || 'Premium Architecture'}
-                                </motion.div>
-                                <motion.h1
-                                    initial={{ opacity: 0, y: 30 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.1 }}
-                                    className={`text-4xl lg:text-6xl font-black text-gray-900 outfit leading-[0.95] tracking-tighter ${bengaliClass}`}
-                                >
-                                    {website.title}
-                                </motion.h1>
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: 0.2 }}
-                                    className="flex flex-wrap items-center gap-8"
-                                >
-                                    <div className="flex items-center gap-2 bg-teal-50/50 px-5 py-2.5 rounded-2xl border border-teal-100/50">
-                                        <div className="flex text-amber-400">
-                                            {[1, 2, 3, 4, 5].map((s) => <LuStar key={s} size={14} className="fill-current" />)}
-                                        </div>
-                                        <span className="font-black text-teal-900 text-sm outfit">{website.rating || '5.0'}</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-3 h-3 bg-[#F79952] rounded-full animate-pulse shadow-[0_0_15px_rgba(247,153,82,0.5)]"></div>
-                                        <span className="text-sm font-black text-gray-900 uppercase tracking-widest work">{website.salesCount || '500'}+ Active Deployments</span>
-                                    </div>
-                                </motion.div>
-                            </div>
-
-                            {/* Sticky Price Hub */}
-                            <div className="sticky top-24">
-                                <motion.div
-                                    initial={{ opacity: 0, y: 40 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.3 }}
-                                    className="relative group"
-                                >
-                                    <div className="absolute -inset-1 bg-gradient-to-tr from-[#41bfb8] via-[#F79952] to-[#41bfb8] rounded-[3.5rem] blur-2xl opacity-10 group-hover:opacity-20 transition-opacity duration-1000"></div>
-                                    <div className="relative bg-white/80 backdrop-blur-3xl p-10 rounded-[3.5rem] border border-white shadow-2xl space-y-8">
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <div className="flex items-end gap-3 mb-1">
-                                                    <span className="text-5xl font-black text-gray-900 outfit tracking-tighter">৳{website.price?.toLocaleString()}</span>
-                                                    {website.offerPrice && (
-                                                        <span className="text-xl text-gray-400 line-through font-bold pb-1">৳{website.offerPrice.toLocaleString()}</span>
-                                                    )}
-                                                </div>
-                                                <p className="text-[10px] font-black text-[#41bfb8] uppercase tracking-[0.4em] work">Fully Synchronized System</p>
-                                            </div>
-                                            <div className="w-12 h-12 bg-white rounded-2xl shadow-inner border border-slate-50 flex items-center justify-center text-[#F79952]">
-                                                <LuShieldCheck size={24} />
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-4">
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                                                <button
-                                                    onClick={handleBuyNow}
-                                                    className="group relative flex items-center justify-center gap-3 py-6 bg-gray-900 text-white rounded-[1.8rem] font-black uppercase tracking-widest text-xs shadow-2xl transition-all active:scale-[0.98] overflow-hidden"
-                                                >
-                                                    <LuArrowRight className="group-hover:translate-x-1 transition-transform" />
-                                                    <span>Acquire Now</span>
-                                                    <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-                                                </button>
-                                                <button
-                                                    onClick={handleAddToCart}
-                                                    className="group flex items-center justify-center gap-3 py-6 bg-white border-2 border-slate-100 text-gray-900 rounded-[1.8rem] font-black uppercase tracking-widest text-xs shadow-lg shadow-slate-200/50 transition-all hover:border-[#41bfb8] hover:text-[#41bfb8] active:scale-[0.98]"
-                                                >
-                                                    <LuPlus size={16} /> Add to Vault
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <div className="pt-8 border-t border-slate-100 space-y-6">
-                                            <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Ready-to-Deploy Assets:</h4>
-                                            <ul className="grid grid-cols-1 gap-4">
-                                                {[
-                                                    'Full Responsive Frontend',
-                                                    'Scaleable Backend Core',
-                                                    'Database Schema Architecture',
-                                                    '1 Month Premium Setup Support'
-                                                ].map((item, i) => (
-                                                    <li key={i} className="flex items-center gap-3 text-sm font-bold text-gray-700 work">
-                                                        <div className="w-1.5 h-1.5 bg-[#41bfb8] rounded-full"></div>
-                                                        {item}
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* Premium Tabbed Navigation */}
-            <section className="py-24 container mx-auto px-4 lg:px-16 relative z-10 border-t border-slate-50">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-20">
-                    <div className="lg:col-span-8">
-                        {/* Tabs Header */}
-                        <div className="flex gap-12 border-b border-slate-100 mb-12 overflow-x-auto no-scrollbar">
-                            {[
-                                { id: 'overview', label: 'Project Narrative', icon: LuInfo },
-                                { id: 'technical', label: 'Architecture', icon: LuSettings },
-                                { id: 'support', label: 'Deployment & Support', icon: LuShieldCheck }
-                            ].map((tab) => (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => setActiveTab(tab.id)}
-                                    className={`flex items-center gap-2.5 pb-6 text-xs font-black uppercase tracking-[0.25em] transition-all relative whitespace-nowrap ${activeTab === tab.id ? 'text-[#41bfb8]' : 'text-gray-400 hover:text-gray-900'}`}
-                                >
-                                    <tab.icon size={16} />
-                                    {tab.label}
-                                    {activeTab === tab.id && (
-                                        <motion.div layoutId="activeTabWebsite" className="absolute bottom-0 left-0 right-0 h-1.5 bg-[#41bfb8] rounded-full" />
-                                    )}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* Tabs Content */}
-                        <AnimatePresence mode="wait">
-                            <motion.div
-                                key={activeTab}
-                                initial={{ opacity: 0, scale: 0.99 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.99 }}
-                                transition={{ duration: 0.4 }}
-                            >
-                                {activeTab === 'overview' && (
-                                    <div className="space-y-12">
-                                        <div className="prose prose-2xl max-w-none text-gray-600 work leading-[1.6] font-medium text-justify">
-                                            {website.description}
-                                        </div>
-                                        {website.longDescription && (
-                                            <div className="p-12 bg-teal-50/20 rounded-[4rem] border border-teal-100/30 text-gray-700 work text-xl leading-relaxed shadow-sm">
-                                                {website.longDescription}
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-
-                                {activeTab === 'technical' && (
-                                    <div className="space-y-12">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                            {website.features?.map((feature, idx) => (
-                                                <div key={idx} className="group flex items-center gap-6 p-8 bg-white border border-slate-100 rounded-[2.5rem] shadow-sm hover:shadow-2xl hover:border-[#41bfb8]/20 transition-all">
-                                                    <div className="w-16 h-16 rounded-2xl bg-[#F79952]/10 text-[#F79952] flex items-center justify-center group-hover:rotate-12 transition-transform">
-                                                        <LuBadgeCheck size={32} />
-                                                    </div>
-                                                    <span className="text-gray-800 font-extrabold text-lg tracking-tight">{feature}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {activeTab === 'support' && (
-                                    <div className="space-y-10">
-                                        <div className="bg-gray-900 p-12 rounded-[4rem] text-white space-y-8 relative overflow-hidden">
-                                            <div className="absolute bottom-0 right-0 w-64 h-64 bg-[#41bfb8]/10 blur-[100px] rounded-full"></div>
-                                            <h3 className="text-3xl font-black outfit uppercase tracking-tighter italic">MotionBoss Deployment Standard</h3>
-                                            <p className="text-gray-400 work text-lg font-medium leading-relaxed max-w-3xl relative z-10">
-                                                We don't just sell code; we deliver platforms. Our technical engineering team provides a white-glove setup service for every website acquisition. This includes server configuration, database mapping, and final UI optimization for your specific requirements.
-                                            </p>
-                                            <div className="flex gap-8 relative z-10">
-                                                <div className="flex flex-col">
-                                                    <span className="text-4xl font-black outfit text-[#41bfb8]">24H</span>
-                                                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Response Guarantee</span>
-                                                </div>
-                                                <div className="flex flex-col">
-                                                    <span className="text-4xl font-black outfit text-[#F79952]">LIFETIME</span>
-                                                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Core Updates</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </motion.div>
-                        </AnimatePresence>
-                    </div>
-
-                    {/* Sidebar: Project Registry */}
-                    <div className="lg:col-span-4 space-y-10">
+                <div className="container mx-auto px-4 lg:px-24 relative z-10">
+                    <div className="max-w-3xl">
+                        {/* Breadcrumb */}
                         <motion.div
-                            initial={{ opacity: 0, y: 50 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            className="bg-white p-12 rounded-[3.5rem] border border-slate-100 shadow-2xl space-y-10"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="flex items-center gap-2 text-sm text-gray-500 mb-6 poppins"
                         >
-                            <h3 className="text-xl font-black text-gray-900 outfit uppercase tracking-widest flex items-center gap-3">
-                                <div className="w-2.5 h-2.5 bg-[#41bfb8] rounded-full"></div>
-                                Project Registry
-                            </h3>
-                            <div className="space-y-8">
-                                {[
-                                    { label: 'Integration Status', val: 'MB-Verified', color: 'text-[#41bfb8]' },
-                                    { label: 'Platform Engine', val: website.projectType, type: 'badge' },
-                                    { label: 'Initial Release', val: new Date(website.publishDate || website.createdAt).toLocaleDateString() },
-                                    { label: 'Global Registry', val: `#MBW-${website._id?.slice(-6).toUpperCase()}` }
-                                ].map((item, i) => (
-                                    <div key={i} className="flex justify-between items-center group">
-                                        <span className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em]">{item.label}</span>
-                                        {item.type === 'badge' ? (
-                                            <span className="bg-gray-900 text-white px-4 py-1.5 rounded-xl text-[10px] font-black tracking-widest">{item.val}</span>
-                                        ) : (
-                                            <span className={`text-sm font-black outfit ${item.color || 'text-gray-900'}`}>{item.val}</span>
-                                        )}
-                                    </div>
-                                ))}
+                            <Link href="/" className="hover:text-teal-600 transition-colors">Home</Link>
+                            <span>/</span>
+                            <Link href="/website" className="hover:text-teal-600 transition-colors">Website</Link>
+                            <span>/</span>
+                            <span className="text-gray-700 font-medium truncate max-w-[200px]">{website.title}</span>
+                        </motion.div>
+
+                        {/* Badges */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="flex flex-wrap items-center gap-2 mb-5"
+                        >
+                            <span className="px-3 py-1 bg-gradient-to-r from-teal-500 to-teal-600 rounded text-white text-[11px] font-bold uppercase tracking-wider poppins">
+                                {website.projectType || 'Website'}
+                            </span>
+                            <span className="px-3 py-1 bg-white/90 border border-gray-200 rounded text-gray-600 text-[11px] font-bold uppercase tracking-wider poppins">
+                                Full Stack
+                            </span>
+                            {website.isFeatured && (
+                                <span className="px-3 py-1 bg-gradient-to-r from-amber-500 to-orange-500 rounded text-white text-[11px] font-bold uppercase tracking-wider flex items-center gap-1">
+                                    <LuSparkles size={10} /> Featured
+                                </span>
+                            )}
+                        </motion.div>
+
+                        {/* Title */}
+                        <motion.h1
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.05 }}
+                            className="text-2xl sm:text-3xl lg:text-4xl font-bold outfit leading-[1.2] tracking-tight text-gray-900 mb-4"
+                        >
+                            {website.title}
+                        </motion.h1>
+
+                        {/* Description */}
+                        <motion.p
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.1 }}
+                            className="text-[15px] lg:text-base text-gray-600 poppins leading-relaxed mb-6 max-w-2xl"
+                        >
+                            {website.description?.substring(0, 160)}...
+                        </motion.p>
+
+                        {/* Stats Row */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.15 }}
+                            className="flex flex-wrap items-center gap-3 mb-5"
+                        >
+                            {/* Rating */}
+                            <div className="flex items-center gap-2 bg-white px-8 py-2.5 rounded-md border border-gray-200">
+                                <div className="flex text-amber-400 gap-0.5">
+                                    {[1, 2, 3, 4, 5].map((s) => <FaStar key={s} size={12} />)}
+                                </div>
+                                <span className="font-bold outfit text-gray-900">{website.rating || '5.0'}</span>
+                                <span className="text-gray-400 text-xs poppins">({website.reviewCount || 0})</span>
                             </div>
 
-                            <div className="space-y-6 pt-6">
-                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Ecosystem Stack</p>
-                                <div className="flex flex-wrap gap-2.5">
-                                    {website.technologies?.map((tech, idx) => (
-                                        <span key={idx} className="px-5 py-2.5 bg-slate-50 border border-slate-100 rounded-2xl text-[10px] font-black text-gray-500 uppercase tracking-widest hover:bg-gray-900 hover:text-white transition-all cursor-default shadow-sm hover:shadow-xl">
-                                            {tech}
-                                        </span>
-                                    ))}
+                            {/* Sales */}
+                            <div className="flex items-center gap-3 bg-white px-8 py-2.5 rounded-md border border-gray-200">
+                                <div className="w-7 h-7 rounded bg-emerald-50 flex items-center justify-center">
+                                    <LuPackage className="text-emerald-600" size={14} />
                                 </div>
+                                <span className="text-gray-700 font-medium text-sm poppins">
+                                    <AnimatedCounter value={website.salesCount || 0} />
+                                    <span className="text-gray-400 ml-1">sold</span>
+                                </span>
                             </div>
+
+                            {/* Views */}
+                            <div className="flex items-center gap-3 bg-white px-8 py-2.5 rounded-md border border-gray-200">
+                                <div className="w-7 h-7 rounded bg-blue-50 flex items-center justify-center">
+                                    <LuEye className="text-blue-600" size={14} />
+                                </div>
+                                <span className="text-gray-700 font-medium text-sm poppins">
+                                    <AnimatedCounter value={website.viewCount || 0} />
+                                    <span className="text-gray-400 ml-1">views</span>
+                                </span>
+                            </div>
+                        </motion.div>
+
+                        {/* Platform & Like */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="flex items-center gap-3"
+                        >
+                            <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-md border border-gray-200">
+                                <span className="text-gray-400 text-sm poppins">Type</span>
+                                <span className="text-teal-600 font-semibold text-sm outfit">{website.projectType || 'Full Stack'}</span>
+                                <MdVerified className="text-blue-500" size={16} />
+                            </div>
+
+                            <button
+                                onClick={handleToggleLike}
+                                disabled={isLiking}
+                                className={`flex items-center gap-2 px-3 py-2 rounded-md border transition-all ${website.isLiked
+                                    ? 'bg-rose-50 border-rose-200 text-rose-600'
+                                    : 'bg-white border-gray-200 text-gray-600 hover:border-rose-200 hover:text-rose-500'
+                                    }`}
+                            >
+                                {website.isLiked ? <FaHeart size={14} /> : <FaRegHeart size={14} />}
+                                <span className="font-semibold text-sm poppins">
+                                    <AnimatedCounter value={website.likeCount || 0} />
+                                </span>
+                            </button>
                         </motion.div>
                     </div>
                 </div>
             </section>
 
-            {/* Related Projects */}
-            <section className="py-32 bg-slate-50 border-t border-slate-100">
-                <div className="container mx-auto px-4 lg:px-16">
-                    <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-20 gap-8 px-6">
-                        <div className="space-y-3">
-                            <h2 className="text-3xl lg:text-6xl font-black text-gray-900 outfit tracking-tighter uppercase italic">Strategic Alternatives</h2>
-                            <p className="text-gray-500 work font-bold text-xl">Compatible architectures for your roadmap</p>
+            {/* Main Content */}
+            <section className="container mx-auto px-4 lg:px-24 pb-20 relative z-20">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+                    {/* Left Content */}
+                    <div className="lg:col-span-8 space-y-6">
+                        {/* Mobile Pricing Card */}
+                        <div className="lg:hidden bg-white rounded-md border border-gray-200 overflow-hidden">
+                            <img src={website.images?.[0] || website.image || "/images/placeholder.png"} alt={website.title} className="w-full aspect-video object-cover" />
+                            <div className="p-5">
+                                <div className="flex items-baseline gap-2 mb-4">
+                                    <span className="text-2xl font-bold text-gray-900 outfit">৳{website.price?.toLocaleString()}</span>
+                                    {website.offerPrice && <span className="text-gray-400 line-through text-sm">৳{website.offerPrice?.toLocaleString()}</span>}
+                                </div>
+                                <button onClick={handleBuyNow} className="w-full py-3 bg-teal-500 text-white font-semibold rounded-md active:scale-[0.98] transition-transform poppins">
+                                    Buy Now
+                                </button>
+                            </div>
                         </div>
-                        <button
-                            onClick={() => router.push('/website')}
-                            className="w-fit flex items-center gap-3 px-10 py-5 bg-white border-2 border-slate-200 rounded-[2rem] text-xs font-black uppercase tracking-widest hover:border-[#41bfb8] hover:text-[#41bfb8] transition-all group"
-                        >
-                            Global Marketplace <LuChevronRight className="group-hover:translate-x-1 transition-transform" />
-                        </button>
+
+                        {/* Tabs */}
+                        <div className="bg-white rounded-md border border-gray-200 overflow-hidden">
+                            {/* Tab Headers */}
+                            <div className="flex border-b border-gray-100 bg-gray-50/80">
+                                {[
+                                    { id: "overview", label: "Overview", icon: LuLayoutGrid },
+                                    { id: "gallery", label: "Gallery", icon: LuImage },
+                                    { id: "features", label: "Features", icon: LuZap },
+                                    { id: "technical", label: "Technical", icon: LuSettings },
+                                ].map((tab) => (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setActiveTab(tab.id)}
+                                        className={`flex-1 flex items-center justify-center gap-2 py-4 text-sm font-semibold transition-all border-b-2 -mb-[1px] poppins ${activeTab === tab.id
+                                            ? "text-teal-600 border-teal-500 bg-white"
+                                            : "text-gray-500 border-transparent hover:text-gray-700"
+                                            }`}
+                                    >
+                                        <tab.icon size={16} />
+                                        <span className="hidden sm:inline">{tab.label}</span>
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Tab Content */}
+                            <div className="p-6 lg:p-8">
+                                <AnimatePresence mode="wait">
+                                    {activeTab === "overview" && (
+                                        <motion.div
+                                            key="overview"
+                                            initial={{ opacity: 0, y: 12 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -12 }}
+                                            transition={{ duration: 0.2 }}
+                                            className="space-y-8"
+                                        >
+                                            {/* About */}
+                                            <div>
+                                                <h2 className="text-lg font-bold outfit text-gray-900 mb-4 flex items-center gap-2">
+                                                    <span className="w-1 h-5 bg-teal-500 rounded-full"></span>
+                                                    About This Website
+                                                </h2>
+                                                <p className="text-gray-600 poppins text-[15px] leading-7">
+                                                    {website.description}
+                                                </p>
+                                                {website.longDescription && (
+                                                    <div className="mt-4 p-4 bg-gray-50 rounded-md border border-gray-100 text-gray-600 poppins text-sm leading-6">
+                                                        {website.longDescription}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Tech Stack */}
+                                            {website.technologies?.length > 0 && (
+                                                <div>
+                                                    <h3 className="text-base font-bold outfit text-gray-900 mb-4 flex items-center gap-2">
+                                                        <span className="w-1 h-5 bg-amber-500 rounded-full"></span>
+                                                        Technologies Used
+                                                    </h3>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {website.technologies.map((tech, idx) => (
+                                                            <span
+                                                                key={idx}
+                                                                className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded text-gray-700 font-medium text-sm hover:border-teal-300 hover:bg-teal-50 transition-colors cursor-default poppins"
+                                                            >
+                                                                {tech}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </motion.div>
+                                    )}
+
+                                    {activeTab === "gallery" && (
+                                        <motion.div
+                                            key="gallery"
+                                            initial={{ opacity: 0, y: 12 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -12 }}
+                                            transition={{ duration: 0.2 }}
+                                        >
+                                            <h2 className="text-lg font-bold outfit text-gray-900 mb-5 flex items-center gap-2">
+                                                <span className="w-1 h-5 bg-teal-500 rounded-full"></span>
+                                                Project Screenshots
+                                                {website.images?.length > 0 && (
+                                                    <span className="text-xs text-gray-400 font-normal poppins ml-2">({website.images.length} images)</span>
+                                                )}
+                                            </h2>
+
+                                            {website.images?.length > 0 ? (
+                                                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                                    {website.images.map((img, idx) => (
+                                                        <motion.div
+                                                            key={idx}
+                                                            initial={{ opacity: 0, scale: 0.95 }}
+                                                            animate={{ opacity: 1, scale: 1 }}
+                                                            transition={{ delay: idx * 0.05 }}
+                                                            onClick={() => setSelectedImage(img)}
+                                                            className="group relative aspect-video bg-gray-100 rounded-md overflow-hidden cursor-pointer border border-gray-200 hover:border-teal-400 transition-all"
+                                                        >
+                                                            <img
+                                                                src={img}
+                                                                alt={`Screenshot ${idx + 1}`}
+                                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                            />
+                                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                                                                <LuEye className="text-white opacity-0 group-hover:opacity-100 transition-opacity" size={24} />
+                                                            </div>
+                                                            <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 rounded text-white text-xs poppins">
+                                                                {idx + 1}/{website.images.length}
+                                                            </div>
+                                                        </motion.div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="text-center py-12 bg-gray-50 rounded-md border border-dashed border-gray-200">
+                                                    <LuImage className="mx-auto text-2xl text-gray-300 mb-2" />
+                                                    <p className="text-gray-400 text-sm poppins">No screenshots available</p>
+                                                </div>
+                                            )}
+                                        </motion.div>
+                                    )}
+
+                                    {activeTab === "features" && (
+                                        <motion.div
+                                            key="features"
+                                            initial={{ opacity: 0, y: 12 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -12 }}
+                                            transition={{ duration: 0.2 }}
+                                        >
+                                            <h2 className="text-lg font-bold outfit text-gray-900 mb-5 flex items-center gap-2">
+                                                <span className="w-1 h-5 bg-teal-500 rounded-full"></span>
+                                                Key Features
+                                            </h2>
+
+                                            {website.features?.length > 0 ? (
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                    {website.features.map((feature, idx) => (
+                                                        <div
+                                                            key={idx}
+                                                            className="flex items-start gap-3 p-4 bg-gray-50 border border-gray-100 rounded-md hover:border-teal-200 hover:bg-teal-50/30 transition-colors"
+                                                        >
+                                                            <div className="w-8 h-8 rounded bg-teal-100 flex items-center justify-center flex-shrink-0">
+                                                                <LuCheck className="text-teal-600" size={16} strokeWidth={3} />
+                                                            </div>
+                                                            <span className="text-gray-700 font-medium text-sm leading-relaxed pt-1 poppins">{feature}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="text-center py-12 bg-gray-50 rounded-md border border-dashed border-gray-200">
+                                                    <LuLayoutGrid className="mx-auto text-2xl text-gray-300 mb-2" />
+                                                    <p className="text-gray-400 text-sm poppins">No features added yet</p>
+                                                </div>
+                                            )}
+                                        </motion.div>
+                                    )}
+
+                                    {activeTab === "technical" && (
+                                        <motion.div
+                                            key="technical"
+                                            initial={{ opacity: 0, y: 12 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -12 }}
+                                            transition={{ duration: 0.2 }}
+                                            className="space-y-8"
+                                        >
+                                            {/* Project Details */}
+                                            <div>
+                                                <h2 className="text-lg font-bold outfit text-gray-900 mb-5 flex items-center gap-2">
+                                                    <span className="w-1 h-5 bg-teal-500 rounded-full"></span>
+                                                    Project Details
+                                                </h2>
+
+                                                <div className="space-y-2">
+                                                    {[
+                                                        { label: 'Project Type', value: website.projectType || 'Full Stack' },
+                                                        { label: 'Published', value: new Date(website.publishDate || website.createdAt).toLocaleDateString() },
+                                                        { label: 'Project ID', value: `#MBW-${website._id?.slice(-6).toUpperCase()}` },
+                                                    ].map((item, idx) => (
+                                                        <div
+                                                            key={idx}
+                                                            className="flex items-center justify-between p-3 bg-gray-50 border border-gray-100 rounded-md"
+                                                        >
+                                                            <span className="text-gray-500 text-sm poppins">{item.label}</span>
+                                                            <span className="text-gray-900 font-semibold text-sm outfit">{item.value}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Support Info */}
+                                            <div className="p-5 bg-gray-900 rounded-md text-white">
+                                                <h3 className="font-bold outfit text-lg mb-3">Deployment Support</h3>
+                                                <p className="text-gray-400 text-sm leading-relaxed poppins">
+                                                    We provide complete deployment support including server configuration, database setup, and final optimization for your requirements.
+                                                </p>
+                                                <div className="flex gap-6 mt-4">
+                                                    <div>
+                                                        <span className="text-2xl font-bold outfit text-teal-400">24H</span>
+                                                        <p className="text-gray-500 text-xs poppins">Response</p>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-2xl font-bold outfit text-amber-400">Lifetime</span>
+                                                        <p className="text-gray-500 text-xs poppins">Updates</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
-                        {recommended.map((item) => (
-                            <Link
-                                key={item._id}
-                                href={`/website/${item._id}`}
-                                className="group bg-white rounded-[3rem] p-5 border border-slate-100 shadow-lg hover:shadow-2xl transition-all duration-700"
-                            >
-                                <div className="aspect-[16/11] rounded-[2.5rem] overflow-hidden mb-8 relative">
-                                    <img src={item.images?.[0] || item.image || "/images/placeholder.png"} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
-                                    <div className="absolute top-5 left-5 px-4 py-2 bg-white/95 backdrop-blur rounded-2xl text-[9px] font-black uppercase tracking-widest shadow-xl">{item.projectType}</div>
-                                </div>
-                                <div className="px-3 space-y-4">
-                                    <h3 className="text-xl font-black text-gray-900 outfit line-clamp-1 group-hover:text-[#41bfb8] transition-colors">{item.title}</h3>
-                                    <div className="flex items-center justify-between pt-2">
-                                        <div className="flex flex-col">
-                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Entry Fee</span>
-                                            <span className="text-2xl font-black text-gray-900 outfit tracking-tighter">৳{item.price?.toLocaleString()}</span>
-                                        </div>
-                                        <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-amber-500 group-hover:bg-[#41bfb8] group-hover:text-white transition-all">
-                                            <LuArrowRight />
-                                        </div>
+                    {/* Right Sidebar */}
+                    <div className="lg:col-span-4 hidden lg:block">
+                        <div className="sticky top-24 -mt-[28rem] space-y-5">
+                            {/* Pricing Card */}
+                            <div className="bg-white rounded-md border border-gray-200 shadow-sm overflow-hidden">
+                                {/* Image */}
+                                <div className="relative aspect-video group cursor-pointer overflow-hidden bg-gray-100">
+                                    <img
+                                        src={website.images?.[0] || website.image || "/images/placeholder.png"}
+                                        alt={website.title}
+                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                    />
+                                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <MdPlayCircleOutline className="text-white text-5xl" />
                                     </div>
                                 </div>
-                            </Link>
-                        ))}
+
+                                {/* Content */}
+                                <div className="p-5 space-y-5">
+                                    {/* Price */}
+                                    <div>
+                                        <div className="flex items-baseline gap-2">
+                                            <span className="text-2xl font-bold text-gray-900 outfit">৳{website.price?.toLocaleString()}</span>
+                                            {website.offerPrice && (
+                                                <span className="text-gray-400 line-through text-sm">৳{website.offerPrice?.toLocaleString()}</span>
+                                            )}
+                                        </div>
+                                        <p className="text-teal-600 text-xs font-semibold uppercase tracking-wide mt-1 poppins">Complete Package</p>
+                                    </div>
+
+                                    {/* Buttons */}
+                                    <div className="space-y-2.5">
+                                        <button
+                                            onClick={handleBuyNow}
+                                            className="w-full py-3 bg-teal-500 hover:bg-teal-600 text-white font-semibold rounded-md transition-colors flex items-center justify-center gap-2 poppins"
+                                        >
+                                            Buy Now <FaArrowRight size={12} />
+                                        </button>
+                                        <button
+                                            onClick={handleAddToCart}
+                                            className="w-full py-2.5 bg-white border border-gray-200 text-gray-700 font-semibold rounded-md hover:border-teal-400 hover:text-teal-600 transition-colors poppins"
+                                        >
+                                            Add to Cart
+                                        </button>
+                                        {website.previewUrl && (
+                                            <a
+                                                href={website.previewUrl}
+                                                target="_blank"
+                                                className="w-full py-2.5 bg-gray-50 border border-gray-200 text-gray-600 font-medium rounded-md hover:border-teal-400 hover:text-teal-600 transition-colors flex items-center justify-center gap-2 text-sm poppins"
+                                            >
+                                                <LuExternalLink size={14} /> Live Preview
+                                            </a>
+                                        )}
+                                    </div>
+
+                                    {/* What's Included */}
+                                    <div className="pt-4 border-t border-gray-100">
+                                        <h5 className="text-sm font-bold text-gray-900 mb-3 outfit">What's Included</h5>
+                                        <ul className="space-y-2.5">
+                                            {[
+                                                { icon: LuFileCode, text: 'Full Source Code' },
+                                                { icon: LuDownload, text: 'Instant Download' },
+                                                { icon: LuClock, text: '6 Months Updates' },
+                                                { icon: LuShieldCheck, text: 'Premium Support' },
+                                            ].map((item, i) => (
+                                                <li key={i} className="flex items-center gap-2.5 text-gray-600 text-sm poppins">
+                                                    <item.icon className="text-teal-500" size={15} />
+                                                    <span>{item.text}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Recommended */}
+                            <div className="bg-white rounded-md p-5 border border-gray-200 shadow-sm">
+                                <h3 className="text-sm font-bold text-gray-900 mb-4 outfit">You May Also Like</h3>
+                                <div className="space-y-4">
+                                    {popularWebsites.map(item => (
+                                        <Link href={`/website/${item._id}`} key={item._id} className="flex gap-3 group">
+                                            <div className="w-14 h-14 rounded overflow-hidden flex-shrink-0 bg-gray-100 border border-gray-100">
+                                                <img
+                                                    src={item.images?.[0] || item.image || "/images/placeholder.png"}
+                                                    alt={item.title}
+                                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                                />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="text-sm font-semibold text-gray-900 group-hover:text-teal-600 transition-colors line-clamp-1 outfit">{item.title}</h4>
+                                                <div className="flex items-center gap-1 text-amber-400 mt-0.5">
+                                                    <FaStar size={10} />
+                                                    <span className="text-gray-600 text-xs font-medium poppins">{item.rating || '5.0'}</span>
+                                                </div>
+                                                <span className="text-teal-600 font-bold text-xs poppins">৳{item.price?.toLocaleString()}</span>
+                                            </div>
+                                        </Link>
+                                    ))}
+                                </div>
+                                <Link
+                                    href="/website"
+                                    className="flex items-center justify-center w-full py-2.5 mt-4 text-teal-600 font-semibold text-sm border border-dashed border-teal-200 rounded-md hover:bg-teal-50 transition-colors poppins"
+                                >
+                                    View All Websites
+                                </Link>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
+
+            {/* Image Lightbox Modal */}
+            <AnimatePresence>
+                {selectedImage && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setSelectedImage(null)}
+                        className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 cursor-pointer"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="relative max-w-5xl max-h-[90vh] cursor-default"
+                        >
+                            <img
+                                src={selectedImage}
+                                alt="Full view"
+                                className="max-w-full max-h-[90vh] object-contain rounded-md"
+                            />
+                            <button
+                                onClick={() => setSelectedImage(null)}
+                                className="absolute -top-12 right-0 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors"
+                            >
+                                <LuX size={20} />
+                            </button>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
