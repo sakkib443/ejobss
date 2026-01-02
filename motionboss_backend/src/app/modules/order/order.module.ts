@@ -15,6 +15,7 @@ import validateRequest from '../../middlewares/validateRequest';
 import DownloadService from '../download/download.module';
 import EmailService from '../email/email.service';
 import { User } from '../user/user.model';
+import { NotificationService } from '../notification/notification.module';
 
 // ==================== INTERFACE ====================
 export interface IOrderItem {
@@ -182,6 +183,23 @@ const OrderService = {
             paymentStatus,
             orderDate: new Date(),
         });
+
+        // Create notification for admin immediately when order is placed
+        try {
+            const user = await User.findById(userId);
+            if (user) {
+                const productTitles = items.map(item => item.title).join(', ');
+                await NotificationService.createOrderNotification({
+                    orderId: order._id,
+                    userId: new Types.ObjectId(userId),
+                    userName: `${user.firstName} ${user.lastName || ''}`.trim(),
+                    amount: totalAmount,
+                    productName: productTitles.length > 50 ? productTitles.substring(0, 47) + '...' : productTitles,
+                });
+            }
+        } catch (err) {
+            console.error('Order notification error:', err);
+        }
 
         // If payment is completed, handle delivery (downloads or enrollments)
         if (paymentStatus === 'completed') {

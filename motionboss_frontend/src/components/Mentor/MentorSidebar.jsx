@@ -96,16 +96,8 @@ const MentorSidebar = () => {
             >
                 {/* Logo */}
                 <div className="px-6 py-5 border-b border-slate-100">
-                    <Link href="/" className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#41bfb8] to-[#F79952] flex items-center justify-center text-white font-bold text-lg shadow-md">
-                            BD
-                        </div>
-                        <div>
-                            <h1 className="text-lg font-bold text-slate-800 outfit">
-                                BD Calling <span className="text-[#41bfb8]">Academy</span>
-                            </h1>
-                            <p className="text-[10px] text-slate-400 uppercase tracking-wider">Mentor Panel</p>
-                        </div>
+                    <Link href="/" className="block w-32 h-10 group">
+                        <img src="/images/ejobsitlogo.png" alt="eJobsIT" className="w-full h-full object-contain group-hover:opacity-80 transition-opacity" />
                     </Link>
                 </div>
 

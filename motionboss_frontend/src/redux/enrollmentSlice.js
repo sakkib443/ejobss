@@ -47,6 +47,29 @@ export const fetchMyStats = createAsyncThunk(
     }
 );
 
+export const updateLessonProgress = createAsyncThunk(
+    'enrollment/updateProgress',
+    async ({ courseId, lessonId }, { rejectWithValue }) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_BASE_URL}/enrollments/progress`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ courseId, lessonId })
+            });
+
+            const data = await response.json();
+            if (!response.ok) return rejectWithValue(data.message || 'Failed to update progress');
+            return data.data;
+        } catch (error) {
+            return rejectWithValue(error.message);
+        }
+    }
+);
+
 const enrollmentSlice = createSlice({
     name: 'enrollment',
     initialState: {
@@ -71,6 +94,21 @@ const enrollmentSlice = createSlice({
             })
             .addCase(fetchMyStats.fulfilled, (state, action) => {
                 state.stats = action.payload;
+            })
+            .addCase(updateLessonProgress.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(updateLessonProgress.fulfilled, (state, action) => {
+                state.loading = false;
+                // Update specific enrollment in the list
+                const index = state.enrollments.findIndex(e => e.course?._id === action.payload.course);
+                if (index !== -1) {
+                    state.enrollments[index] = { ...state.enrollments[index], ...action.payload };
+                }
+            })
+            .addCase(updateLessonProgress.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
             });
     },
 });

@@ -135,19 +135,9 @@ const UserSidebar = () => {
 
                 <div className="relative h-full flex flex-col">
                     {/* Header/Logo */}
-                    <div className="px-8 py-8">
-                        <Link href="/" className="flex items-center gap-4 group">
-                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-500/20 group-hover:scale-110 transition-transform duration-300">
-                                M
-                            </div>
-                            <div className="opacity-100 transition-opacity duration-300">
-                                <h1 className={`text-xl font-black outfit tracking-tight ${isDark ? 'text-white' : 'text-slate-800'}`}>
-                                    Student<span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500">Boss</span>
-                                </h1>
-                                <p className={`text-[10px] font-bold uppercase tracking-[0.2em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                                    LMS Ecosystem
-                                </p>
-                            </div>
+                    <div className="px-6 py-5">
+                        <Link href="/" className="block w-32 h-10 group">
+                            <img src="/images/ejobsitlogo.png" alt="eJobsIT" className="w-full h-full object-contain group-hover:opacity-80 transition-opacity" />
                         </Link>
                     </div>
 

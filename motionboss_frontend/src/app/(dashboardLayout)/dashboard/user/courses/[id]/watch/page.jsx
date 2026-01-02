@@ -3,12 +3,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchCourseContent } from '@/redux/courseSlice';
+import { fetchCourseContent } from '@/redux/CourseSlice';
+import { updateLessonProgress } from '@/redux/enrollmentSlice';
+import toast from 'react-hot-toast';
 import {
     FiPlay, FiCheckCircle, FiChevronDown, FiChevronUp,
-    FiArrowLeft, FiClock, FiBookOpen, FiDownload, FiStar, FiChevronRight, FiMaximize
+    FiArrowLeft, FiClock, FiBookOpen, FiDownload, FiStar, FiChevronRight, FiMaximize,
+    FiFileText, FiLock, FiCheck as FiCircleCheck
 } from 'react-icons/fi';
-import { LuPlayCircle, LuFileText, LuLock, LuCheckCircle2 } from 'react-icons/lu';
 import { useTheme } from '@/providers/ThemeProvider';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -30,17 +32,24 @@ export default function CourseWatchPage() {
 
     // Group lessons by module manually (or use the populated modules)
     const groupedContent = useMemo(() => {
-        if (!currentCourse) return [];
+        if (!currentCourse || !currentCourse.modules || !currentCourse.lessons) return [];
 
-        // The API returns course with populated modules and lessons
+        // The API returns course with modules and lessons arrays
         // We need to associate lessons with their modules
-        return currentCourse.modules.map(module => ({
-            ...module,
-            lessons: currentCourse.lessons.filter(lesson =>
-                lesson.module === module._id || lesson.module?._id === module._id
-            ).sort((a, b) => a.order - b.order)
-        })).sort((a, b) => a.order - b.order);
+        return (currentCourse.modules || []).map(module => {
+            const moduleId = module._id?.toString() || module._id;
+            const moduleLessons = (currentCourse.lessons || []).filter(lesson => {
+                const lessonModuleId = lesson.module?._id?.toString() || lesson.module?.toString() || lesson.module;
+                return lessonModuleId === moduleId;
+            }).sort((a, b) => (a.order || 0) - (b.order || 0));
+
+            return {
+                ...module,
+                lessons: moduleLessons
+            };
+        }).sort((a, b) => (a.order || 0) - (b.order || 0));
     }, [currentCourse]);
+
 
     useEffect(() => {
         if (groupedContent.length > 0 && !activeLesson) {
@@ -54,6 +63,56 @@ export default function CourseWatchPage() {
             }
         }
     }, [groupedContent, activeLesson]);
+
+    const handleMarkAsDone = async () => {
+        if (!activeLesson || !id) return;
+
+        try {
+            await dispatch(updateLessonProgress({ courseId: id, lessonId: activeLesson._id })).unwrap();
+            toast.success('Lesson marked as completed!', {
+                style: {
+                    borderRadius: '1.5rem',
+                    background: isDark ? '#1e293b' : '#fff',
+                    color: isDark ? '#fff' : '#1e293b',
+                    fontWeight: 'bold',
+                    fontSize: '14px',
+                    border: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid #f1f5f9'
+                }
+            });
+
+            // Find next lesson to play
+            let foundActive = false;
+            let nextLesson = null;
+
+            for (const module of groupedContent) {
+                for (const lesson of module.lessons) {
+                    if (foundActive) {
+                        nextLesson = lesson;
+                        break;
+                    }
+                    if (lesson._id === activeLesson._id) {
+                        foundActive = true;
+                    }
+                }
+                if (nextLesson) break;
+            }
+
+            if (nextLesson) {
+                setActiveLesson(nextLesson);
+                // Ensure module is expanded
+                const activeModule = groupedContent.find(m => m.lessons.some(l => l._id === nextLesson._id));
+                if (activeModule) {
+                    setExpandedModules(prev => ({ ...prev, [activeModule._id]: true }));
+                }
+            } else {
+                toast('Congratulations! You have finished the course.', {
+                    icon: '🎉',
+                });
+            }
+        } catch (err) {
+            toast.error(err || 'Failed to update progress');
+        }
+    };
 
     const toggleModule = (moduleId) => {
         setExpandedModules(prev => ({
@@ -146,7 +205,7 @@ export default function CourseWatchPage() {
                                 ></iframe>
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center flex-col gap-4 text-slate-500">
-                                    <LuPlayCircle size={64} className="opacity-20 translate-y-2" />
+                                    <FiPlay size={64} className="opacity-20 translate-y-2" />
                                     <p className="font-bold tracking-widest uppercase text-xs">Select a lesson to start</p>
                                 </div>
                             )}
@@ -173,7 +232,10 @@ export default function CourseWatchPage() {
                                 </div>
 
                                 <div className="flex flex-row md:flex-column gap-3">
-                                    <button className="flex-1 md:w-full px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-xl shadow-indigo-500/20 flex items-center justify-center gap-2">
+                                    <button
+                                        onClick={handleMarkAsDone}
+                                        className="flex-1 md:w-full px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-xl shadow-indigo-500/20 flex items-center justify-center gap-2 hover:bg-indigo-700 hover:scale-[1.02] active:scale-95 transition-all"
+                                    >
                                         Mark as Done <FiCheckCircle />
                                     </button>
                                 </div>
@@ -203,8 +265,8 @@ export default function CourseWatchPage() {
                                         <button
                                             onClick={() => toggleModule(module._id)}
                                             className={`w-full p-6 flex flex-col gap-1 text-left transition-all ${expandedModules[module._id]
-                                                    ? (isDark ? 'bg-white/5' : 'bg-indigo-50/50')
-                                                    : (isDark ? 'hover:bg-white/5' : 'hover:bg-slate-50')
+                                                ? (isDark ? 'bg-white/5' : 'bg-indigo-50/50')
+                                                : (isDark ? 'hover:bg-white/5' : 'hover:bg-slate-50')
                                                 }`}
                                         >
                                             <div className="flex items-center justify-between">
@@ -232,13 +294,13 @@ export default function CourseWatchPage() {
                                                                 key={lesson._id}
                                                                 onClick={() => setActiveLesson(lesson)}
                                                                 className={`w-full p-4 rounded-2xl flex items-center gap-4 group transition-all mb-1 ${activeLesson?._id === lesson._id
-                                                                        ? (isDark ? 'bg-indigo-500 text-white shadow-lg' : 'bg-indigo-600 text-white shadow-lg shadow-indigo-200')
-                                                                        : (isDark ? 'hover:bg-white/5 text-slate-400' : 'hover:bg-slate-50 text-slate-600')
+                                                                    ? (isDark ? 'bg-indigo-500 text-white shadow-lg' : 'bg-indigo-600 text-white shadow-lg shadow-indigo-200')
+                                                                    : (isDark ? 'hover:bg-white/5 text-slate-400' : 'hover:bg-slate-50 text-slate-600')
                                                                     }`}
                                                             >
                                                                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${activeLesson?._id === lesson._id
-                                                                        ? 'bg-white/20'
-                                                                        : (isDark ? 'bg-slate-700' : 'bg-slate-100')
+                                                                    ? 'bg-white/20'
+                                                                    : (isDark ? 'bg-slate-700' : 'bg-slate-100')
                                                                     }`}>
                                                                     {activeLesson?._id === lesson._id ? <FiPlay fill="currentColor" size={14} /> : <FiPlay size={14} />}
                                                                 </div>
@@ -250,13 +312,13 @@ export default function CourseWatchPage() {
                                                                     </div>
                                                                 </div>
                                                                 {/* Placeholder for completion check */}
-                                                                <LuCheckCircle2 className={`opacity-0 group-hover:opacity-100 transition-opacity ${activeLesson?._id === lesson._id ? 'text-white' : 'text-indigo-500'
+                                                                <FiCircleCheck className={`opacity-0 group-hover:opacity-100 transition-opacity ${activeLesson?._id === lesson._id ? 'text-white' : 'text-indigo-500'
                                                                     }`} />
                                                             </button>
                                                         ))}
                                                         {module.lessons.length === 0 && (
                                                             <div className="p-8 text-center opacity-30">
-                                                                <LuLock size={24} className="mx-auto mb-2" />
+                                                                <FiLock size={24} className="mx-auto mb-2" />
                                                                 <p className="text-[10px] font-black uppercase">Coming Soon</p>
                                                             </div>
                                                         )}

@@ -88,7 +88,7 @@ const Navbar = () => {
         <div className="flex items-center justify-between p-5 border-b border-gray-100">
           <Link href="/" onClick={closeMobileMenu}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="w-32 cursor-pointer" src="/images/logo.png" alt="BD Calling Academy" />
+            <img className="w-32 cursor-pointer" src="/images/ejobsitlogo.png" alt="eJobsIT" />
           </Link>
           <button
             onClick={closeMobileMenu}
@@ -199,8 +199,8 @@ const Navbar = () => {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   className="w-32 lg:w-40 transition-transform duration-300 group-hover:scale-105"
-                  src="/images/logo.png"
-                  alt="BD Calling Academy"
+                  src="/images/ejobsitlogo.png"
+                  alt="eJobsIT"
                 />
               </Link>
 

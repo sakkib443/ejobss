@@ -11,6 +11,7 @@ import { User } from '../user/user.model';
 import { IEnrollment, IEnrollmentFilters, IEnrollmentStats } from './enrollment.interface';
 import AppError from '../../utils/AppError';
 import { Types } from 'mongoose';
+import { NotificationService } from '../notification/notification.module';
 
 /**
  * Enroll student in a course
@@ -75,6 +76,19 @@ const enrollStudent = async (
         $addToSet: { enrolledCourses: courseId },
         $inc: { totalCoursesEnrolled: 1 },
     });
+
+    // Create notification for admin
+    try {
+        await NotificationService.createEnrollmentNotification({
+            enrollmentId: enrollment._id as Types.ObjectId,
+            userId: new Types.ObjectId(studentId),
+            userName: `${student.firstName} ${student.lastName || ''}`.trim(),
+            courseId: new Types.ObjectId(courseId),
+            courseName: course.title,
+        });
+    } catch (err) {
+        console.error('Enrollment notification error:', err);
+    }
 
     return enrollment;
 };

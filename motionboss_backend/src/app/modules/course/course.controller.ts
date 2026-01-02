@@ -237,7 +237,7 @@ const getCoursesByCategory = async (req: Request, res: Response, next: NextFunct
 const getCourseContentForStudent = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { id } = req.params;
-        const userId = req.user?._id;
+        const userId = req.user?.userId;
 
         // Verify enrollment
         const enrolled = await Enrollment.findOne({

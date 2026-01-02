@@ -326,20 +326,33 @@ const updateCourseStats = async (
  */
 const getCourseContentForStudent = async (courseId: string) => {
     const course = await Course.findById(courseId)
-        .populate({
-            path: 'modules',
-            options: { sort: { order: 1 } }
-        })
-        .populate({
-            path: 'lessons',
-            options: { sort: { order: 1 } }
-        });
+        .populate('category', 'name nameEn icon')
+        .lean();
 
     if (!course) {
         throw new AppError(404, 'Course not found');
     }
 
-    return course;
+    // Import LessonService dynamically to avoid circular dependency
+    const { LessonService } = await import('../lesson/lesson.service');
+
+    // Get modules for this course
+    const { Module } = await import('../module/module.model');
+    const modules = await Module.find({ course: courseId, isPublished: true })
+        .sort({ order: 1 })
+        .lean();
+
+    // Get lessons for this course
+    const { Lesson } = await import('../lesson/lesson.model');
+    const lessons = await Lesson.find({ course: courseId, isPublished: true })
+        .sort({ order: 1 })
+        .lean();
+
+    return {
+        ...course,
+        modules,
+        lessons,
+    };
 };
 
 export const CourseService = {

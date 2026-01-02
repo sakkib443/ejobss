@@ -41,7 +41,7 @@ export default function EditLessonPage() {
         setFetchingModules(true);
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`${BASE_URL}/modules/course/${courseId}`, {
+            const res = await fetch(`${BASE_URL}/modules/course/${courseId}?includeUnpublished=true`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();

@@ -79,7 +79,7 @@ const Footer = () => {
           {/* Brand Section */}
           <div className="lg:col-span-2 space-y-5">
             <Link href="/" className="inline-block">
-              <img src="/images/logo.png" alt="BD Calling Academy" className="h-12 lg:h-14" />
+              <img src="/images/ejobsitlogo.png" alt="eJobsIT" className="h-12 lg:h-14" />
             </Link>
             <p className={`text-gray-600 work text-sm leading-relaxed max-w-sm ${bengaliClass}`}>
               {t("footer.brandDescription")}

@@ -75,8 +75,8 @@ export default function UserCoursesPage() {
         <div className="space-y-8 animate-in fade-in duration-700">
             {/* Premium Header */}
             <div className={`relative p-8 rounded-[2.5rem] overflow-hidden border transition-all ${isDark
-                    ? 'bg-slate-900/40 border-white/5 shadow-2xl shadow-indigo-500/10'
-                    : 'bg-white border-slate-100 shadow-xl shadow-slate-200/40'
+                ? 'bg-slate-900/40 border-white/5 shadow-2xl shadow-indigo-500/10'
+                : 'bg-white border-slate-100 shadow-xl shadow-slate-200/40'
                 }`}>
                 <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                     <div className="space-y-2">
@@ -101,8 +101,8 @@ export default function UserCoursesPage() {
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className={`w-full pl-11 pr-4 py-3 rounded-2xl text-sm transition-all focus:outline-none focus:ring-2 ${isDark
-                                        ? 'bg-slate-800/50 border-white/5 text-slate-200 focus:ring-indigo-500/30'
-                                        : 'bg-slate-50 border-slate-200 text-slate-700 focus:ring-indigo-500/20'
+                                    ? 'bg-slate-800/50 border-white/5 text-slate-200 focus:ring-indigo-500/30'
+                                    : 'bg-slate-50 border-slate-200 text-slate-700 focus:ring-indigo-500/20'
                                     }`}
                             />
                         </div>
@@ -215,8 +215,8 @@ export default function UserCoursesPage() {
                             key={enroll._id}
                             variants={itemVariants}
                             className={`group relative rounded-[2rem] border overflow-hidden transition-all duration-500 ${isDark
-                                    ? 'bg-slate-900/40 border-white/5 hover:border-indigo-500/30 hover:bg-slate-800/40 shadow-2xl shadow-black/20'
-                                    : 'bg-white border-slate-200/60 hover:border-indigo-500/20 hover:shadow-2xl shadow-slate-200/40'
+                                ? 'bg-slate-900/40 border-white/5 hover:border-indigo-500/30 hover:bg-slate-800/40 shadow-2xl shadow-black/20'
+                                : 'bg-white border-slate-200/60 hover:border-indigo-500/20 hover:shadow-2xl shadow-slate-200/40'
                                 }`}
                         >
                             {/* Thumbnail Area */}
@@ -299,7 +299,7 @@ export default function UserCoursesPage() {
 
                                 <div className="flex items-center gap-3 pt-2">
                                     <Link
-                                        href={`/dashboard/user/courses/${enroll.course?._id}`}
+                                        href={`/learn/${enroll.course?._id}`}
                                         className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-indigo-600 to-indigo-500 text-white rounded-xl font-bold text-xs shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all"
                                     >
                                         <FiPlay /> Continue Learning
@@ -327,8 +327,8 @@ export default function UserCoursesPage() {
 
             {/* Support Widget */}
             <div className={`mt-12 p-8 rounded-[2.5rem] border flex flex-col md:flex-row items-center justify-between gap-6 transition-all ${isDark
-                    ? 'bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border-indigo-500/20 shadow-2xl shadow-indigo-500/10'
-                    : 'bg-gradient-to-br from-indigo-50/50 to-purple-50/50 border-indigo-100 shadow-xl'
+                ? 'bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border-indigo-500/20 shadow-2xl shadow-indigo-500/10'
+                : 'bg-gradient-to-br from-indigo-50/50 to-purple-50/50 border-indigo-100 shadow-xl'
                 }`}>
                 <div className="flex items-center gap-6 text-center md:text-left">
                     <div className="w-16 h-16 rounded-3xl bg-white dark:bg-slate-800 flex items-center justify-center text-indigo-500 shadow-xl border border-slate-100 dark:border-white/5 shrink-0">
