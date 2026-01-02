@@ -33,6 +33,8 @@ import { LessonRoutes } from './app/modules/lesson/lesson.routes';
 import { ModuleRoutes } from './app/modules/module/module.routes';
 import { EnrollmentRoutes } from './app/modules/enrollment/enrollment.routes';
 import { NotificationRoutes } from './app/modules/notification/notification.module';
+import { DesignRoutes } from './app/modules/design/design.routes';
+import { StatsRoutes } from './app/modules/stats/stats.routes';
 
 // ==================== App Initialization ====================
 const app: Application = express();
@@ -134,6 +136,12 @@ app.use('/api/upload', uploadRoutes);
 
 // Notification routes (admin only)
 app.use('/api/notifications', NotificationRoutes);
+
+// Design routes (website design/content management)
+app.use('/api/design', DesignRoutes);
+
+// Stats routes (real-time database statistics)
+app.use('/api/stats', StatsRoutes);
 
 // ==================== Error Handling ====================
 // 404 Not Found handler (must be after all routes)

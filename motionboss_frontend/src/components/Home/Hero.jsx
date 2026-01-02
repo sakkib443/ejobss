@@ -2,22 +2,76 @@
 
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
-import { FiBookOpen, FiUsers, FiAward, FiTrendingUp } from "react-icons/fi";
-import { LuSparkles, LuGraduationCap, LuRocket } from "react-icons/lu";
-import { HiOutlineAcademicCap } from "react-icons/hi2";
+import { LuSearch, LuDownload, LuUsers, LuStar, LuLayoutTemplate, LuCircleCheck } from "react-icons/lu";
 import { useLanguage } from "@/context/LanguageContext";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 const Hero = () => {
     const [isVisible, setIsVisible] = useState(false);
-    const [counts, setCounts] = useState({ courses: 0, students: 0, placement: 0 });
+    const [counts, setCounts] = useState({ users: 0, downloads: 0, rating: 0, templates: 0 });
+    const [typedText, setTypedText] = useState("");
+    const [searchQuery, setSearchQuery] = useState("");
+    const [heroData, setHeroData] = useState(null);
     const { t, language } = useLanguage();
 
     // Apply Bengali font class when language is Bengali
     const bengaliClass = language === "bn" ? "hind-siliguri" : "";
 
+    // Typing animation texts from API or defaults
+    const [dynamicTexts, setDynamicTexts] = useState(["Professional Courses", "Software Tools", "Web Development"]);
+    const [currentTextIndex, setCurrentTextIndex] = useState(0);
+
+    // Fetch hero design from API
+    useEffect(() => {
+        const fetchHeroDesign = async () => {
+            try {
+                const res = await fetch(`${API_URL}/design/hero`);
+                const data = await res.json();
+                if (data.success && data.data?.heroContent) {
+                    setHeroData(data.data.heroContent);
+                    // Set dynamic texts based on language
+                    if (language === 'bn' && data.data.heroContent.dynamicTextsBn?.length > 0) {
+                        setDynamicTexts(data.data.heroContent.dynamicTextsBn);
+                    } else if (data.data.heroContent.dynamicTexts?.length > 0) {
+                        setDynamicTexts(data.data.heroContent.dynamicTexts);
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching hero design:', error);
+            }
+        };
+        fetchHeroDesign();
+    }, [language]);
+
+    // Fetch real stats from database
+    const [realStats, setRealStats] = useState(null);
+
+    useEffect(() => {
+        const fetchRealStats = async () => {
+            try {
+                const res = await fetch(`${API_URL}/stats/dashboard`);
+                const data = await res.json();
+                if (data.success && data.data) {
+                    setRealStats(data.data);
+                }
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+            }
+        };
+        fetchRealStats();
+    }, []);
+
     useEffect(() => {
         setIsVisible(true);
 
+        // Get target values from real stats API (database counts) or defaults
+        const targetUsers = realStats?.activeUsers || 0;
+        const targetDownloads = realStats?.downloads || 0;
+        const targetRating = realStats?.avgRating || 4.8;
+        const targetProducts = realStats?.totalProducts || 0;
+
+        // Counter animation
         const duration = 2000;
         const steps = 60;
         const interval = duration / steps;
@@ -27,236 +81,201 @@ const Hero = () => {
             step++;
             const progress = step / steps;
             setCounts({
-                courses: Math.floor(50 * progress),
-                students: Math.floor(4200 * progress),
-                placement: Math.floor(92 * progress)
+                users: Math.floor(targetUsers * progress),
+                downloads: Math.floor(targetDownloads * progress),
+                rating: Math.min(targetRating, targetRating * progress),
+                templates: Math.floor(targetProducts * progress)
             });
 
             if (step >= steps) clearInterval(timer);
         }, interval);
 
         return () => clearInterval(timer);
-    }, []);
+    }, [realStats]);
+
+    // Typing effect
+    useEffect(() => {
+        if (!dynamicTexts || dynamicTexts.length === 0) return;
+
+        const currentWord = dynamicTexts[currentTextIndex];
+        let i = 0;
+        let isDeleting = false;
+        let speed = 100;
+
+        const type = () => {
+            const current = isDeleting
+                ? currentWord.substring(0, i - 1)
+                : currentWord.substring(0, i + 1);
+
+            setTypedText(current);
+
+            if (!isDeleting && current === currentWord) {
+                isDeleting = true;
+                speed = 2000; // Pause at end
+            } else if (isDeleting && current === "") {
+                isDeleting = false;
+                setCurrentTextIndex((prev) => (prev + 1) % dynamicTexts.length);
+                speed = 500;
+            } else {
+                speed = isDeleting ? 50 : 100;
+                i = isDeleting ? i - 1 : i + 1;
+            }
+
+            setTimeout(type, speed);
+        };
+
+        const timer = setTimeout(type, speed);
+        return () => clearTimeout(timer);
+    }, [currentTextIndex, dynamicTexts]);
+
+    const getBadgeText = () => {
+        if (heroData?.badge?.text) {
+            return language === 'bn' ? heroData.badge.textBn : heroData.badge.text;
+        }
+        return language === 'bn' ? 'আমাদের নতুন কালেকশন দেখুন' : 'Explore our newest collection';
+    };
+
+    const getHeading = () => {
+        if (heroData?.heading) {
+            return language === 'bn' ? heroData.heading.textBn : heroData.heading.text;
+        }
+        return language === 'bn' ? 'আপনার ভবিষ্যৎ গড়ুন' : 'Elevate Your Digital Success with';
+    };
+
+    const getDescription = () => {
+        if (heroData?.description) {
+            return {
+                text: language === 'bn' ? heroData.description.textBn : heroData.description.text,
+                brand: language === 'bn' ? heroData.description.brandBn : heroData.description.brand
+            };
+        }
+        return {
+            text: language === 'bn' ? 'সবচেয়ে নির্ভরযোগ্য লার্নিং প্ল্যাটফর্ম' : 'The most powerful learning and creative platform by',
+            brand: 'Motion Boss'
+        };
+    };
+
+    const getFeatures = () => {
+        if (heroData?.features && heroData.features.length > 0) {
+            return heroData.features.map(f => ({
+                icon: LuCircleCheck,
+                text: language === 'bn' ? f.textBn : f.text
+            }));
+        }
+        return [
+            { icon: LuCircleCheck, text: language === 'bn' ? 'তাৎক্ষণিক অ্যাক্সেস' : 'Instant Access' },
+            { icon: LuCircleCheck, text: language === 'bn' ? 'আজীবন আপডেট' : 'Lifetime Updates' },
+            { icon: LuCircleCheck, text: language === 'bn' ? 'প্রিমিয়াম সাপোর্ট' : 'Premium Support' },
+            { icon: LuCircleCheck, text: language === 'bn' ? 'মানি ব্যাক গ্যারান্টি' : 'Money Back Guarantee' },
+        ];
+    };
+
+    const getSearchPlaceholder = () => {
+        if (heroData?.searchPlaceholder) {
+            return language === 'bn' ? heroData.searchPlaceholder.textBn : heroData.searchPlaceholder.text;
+        }
+        return language === 'bn' ? 'কোর্স, সফটওয়্যার, থিম খুঁজুন...' : 'Search courses, software, themes...';
+    };
+
+    const stats = [
+        { icon: LuUsers, value: counts.users.toLocaleString(), label: language === 'bn' ? 'সক্রিয় শিক্ষার্থী' : 'Active Learners', color: 'bg-blue-500' },
+        { icon: LuDownload, value: counts.downloads.toLocaleString(), label: language === 'bn' ? 'ডাউনলোড' : 'Downloads', color: 'bg-teal-500' },
+        { icon: LuStar, value: counts.rating.toFixed(1), label: language === 'bn' ? 'গড় রেটিং' : 'Avg Rating', color: 'bg-amber-500' },
+        { icon: LuLayoutTemplate, value: counts.templates.toLocaleString(), label: language === 'bn' ? 'মোট প্রোডাক্ট' : 'Products', color: 'bg-purple-500' },
+    ];
+
+    const features = getFeatures();
+    const description = getDescription();
 
     return (
-        <section className="relative overflow-hidden lg:py-12 bg-gradient-to-br from-slate-50 via-white to-teal-50/30">
-            {/* Animated Background Gradient Orbs */}
-            <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-[#41bfb8]/20 to-[#41bfb8]/5 rounded-full blur-3xl animate-blob"></div>
-            <div className="absolute top-1/2 right-0 w-80 h-80 bg-gradient-to-br from-[#F79952]/20 to-[#F79952]/5 rounded-full blur-3xl animate-blob animation-delay-2000"></div>
-            <div className="absolute -bottom-20 left-1/3 w-72 h-72 bg-gradient-to-br from-[#41bfb8]/15 to-purple-200/10 rounded-full blur-3xl animate-blob animation-delay-4000"></div>
+        <section className="relative overflow-hidden py-16 lg:py-24 bg-gradient-to-br from-[#f0fffe] via-[#e8f9f8] to-[#f5f5ff]">
+            {/* Background Effects */}
+            <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-teal-400/10 to-transparent blur-3xl pointer-events-none"></div>
+            <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-amber-400/8 rounded-full blur-3xl pointer-events-none"></div>
 
-            {/* Floating Geometric Shapes */}
-            <div className="absolute bottom-20 right-[5%] w-16 h-16 border-2 border-[#41bfb8]/20 rounded-lg animate-float rotate-12"></div>
-            <div className="absolute top-40 left-[10%] w-12 h-12 border-2 border-[#F79952]/20 rounded-full animate-float animation-delay-1000"></div>
-            <div className="absolute bottom-32 right-[25%] w-10 h-10 bg-[#41bfb8]/10 rounded-lg animate-float animation-delay-2000 rotate-45"></div>
-            <div className="absolute top-1/2 left-[5%] w-8 h-8 border-2 border-[#41bfb8]/15 rounded-full animate-float animation-delay-3000"></div>
+            {/* Grid Pattern */}
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.015)_1px,transparent_1px)] bg-[size:48px_48px] pointer-events-none"></div>
 
-            {/* Floating Dots */}
-            <div className="absolute top-24 right-1/4 w-3 h-3 bg-[#41bfb8] rounded-full animate-ping opacity-40"></div>
-            <div className="absolute top-40 left-1/3 w-2 h-2 bg-[#F79952] rounded-full animate-ping animation-delay-1000 opacity-40"></div>
-            <div className="absolute bottom-40 left-1/4 w-4 h-4 bg-[#41bfb8]/50 rounded-full animate-ping animation-delay-2000 opacity-30"></div>
-            <div className="absolute top-1/3 right-[10%] w-2 h-2 bg-[#F79952]/60 rounded-full animate-ping animation-delay-3000 opacity-50"></div>
+            {/* Main Content */}
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                <div className={`max-w-3xl mx-auto text-center transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
 
-            {/* Moving Particles */}
-            <div className="absolute top-[20%] left-[20%] w-1 h-1 bg-[#41bfb8] rounded-full animate-particle opacity-60"></div>
-            <div className="absolute top-[60%] right-[30%] w-1.5 h-1.5 bg-[#F79952] rounded-full animate-particle animation-delay-2000 opacity-50"></div>
-            <div className="absolute top-[40%] left-[60%] w-1 h-1 bg-[#41bfb8] rounded-full animate-particle animation-delay-4000 opacity-40"></div>
+                    {/* Top Heading/Badge */}
+                    <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-full shadow-sm">
+                        <span className="w-6 h-6 bg-teal-500 rounded-full flex items-center justify-center">
+                            <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                            </svg>
+                        </span>
+                        <span className={`text-sm font-medium text-gray-700 ${bengaliClass}`}>
+                            {getBadgeText()}
+                        </span>
+                        {heroData?.badge?.showNew !== false && (
+                            <span className="px-2 py-0.5 bg-teal-100 text-teal-700 text-[10px] font-bold rounded-full uppercase italic">New</span>
+                        )}
+                    </div>
 
-            {/* Gradient Lines */}
-            <div className="absolute top-0 left-1/2 w-px h-40 bg-gradient-to-b from-transparent via-[#41bfb8]/20 to-transparent animate-pulse"></div>
-            <div className="absolute bottom-0 right-1/3 w-px h-32 bg-gradient-to-t from-transparent via-[#F79952]/20 to-transparent animate-pulse animation-delay-1000"></div>
+                    {/* Main Heading */}
+                    <h1 className={`text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-4 ${bengaliClass}`}>
+                        {getHeading()}
+                        <br />
+                        <span className="bg-gradient-to-r from-teal-500 via-blue-500 to-purple-500 bg-clip-text text-transparent">
+                            {typedText}
+                            <span className="animate-pulse">|</span>
+                        </span>
+                    </h1>
 
-            {/* Grid Pattern with Animation */}
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(65,191,184,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(65,191,184,0.03)_1px,transparent_1px)] bg-[size:50px_50px] animate-grid-flow"></div>
-
-            {/* Sparkle Effects */}
-            <svg className="absolute top-[15%] right-[20%] w-6 h-6 text-[#F79952]/40 animate-sparkle" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
-            </svg>
-            <svg className="absolute bottom-[25%] left-[15%] w-4 h-4 text-[#41bfb8]/40 animate-sparkle animation-delay-2000" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
-            </svg>
-            <svg className="absolute top-[50%] right-[5%] w-5 h-5 text-[#F79952]/30 animate-sparkle animation-delay-4000" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
-            </svg>
-
-            {/* Soft Ambient Light for Contrast */}
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-sky-200/20 rounded-full blur-[100px]"></div>
-            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-teal-100/10 rounded-full blur-[100px]"></div>
-
-            <div className="container mx-auto px-4 sm:px-6 lg:px-16 relative z-10 py-12 lg:py-16">
-                <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-16">
-
-                    {/* Left Section - Content */}
-                    <div className={`flex-1 w-full transition-all duration-1000 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'}`}>
-
-                        {/* Badge */}
-                        <div className="inline-flex items-center gap-2 mb-4 px-4 py-2 bg-white/50 backdrop-blur-md border border-white/40 rounded-full w-fit shadow-sm">
-                            <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#41bfb8] opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#41bfb8]"></span>
-                            </span>
-                            <p className={`text-sm font-medium text-gray-700 work ${bengaliClass}`}>
-                                {t("hero.badge")}
-                            </p>
-                        </div>
-
-                        {/* Main Heading */}
-                        <div className="mb-4">
-                            <h1 className={`text-3xl sm:text-4xl lg:text-5xl font-bold outfit leading-tight ${bengaliClass}`}>
-                                <span className="text-gray-800">{t("hero.heading1")} </span>
-                                <span className="relative inline-block">
-                                    <span className="bg-gradient-to-r from-[#41bfb8] via-[#26a69a] to-[#41bfb8] bg-clip-text text-transparent">
-                                        {t("hero.heading2")}
-                                    </span>
-                                    {/* Ice underline */}
-                                    <svg className="absolute -bottom-1 left-0 w-full" height="8" viewBox="0 0 200 8" fill="none">
-                                        <path d="M2 6C50 2 150 2 198 6" stroke="#4db6ac" strokeWidth="3" strokeLinecap="round" opacity="0.6" />
-                                    </svg>
-                                </span>
-                            </h1>
-                            <p className={`mt-2 text-lg lg:text-3xl text-gray-600 outfit-semibold ${bengaliClass}`}>
-                                {t("hero.headingWith")} <span className="text-[#41bfb8]">{t("hero.academyName")}</span>
-                            </p>
-                        </div>
-
-                        {/* Description */}
-                        <p className={`text-gray-600 text-sm sm:text-base leading-relaxed mb-5 work ${bengaliClass}`}>
-                            {t("hero.description")}
+                    {/* Description with Brand */}
+                    <div className="mb-6">
+                        <p className={`text-lg text-gray-600 ${bengaliClass}`}>
+                            {description.text} <span className="font-bold text-teal-600">{description.brand}</span>
+                            {language === 'bn' ? ' দ্বারা তৈরি।' : ''}
                         </p>
+                    </div>
 
-                        {/* Stats Cards - Frosted Glass */}
-                        <div className="grid grid-cols-3 gap-3 mb-5">
-                            {/* Courses */}
-                            <div className="group relative bg-white/40 backdrop-blur-md border border-white/50 rounded-lg p-3 hover:shadow-lg hover:bg-white/60 transition-all duration-300 hover:-translate-y-1">
-                                <div className="flex items-center gap-1.5 mb-1">
-                                    <FiBookOpen className="text-[#26a69a] text-base" />
-                                    <span className={`text-xs text-gray-600 work ${bengaliClass}`}>{t("hero.courses")}</span>
-                                </div>
-                                <p className="text-xl sm:text-2xl font-bold text-gray-800 outfit">{counts.courses}+</p>
-                                <p className={`text-[10px] text-gray-500 work hidden sm:block ${bengaliClass}`}>{t("hero.vendorCertified")}</p>
+                    {/* Feature Pills */}
+                    <div className="flex flex-wrap justify-center gap-3 mb-8">
+                        {features.map((feature, index) => (
+                            <div key={index} className="flex items-center gap-1.5 px-4 py-1.5 bg-white border border-gray-200 rounded-full shadow-sm">
+                                <feature.icon className="w-4 h-4 text-teal-500" />
+                                <span className={`text-sm text-gray-700 ${bengaliClass}`}>{feature.text}</span>
                             </div>
+                        ))}
+                    </div>
 
-                            {/* Students */}
-                            <div className="group relative bg-white/40 backdrop-blur-md border border-white/50 rounded-lg p-3 hover:shadow-lg hover:bg-white/60 transition-all duration-300 hover:-translate-y-1">
-                                <div className="flex items-center gap-1.5 mb-1">
-                                    <FiUsers className="text-[#F79952] text-base" />
-                                    <span className={`text-xs text-gray-600 work ${bengaliClass}`}>{t("hero.students")}</span>
-                                </div>
-                                <p className="text-xl sm:text-2xl font-bold text-gray-800 outfit">{counts.students.toLocaleString()}+</p>
-                                <p className={`text-[10px] text-gray-500 work hidden sm:block ${bengaliClass}`}>{t("hero.buildingSkills")}</p>
-                            </div>
-
-                            {/* Placement */}
-                            <div className="group relative bg-white/40 backdrop-blur-md border border-white/50 rounded-lg p-3 hover:shadow-lg hover:bg-white/60 transition-all duration-300 hover:-translate-y-1">
-                                <div className="flex items-center gap-1.5 mb-1">
-                                    <FiTrendingUp className="text-[#26a69a] text-base" />
-                                    <span className={`text-xs text-gray-600 work ${bengaliClass}`}>{t("hero.placement")}</span>
-                                </div>
-                                <p className="text-xl sm:text-2xl font-bold text-gray-800 outfit">{counts.placement}%</p>
-                                <p className={`text-[10px] text-gray-500 work hidden sm:block ${bengaliClass}`}>{t("hero.careerSuccess")}</p>
-                            </div>
-                        </div>
-
-                        {/* CTA Buttons */}
-                        <div className="flex flex-wrap gap-3 mb-5">
-                            <a href="/events" className="group relative overflow-hidden">
-                                <div className={`relative flex items-center gap-2 bg-gradient-to-r from-[#41bfb8] to-[#41bfb8] text-white px-5 py-2.5 rounded-md font-semibold work transition-all duration-300 group-hover:shadow-lg group-hover:shadow-[#26a69a]/30 text-sm ${bengaliClass}`}>
-                                    <LuSparkles className="text-lg group-hover:rotate-12 transition-transform" />
-                                    <span>{t("hero.joinSeminar")}</span>
-                                    <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
-                                </div>
-                            </a>
-
-                            <Link href="/success-story" className="group">
-                                <div className={`flex items-center gap-2 bg-white/50 border border-[#26a69a] text-[#00796b] px-5 py-2.5 rounded-md font-semibold work transition-all duration-300 hover:bg-[#e0f2f1] hover:shadow-lg text-sm ${bengaliClass}`}>
-                                    <LuRocket className="text-lg group-hover:translate-x-1 transition-transform" />
-                                    <span>{t("hero.successStories")}</span>
-                                </div>
+                    {/* Search Bar */}
+                    <div className="max-w-xl mx-auto mb-10">
+                        <div className="relative flex items-center bg-white border border-gray-200 rounded-full shadow-lg hover:shadow-xl transition-shadow">
+                            <LuSearch className="absolute left-5 w-5 h-5 text-gray-400" />
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder={getSearchPlaceholder()}
+                                className={`w-full pl-12 pr-32 py-4 rounded-full text-gray-700 placeholder-gray-400 focus:outline-none ${bengaliClass}`}
+                            />
+                            <Link
+                                href={`/courses${searchQuery ? `?search=${searchQuery}` : ''}`}
+                                className="absolute right-2 px-6 py-2.5 bg-teal-500 hover:bg-teal-600 text-white font-semibold rounded-full transition-colors"
+                            >
+                                {language === 'bn' ? 'খুঁজুন' : 'Search'}
                             </Link>
-                        </div>
-
-                        {/* Trust Indicators */}
-                        <div className="flex items-center gap-3">
-                            <div className="flex -space-x-2">
-                                {[
-                                    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face",
-                                    "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=100&h=100&fit=crop&crop=face",
-                                    "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop&crop=face",
-                                    "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&crop=face",
-                                    "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face",
-                                ].map((img, i) => (
-                                    <div key={i} className="w-7 h-7 rounded-full border-2 border-white overflow-hidden shadow-sm">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img src={img} alt={`Student ${i + 1}`} className="w-full h-full object-cover" />
-                                    </div>
-                                ))}
-                            </div>
-                            <p className={`text-xs text-gray-500 work ${bengaliClass}`}>
-                                <span className="text-gray-800 font-semibold">500+</span> {t("hero.enrolledThisMonth")}
-                            </p>
                         </div>
                     </div>
 
-                    {/* Right Section - Video */}
-                    <div className={`flex-1 w-full transition-all duration-1000 delay-300 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10'}`}>
-                        <div className="relative">
-                            {/* Decorative Elements - Ice Blocks */}
-                            <div className="absolute -top-3 -left-3 w-20 h-20 bg-[#b2dfdb]/30 rounded-lg -z-10 backdrop-blur-sm border border-white/20"></div>
-                            <div className="absolute -top-3 -right-3 w-24 h-24 bg-[#ffccbc]/20 rounded-lg -z-10 backdrop-blur-sm border border-white/20"></div>
-
-                            {/* Floating Badge - Moved to Bottom Right */}
-                            <div className="absolute -bottom-4 -right-2 z-20 bg-white/90 backdrop-blur-md shadow-lg rounded-md px-3 py-2 border border-white/50">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-7 h-7 bg-gradient-to-br from-[#F79952] to-[#f59e0b] rounded-md flex items-center justify-center">
-                                        <FiAward className="text-white text-xs" />
-                                    </div>
-                                    <div>
-                                        <p className={`text-xs font-semibold text-gray-800 outfit ${bengaliClass}`}>{t("hero.topRated")}</p>
-                                        <p className={`text-[9px] text-gray-500 work ${bengaliClass}`}>{t("hero.academy2024")}</p>
-                                    </div>
+                    {/* Stats Cards */}
+                    <div className="flex flex-wrap justify-center gap-4">
+                        {stats.map((stat, index) => (
+                            <div key={index} className="flex items-center gap-3 px-5 py-3 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                                <div className={`w-10 h-10 ${stat.color} rounded-lg flex items-center justify-center`}>
+                                    <stat.icon className="w-5 h-5 text-white" />
+                                </div>
+                                <div className="text-left">
+                                    <p className="text-xl font-bold text-gray-900">{stat.value}</p>
+                                    <p className={`text-xs text-gray-500 ${bengaliClass}`}>{stat.label}</p>
                                 </div>
                             </div>
-
-                            {/* Video Container */}
-                            <div className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-lg overflow-hidden shadow-2xl ring-1 ring-white/20">
-                                <div className="absolute inset-0 bg-gradient-to-br from-[#41bfb8]/10 via-transparent to-[#F79952]/10 rounded-lg"></div>
-
-                                <div className="relative aspect-video m-[2px] rounded-lg overflow-hidden bg-gray-900">
-                                    <iframe
-                                        className="absolute border-none top-0 left-0 w-full h-full"
-                                        src="https://www.youtube.com/embed/FtsFZkw2h-A?si=OcWlPICdVmdLQE14"
-                                        title="BD Calling Academy"
-                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                        referrerPolicy="strict-origin-when-cross-origin"
-                                        allowFullScreen
-                                    ></iframe>
-                                </div>
-                            </div>
-
-                            {/* Bottom Stats Badge */}
-                            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 z-20 bg-white/90 backdrop-blur-md shadow-lg rounded-md px-4 py-2 border border-white/50 flex items-center gap-3">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 bg-gradient-to-br from-[#41bfb8] to-[#2dd4bf] rounded-md flex items-center justify-center">
-                                        <HiOutlineAcademicCap className="text-white text-base" />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-bold text-gray-800 outfit">4.9/5</p>
-                                        <p className={`text-[9px] text-gray-500 work ${bengaliClass}`}>{t("hero.rating")}</p>
-                                    </div>
-                                </div>
-                                <div className="w-px h-6 bg-gray-300"></div>
-                                <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 bg-gradient-to-br from-[#F79952] to-[#f59e0b] rounded-md flex items-center justify-center">
-                                        <LuGraduationCap className="text-white text-base" />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-bold text-gray-800 outfit">100%</p>
-                                        <p className={`text-[9px] text-gray-500 work ${bengaliClass}`}>{t("hero.jobSupport")}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        ))}
                     </div>
                 </div>
             </div>

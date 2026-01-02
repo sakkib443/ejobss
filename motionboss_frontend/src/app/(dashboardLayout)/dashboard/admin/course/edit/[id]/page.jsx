@@ -1,18 +1,17 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useRouter, useParams } from 'next/navigation';
 import {
-  FiPlus, FiTrash2, FiSave, FiArrowLeft, FiImage, FiVideo,
-  FiBookOpen, FiDollarSign, FiGlobe, FiLayers, FiCheck,
-  FiTarget, FiList, FiAward, FiTag, FiSearch, FiLayout, FiClock, FiLoader
+  FiArrowLeft, FiSave, FiLoader, FiImage, FiBookOpen,
+  FiPlus, FiTrash2, FiDollarSign, FiVideo, FiTag
 } from 'react-icons/fi';
 import Link from 'next/link';
+import { useTheme } from '@/providers/ThemeProvider';
 
-// Zod Schema updated to match ICourse interface
 const courseValidationSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
   titleBn: z.string().min(3, "Bengali title must be at least 3 characters").optional().or(z.literal('')),
@@ -45,17 +44,19 @@ const courseValidationSchema = z.object({
   isPopular: z.boolean().optional(),
 });
 
-const EditCourse = () => {
+export default function EditCoursePage() {
+  const { isDark } = useTheme();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [categories, setCategories] = useState([]);
+  const [courseData, setCourseData] = useState(null);
   const router = useRouter();
   const { id } = useParams();
 
-  const { register, control, handleSubmit, setValue, reset, formState: { errors } } = useForm({
+  const { register, control, handleSubmit, reset, formState: { errors } } = useForm({
     resolver: zodResolver(courseValidationSchema),
     defaultValues: {
-      courseType: 'online',
+      courseType: 'recorded',
       level: 'beginner',
       language: 'bangla',
       status: 'draft',
@@ -76,10 +77,8 @@ const EditCourse = () => {
   const tagsFields = useFieldArray({ control, name: 'tags' });
 
   const fetchData = useCallback(async () => {
-    if (!id) return;
     const BASE_URL = 'http://localhost:5000/api';
     const token = localStorage.getItem('token');
-
     try {
       setFetching(true);
       const [catRes, courseRes] = await Promise.all([
@@ -88,14 +87,14 @@ const EditCourse = () => {
           headers: { 'Authorization': `Bearer ${token}` }
         })
       ]);
-
       const catData = await catRes.json();
-      const courseData = await courseRes.json();
+      const courseResult = await courseRes.json();
 
       setCategories(catData.data || []);
+      const course = courseResult.data;
 
-      const course = courseData.data;
       if (course) {
+        setCourseData(course);
         reset({
           ...course,
           category: course.category?._id || course.category,
@@ -112,19 +111,13 @@ const EditCourse = () => {
           metaDescription: course.metaDescription || '',
         });
       }
-    } catch (err) {
-      console.error(err);
-      alert('Failed to load course data');
-    } finally {
-      setFetching(false);
-    }
+    } catch (err) { console.error(err); }
+    finally { setFetching(false); }
   }, [id, reset]);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (values) => {
     setLoading(true);
     const BASE_URL = 'http://localhost:5000/api';
     const token = localStorage.getItem('token');
@@ -136,332 +129,271 @@ const EditCourse = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(values),
       });
 
-      const result = await response.json();
-
       if (response.ok) {
-        alert('Course Updated Successfully! ✅');
+        alert('Course updated successfully! ✅');
         router.push('/dashboard/admin/course');
       } else {
-        // Detailed error reporting
-        const errorMsg = result.errorMessages
-          ? result.errorMessages.map(err => `${err.path.split('.').pop()}: ${err.message}`).join('\n')
-          : result.message;
-        alert(`Update Failed ❌\n\n${errorMsg}`);
+        const err = await response.json();
+        alert(`Error: ${err.message}`);
       }
-    } catch (error) {
-      alert('Network error!');
-    } finally {
-      setLoading(false);
-    }
+    } catch (error) { alert('Network error'); }
+    finally { setLoading(false); }
   };
 
-  const FormField = ({ label, icon: Icon, error, children, required }) => (
-    <div className="space-y-2">
-      <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-        {Icon && <Icon size={14} className="text-slate-400" />}
-        {label}
-        {required && <span className="text-red-500">*</span>}
-      </label>
-      {children}
-      {error && <p className="text-red-500 text-xs font-medium">{error.message}</p>}
-    </div>
-  );
-
-  const SectionHeader = ({ title, icon: Icon, className = "" }) => (
-    <div className={`px-6 py-4 border-b border-slate-100 ${className}`}>
-      <h2 className="font-semibold text-slate-800 flex items-center gap-2">
-        {Icon && <Icon size={18} className="text-indigo-600" />}
-        {title}
-      </h2>
-    </div>
-  );
-
-  const inputBase = "w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all";
-  const selectBase = "w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all appearance-none cursor-pointer";
+  const inputClass = `w-full px-4 py-3 rounded-xl border outline-none text-sm transition-all ${isDark
+      ? 'bg-slate-950 border-slate-800 text-slate-200 focus:border-emerald-500 placeholder:text-slate-600'
+      : 'bg-white border-slate-200 text-slate-700 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 placeholder:text-slate-400'
+    }`;
+  const labelClass = `block text-sm font-medium mb-2 ${isDark ? 'text-slate-300' : 'text-slate-700'}`;
+  const cardClass = `p-6 rounded-2xl border ${isDark ? 'bg-black/40 border-slate-800 shadow-none' : 'bg-white border-slate-200/60 shadow-sm'} space-y-5`;
 
   if (fetching) return (
-    <div className="h-screen flex items-center justify-center bg-slate-50">
+    <div className="h-screen flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
-        <FiLoader className="animate-spin text-indigo-600" size={40} />
-        <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Loading Course Data...</p>
+        <FiLoader className="animate-spin text-emerald-500" size={40} />
+        <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Loading course data...</p>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="max-w-7xl mx-auto p-6 pb-20">
-
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
-          <div className="flex items-center gap-4">
-            <Link href="/dashboard/admin/course" className="p-3 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-slate-800 hover:border-slate-300 shadow-sm transition-all">
-              <FiArrowLeft size={20} />
-            </Link>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-800">Edit Course</h1>
-              <p className="text-slate-500 text-sm mt-1">Modify course details and publish changes</p>
-            </div>
+    <div className="max-w-5xl mx-auto space-y-6 pb-20">
+      {/* Header - Identical to Website Edit */}
+      <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 rounded-2xl border ${isDark ? 'bg-black/40 border-slate-800 shadow-none' : 'bg-white border-slate-200/60 shadow-sm'}`}>
+        <div className="flex items-center gap-4">
+          <Link href="/dashboard/admin/course" className={`p-2.5 rounded-xl transition-all ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-slate-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'}`}>
+            <FiArrowLeft size={18} />
+          </Link>
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/25">
+            <FiBookOpen className="text-white text-lg" />
           </div>
-          <button
-            onClick={handleSubmit(onSubmit)}
-            disabled={loading}
-            className="flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/25 transition-all disabled:opacity-50"
-          >
-            {loading ? <><FiLoader className="animate-spin" /> Updating...</> : <><FiSave /> Save Changes</>}
-          </button>
+          <div>
+            <h1 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>Edit Course</h1>
+            <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{courseData?.title || 'Loading...'}</p>
+          </div>
         </div>
+        <button
+          onClick={handleSubmit(onSubmit)}
+          disabled={loading}
+          className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-6 py-2.5 rounded-xl font-semibold text-sm shadow-lg shadow-emerald-500/25 transition-all disabled:opacity-50"
+        >
+          {loading ? <FiLoader className="animate-spin" /> : <FiSave size={16} />}
+          {loading ? 'Updating...' : 'Update Course'}
+        </button>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-          {/* Left Column - 8 Cols */}
-          <div className="lg:col-span-8 space-y-6">
-
-            {/* Basic Info */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-              <SectionHeader title="Basic Information" icon={FiBookOpen} className="bg-gradient-to-r from-indigo-50 to-purple-50" />
-              <div className="p-6 space-y-5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <FormField label="Course Title (English)" error={errors.title} required>
-                    <input {...register('title')} className={inputBase} placeholder="e.g. Complete Video Editing Masterclass" />
-                  </FormField>
-                  <FormField label="Course Title (বাংলা)" error={errors.titleBn}>
-                    <input {...register('titleBn')} className={inputBase} placeholder="যেমনঃ প্রফেশনাল ভিডিও এডিটিং কোর্স" />
-                  </FormField>
+      <form className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Left: General Info */}
+        <div className="md:col-span-2 space-y-6">
+          <div className={cardClass}>
+            <h2 className={`text-sm font-semibold border-b pb-3 mb-2 ${isDark ? 'text-slate-300 border-slate-800' : 'text-slate-700 border-slate-100'}`}>Basic Metadata</h2>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className={labelClass}>Course Title (English)</label>
+                  <input {...register('title')} placeholder="e.g. Video Editing Masterclass" className={inputClass} />
+                  {errors.title && <p className="text-rose-500 text-xs mt-1">{errors.title.message}</p>}
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <FormField label="Short Description (English)" error={errors.shortDescription}>
-                    <textarea {...register('shortDescription')} rows={2} className={inputBase} placeholder="A brief one-liner summary..." />
-                  </FormField>
-                  <FormField label="Short Description (বাংলা)" error={errors.shortDescriptionBn}>
-                    <textarea {...register('shortDescriptionBn')} rows={2} className={inputBase} placeholder="কোর্স সম্পর্কে ছোট একটি বাক্য..." />
-                  </FormField>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <FormField label="Full Description (English)" error={errors.description} required>
-                    <textarea {...register('description')} rows={5} className={inputBase} placeholder="Write detailed course description..." />
-                  </FormField>
-                  <FormField label="Full Description (বাংলা)" error={errors.descriptionBn}>
-                    <textarea {...register('descriptionBn')} rows={5} className={inputBase} placeholder="কোর্সের বিস্তারিত তথ্য লিখুন..." />
-                  </FormField>
+                <div>
+                  <label className={labelClass}>Course Title (বাংলা)</label>
+                  <input {...register('titleBn')} placeholder="যেমনঃ ভিডিও এডিটিং কোর্স" className={inputClass} />
                 </div>
               </div>
-            </div>
-
-            {/* Media */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-              <SectionHeader title="Media & Video" icon={FiImage} className="bg-gradient-to-r from-pink-50 to-rose-50" />
-              <div className="p-6 space-y-5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <FormField label="Thumbnail Image URL" icon={FiImage} error={errors.thumbnail} required>
-                    <input {...register('thumbnail')} className={inputBase} placeholder="https://..." />
-                  </FormField>
-                  <FormField label="Banner Image URL" icon={FiLayout} error={errors.bannerImage}>
-                    <input {...register('bannerImage')} className={inputBase} placeholder="https://..." />
-                  </FormField>
-                </div>
-                <FormField label="Preview Video URL (YouTube/Vimeo)" icon={FiVideo} error={errors.previewVideo}>
-                  <input {...register('previewVideo')} className={inputBase} placeholder="https://..." />
-                </FormField>
-              </div>
-            </div>
-
-            {/* Dynamic Content Lists */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Features */}
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                <div className="px-5 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
-                  <h3 className="text-sm font-bold text-slate-700 flex items-center gap-2 italic"><FiCheck className="text-emerald-500" /> features</h3>
-                  <button type="button" onClick={() => featuresFields.append('')} className="p-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"><FiPlus size={14} /></button>
-                </div>
-                <div className="p-5 space-y-3">
-                  {featuresFields.fields.map((field, index) => (
-                    <div key={field.id} className="flex gap-2">
-                      <input {...register(`features.${index}`)} className={`${inputBase} py-2`} placeholder="Feature..." />
-                      <button type="button" onClick={() => featuresFields.remove(index)} className="text-red-400 hover:text-red-600"><FiTrash2 size={16} /></button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* What You'll Learn */}
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                <div className="px-5 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
-                  <h3 className="text-sm font-bold text-slate-700 flex items-center gap-2 italic"><FiTarget className="text-indigo-500" /> whatYouWillLearn</h3>
-                  <button type="button" onClick={() => learningFields.append('')} className="p-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"><FiPlus size={14} /></button>
-                </div>
-                <div className="p-5 space-y-3">
-                  {learningFields.fields.map((field, index) => (
-                    <div key={field.id} className="flex gap-2">
-                      <input {...register(`whatYouWillLearn.${index}`)} className={`${inputBase} py-2`} placeholder="Outcome..." />
-                      <button type="button" onClick={() => learningFields.remove(index)} className="text-red-400 hover:text-red-600"><FiTrash2 size={16} /></button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Requirements */}
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                <div className="px-5 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
-                  <h3 className="text-sm font-bold text-slate-700 flex items-center gap-2 italic"><FiList className="text-rose-500" /> Roadmap</h3>
-                  <button type="button" onClick={() => requirementsFields.append('')} className="p-1.5 bg-rose-600 text-white rounded-lg hover:bg-rose-700"><FiPlus size={14} /></button>
-                </div>
-                <div className="p-5 space-y-3">
-                  {requirementsFields.fields.map((field, index) => (
-                    <div key={field.id} className="flex gap-2">
-                      <input {...register(`requirements.${index}`)} className={`${inputBase} py-2`} placeholder="Req..." />
-                      <button type="button" onClick={() => requirementsFields.remove(index)} className="text-red-400 hover:text-red-600"><FiTrash2 size={16} /></button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Tags & Audience */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Tags */}
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                <div className="px-5 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
-                  <h3 className="text-sm font-bold text-slate-700 flex items-center gap-2 italic"><FiTag className="text-blue-500" /> Search Tags</h3>
-                  <button type="button" onClick={() => tagsFields.append('')} className="p-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700"><FiPlus size={14} /></button>
-                </div>
-                <div className="p-5 space-y-3">
-                  {tagsFields.fields.map((field, index) => (
-                    <div key={field.id} className="flex gap-2">
-                      <input {...register(`tags.${index}`)} className={`${inputBase} py-2`} placeholder="Tag..." />
-                      <button type="button" onClick={() => tagsFields.remove(index)} className="text-red-400 hover:text-red-600"><FiTrash2 size={16} /></button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* targetAudience */}
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                <div className="px-5 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
-                  <h3 className="text-sm font-bold text-slate-700 flex items-center gap-2 italic"><FiTarget className="text-purple-500" /> Target Audience</h3>
-                  <button type="button" onClick={() => audienceFields.append('')} className="p-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700"><FiPlus size={14} /></button>
-                </div>
-                <div className="p-5 space-y-3">
-                  {audienceFields.fields.map((field, index) => (
-                    <div key={field.id} className="flex gap-2">
-                      <input {...register(`targetAudience.${index}`)} className={`${inputBase} py-2`} placeholder="Audience..." />
-                      <button type="button" onClick={() => audienceFields.remove(index)} className="text-red-400 hover:text-red-600"><FiTrash2 size={16} /></button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column - 4 Cols */}
-          <div className="lg:col-span-4 space-y-6">
-
-            {/* Pricing */}
-            <div className="bg-slate-900 rounded-2xl p-6 shadow-xl border border-slate-800">
-              <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2"><FiDollarSign className="text-emerald-400" /> Financial Settings</h2>
-              <div className="space-y-4">
-                <FormField label="Regular Price (BDT)" required>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold">৳</span>
-                    <input type="number" {...register('price')} className="w-full pl-10 pr-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white font-bold outline-none focus:border-indigo-500 transition-all" />
-                  </div>
-                </FormField>
-                <FormField label="Discount Price (Optional)">
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold">৳</span>
-                    <input type="number" {...register('discountPrice')} className="w-full pl-10 pr-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white font-bold outline-none focus:border-emerald-500 transition-all" />
-                  </div>
-                </FormField>
-              </div>
-            </div>
-
-            {/* Settings */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-              <SectionHeader title="Classification" icon={FiLayers} className="bg-slate-50" />
-              <div className="p-6 space-y-4">
-                <FormField label="Category" required error={errors.category}>
-                  <select {...register('category')} className={selectBase}>
-                    <option value="">Select Category</option>
-                    {categories.map(cat => <option key={cat._id} value={cat._id}>{cat.name}</option>)}
-                  </select>
-                </FormField>
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField label="Lessons (Auto)">
-                    <input type="number" {...register('totalLessons')} className={`${inputBase} bg-slate-100 text-slate-500 cursor-not-allowed`} readOnly />
-                  </FormField>
-                  <FormField label="Modules (Auto)">
-                    <input type="number" {...register('totalModules')} className={`${inputBase} bg-slate-100 text-slate-500 cursor-not-allowed`} readOnly />
-                  </FormField>
-                </div>
-                <FormField label="Course Type">
-                  <select {...register('courseType')} className={selectBase}>
-                    <option value="recorded">Pre-recorded</option>
-                    <option value="online">Online Live</option>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className={labelClass}>Course Type *</label>
+                  <select {...register('courseType')} className={inputClass}>
+                    <option value="recorded">Recorded</option>
+                    <option value="online">Online</option>
                     <option value="offline">Offline</option>
                   </select>
-                </FormField>
-                <FormField label="Difficulty Level">
-                  <select {...register('level')} className={selectBase}>
+                </div>
+                <div>
+                  <label className={labelClass}>Level *</label>
+                  <select {...register('level')} className={inputClass}>
                     <option value="beginner">Beginner</option>
                     <option value="intermediate">Intermediate</option>
                     <option value="advanced">Advanced</option>
                   </select>
-                </FormField>
-                <FormField label="Language">
-                  <select {...register('language')} className={selectBase}>
+                </div>
+                <div>
+                  <label className={labelClass}>Category *</label>
+                  <select {...register('category')} className={inputClass}>
+                    <option value="">Select category...</option>
+                    {categories.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+                  </select>
+                  {errors.category && <p className="text-rose-500 text-xs mt-1">{errors.category.message}</p>}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={labelClass}>Language</label>
+                  <select {...register('language')} className={inputClass}>
                     <option value="bangla">Bangla</option>
                     <option value="english">English</option>
                     <option value="both">Both</option>
                   </select>
-                </FormField>
-              </div>
-            </div>
-
-            {/* Status & SEO */}
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-              <SectionHeader title="Visibility & SEO" icon={FiSearch} className="bg-slate-50" />
-              <div className="p-6 space-y-4">
-                <FormField label="Slug (Auto)">
-                  <input {...register('slug')} className={`${inputBase} bg-slate-100 text-slate-400`} readOnly />
-                </FormField>
-                <FormField label="Status">
-                  <select {...register('status')} className={selectBase}>
+                </div>
+                <div>
+                  <label className={labelClass}>Status</label>
+                  <select {...register('status')} className={inputClass}>
+                    <option value="published">Published</option>
                     <option value="draft">Draft</option>
-                    <option value="published">Published (Live)</option>
                     <option value="archived">Archived</option>
                   </select>
-                </FormField>
-                <div className="flex flex-wrap gap-4 pt-2">
-                  <label className="flex items-center gap-2 cursor-pointer group">
-                    <input type="checkbox" {...register('isFeatured')} className="w-4 h-4 rounded text-indigo-600" />
-                    <span className="text-xs font-bold text-slate-600">Featured</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer group">
-                    <input type="checkbox" {...register('isPopular')} className="w-4 h-4 rounded text-purple-600" />
-                    <span className="text-xs font-bold text-slate-600">Popular</span>
-                  </label>
                 </div>
-                <hr className="my-2 border-slate-100" />
-                <FormField label="Meta Title">
-                  <input {...register('metaTitle')} className={inputBase} maxLength={100} />
-                </FormField>
-                <FormField label="Meta Description">
-                  <textarea {...register('metaDescription')} rows={3} className={inputBase} maxLength={300} />
-                </FormField>
               </div>
             </div>
+          </div>
 
+          <div className={cardClass}>
+            <h2 className={`text-sm font-semibold border-b pb-3 mb-4 ${isDark ? 'text-slate-300 border-slate-800' : 'text-slate-700 border-slate-100'}`}>Course Features & Learning</h2>
+            <div className="space-y-5">
+              <div>
+                <div className="flex justify-between items-center mb-3">
+                  <label className={labelClass}>What You Will Learn</label>
+                  <button type="button" onClick={() => learningFields.append('')} className="text-xs font-medium text-emerald-600 hover:text-emerald-700">+ Add</button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {learningFields.fields.map((field, idx) => (
+                    <div key={field.id} className="group relative">
+                      <input {...register(`whatYouWillLearn.${idx}`)} className={inputClass} placeholder="Topic name" />
+                      <button type="button" onClick={() => learningFields.remove(idx)} className="absolute -top-1 -right-1 bg-rose-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-all"><FiTrash2 size={10} /></button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center mb-3">
+                  <label className={labelClass}>Key Features</label>
+                  <button type="button" onClick={() => featuresFields.append('')} className="text-xs font-medium text-emerald-600 hover:text-emerald-700">+ Add</button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {featuresFields.fields.map((field, idx) => (
+                    <div key={field.id} className="group relative">
+                      <input {...register(`features.${idx}`)} className={inputClass} placeholder="Feature name" />
+                      <button type="button" onClick={() => featuresFields.remove(idx)} className="absolute -top-1 -right-1 bg-rose-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-all"><FiTrash2 size={10} /></button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className={cardClass}>
+            <h2 className={`text-sm font-semibold border-b pb-3 mb-4 ${isDark ? 'text-slate-300 border-slate-800' : 'text-slate-700 border-slate-100'}`}>Media & Meta</h2>
+            <div className="space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className={labelClass}>Thumbnail URL</label>
+                  <div className="relative">
+                    <FiImage className="absolute left-3 top-3.5 text-slate-400" size={16} />
+                    <input {...register('thumbnail')} className={`${inputClass} pl-10`} placeholder="https://..." />
+                  </div>
+                  {errors.thumbnail && <p className="text-rose-500 text-xs mt-1">{errors.thumbnail.message}</p>}
+                </div>
+                <div>
+                  <label className={labelClass}>Banner Image URL</label>
+                  <div className="relative">
+                    <FiImage className="absolute left-3 top-3.5 text-slate-400" size={16} />
+                    <input {...register('bannerImage')} className={`${inputClass} pl-10`} placeholder="https://..." />
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className={labelClass}>Preview Video URL</label>
+                  <div className="relative">
+                    <FiVideo className="absolute left-3 top-3.5 text-slate-400" size={16} />
+                    <input {...register('previewVideo')} className={`${inputClass} pl-10`} placeholder="YouTube/Vimeo" />
+                  </div>
+                </div>
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className={labelClass}>Search Tags</label>
+                    <button type="button" onClick={() => tagsFields.append('')} className="text-[10px] font-bold text-emerald-600">+ Add Tag</button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {tagsFields.fields.map((field, idx) => (
+                      <div key={field.id} className="group relative">
+                        <input {...register(`tags.${idx}`)} className="px-3 py-1.5 bg-slate-50 dark:bg-slate-900 rounded-lg text-xs border border-slate-200 dark:border-slate-800 outline-none focus:border-emerald-300 w-24" placeholder="tag" />
+                        <button type="button" onClick={() => tagsFields.remove(idx)} className="absolute -top-1 -right-1 bg-rose-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-all"><FiTrash2 size={10} /></button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className={cardClass}>
+            <h2 className={`text-sm font-semibold border-b pb-3 mb-4 ${isDark ? 'text-slate-300 border-slate-800' : 'text-slate-700 border-slate-100'}`}>Description</h2>
+            <div className="space-y-4">
+              <div>
+                <label className={labelClass}>Short Description (English)</label>
+                <textarea {...register('shortDescription')} rows={2} className={`${inputClass} resize-none`} placeholder="Brief wrap-up..."></textarea>
+              </div>
+              <div>
+                <label className={labelClass}>Full Description (English)</label>
+                <textarea {...register('description')} rows={5} className={`${inputClass} resize-none`} placeholder="Detailed course content..."></textarea>
+                {errors.description && <p className="text-rose-500 text-xs mt-1">{errors.description.message}</p>}
+              </div>
+            </div>
           </div>
         </div>
 
-      </div>
+        {/* Right: Pricing */}
+        <div className="space-y-6">
+          <div className={`p-6 rounded-2xl text-white shadow-lg space-y-6 relative overflow-hidden ${isDark ? 'bg-slate-900 border border-slate-800' : 'bg-slate-800'}`}>
+            <div className="absolute top-0 right-0 p-3 opacity-10"><FiDollarSign size={60} /></div>
+            <h2 className="text-sm font-semibold text-slate-300 border-b border-slate-700 pb-3 relative z-10">Pricing</h2>
+            <div className="space-y-4 relative z-10">
+              <div>
+                <label className="text-xs font-medium text-slate-400 block mb-2">Regular Price (৳)</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-3 font-semibold text-slate-500">৳</span>
+                  <input type="number" {...register('price')} placeholder="0" className={`w-full border border-slate-600 rounded-xl py-3 pl-10 px-4 text-white text-lg font-bold focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all ${isDark ? 'bg-black/40' : 'bg-slate-700/50'}`} />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-slate-400 block mb-2">Offer Price (৳)</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-3 font-semibold text-slate-500">৳</span>
+                  <input type="number" {...register('discountPrice')} placeholder="0" className={`w-full border border-slate-600 rounded-xl py-3 pl-10 px-4 text-white text-lg font-bold focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all ${isDark ? 'bg-black/40' : 'bg-slate-700/50'}`} />
+                </div>
+              </div>
+              <div className="space-y-3 pt-2">
+                <label className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer transition-colors ${isDark ? 'bg-black/40 hover:bg-black/60' : 'bg-slate-700/50 hover:bg-slate-700'}`}>
+                  <input type="checkbox" {...register('isFeatured')} className="w-5 h-5 rounded accent-emerald-500" />
+                  <span className="text-sm text-slate-300">Mark as Featured</span>
+                </label>
+                <label className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer transition-colors ${isDark ? 'bg-black/40 hover:bg-black/60' : 'bg-slate-700/50 hover:bg-slate-700'}`}>
+                  <input type="checkbox" {...register('isPopular')} className="w-5 h-5 rounded accent-emerald-500" />
+                  <span className="text-sm text-slate-300">Popular Course</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div className={cardClass}>
+            <h2 className={`text-sm font-semibold border-b pb-3 mb-2 ${isDark ? 'text-slate-300 border-slate-800' : 'text-slate-700 border-slate-100'}`}>Engagement Summary</h2>
+            <div className="grid grid-cols-2 gap-3">
+              <div className={`p-3 rounded-xl border ${isDark ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-100'}`}>
+                <p className="text-[10px] uppercase font-bold text-slate-500">Modules</p>
+                <p className={`text-lg font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>{courseData?.totalModules || 0}</p>
+              </div>
+              <div className={`p-3 rounded-xl border ${isDark ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-100'}`}>
+                <p className="text-[10px] uppercase font-bold text-slate-500">Lessons</p>
+                <p className={`text-lg font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>{courseData?.totalLessons || 0}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
     </div>
   );
-};
-
-export default EditCourse;
+}

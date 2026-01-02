@@ -295,6 +295,7 @@ export default function AdminDashboard() {
     completedOrders: 0,
     categories: 0,
     todayRevenue: 0,
+    todayOrders: 0,
     monthlyRevenue: 0,
     newUsersThisMonth: 0,
     activeEnrollments: 0,
@@ -303,6 +304,7 @@ export default function AdminDashboard() {
   const [recentOrders, setRecentOrders] = useState([]);
   const [topCourses, setTopCourses] = useState([]);
   const [revenueHistory, setRevenueHistory] = useState([]);
+  const [recentActivities, setRecentActivities] = useState([]);
 
   // Mock revenue data for area chart
   const defaultRevenueData = [
@@ -356,6 +358,7 @@ export default function AdminDashboard() {
         completedOrders: summary?.completedOrders || 0,
         categories: summary?.totalCategories || 0,
         todayRevenue: summary?.todayRevenue || 0,
+        todayOrders: summary?.todayOrders || 0,
         monthlyRevenue: summary?.monthlyRevenue || 0,
         newUsersThisMonth: summary?.newUsersThisMonth || 0,
       });
@@ -377,6 +380,24 @@ export default function AdminDashboard() {
         status: p.paymentStatus,
         time: new Date(p.orderDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       })));
+
+      // Fetch notifications for recent activities
+      try {
+        const notifRes = await fetch(`${BASE_URL}/notifications?limit=5`, { headers: { 'Authorization': `Bearer ${token}` } });
+        const notifData = await notifRes.json();
+        if (notifData.data) {
+          setRecentActivities(notifData.data.map(n => ({
+            icon: n.type === 'order' ? FiCheckCircle : n.type === 'enrollment' ? FiUsers : n.type === 'review' ? FiStar : FiActivity,
+            title: n.title,
+            description: n.message,
+            time: getTimeAgo(new Date(n.createdAt)),
+            color: n.type === 'order' ? '#10B981' : n.type === 'enrollment' ? '#3B82F6' : n.type === 'review' ? '#F59E0B' : '#6366F1',
+            isNew: !n.isRead
+          })));
+        }
+      } catch (e) {
+        console.log('Notifications fetch error:', e);
+      }
 
       setLoading(false);
       setRefreshing(false);
@@ -402,49 +423,49 @@ export default function AdminDashboard() {
   // Stats cards data
   const mainStats = [
     {
-      title: 'Total Revenue',
-      value: dashboardData.totalRevenue,
-      subtitle: 'All time earnings',
-      change: '+18.2%',
+      title: 'Today Orders',
+      value: dashboardData.todayOrders || 0,
+      subtitle: 'Orders received today',
+      change: '+12%',
+      changeType: 'up',
+      icon: FiShoppingCart,
+      gradient: 'from-blue-500 to-indigo-500',
+    },
+    {
+      title: 'Today Revenue',
+      value: dashboardData.todayRevenue,
+      subtitle: "Today's earnings",
+      change: '+8.5%',
       changeType: 'up',
       icon: FiDollarSign,
       gradient: 'from-emerald-500 to-teal-500',
     },
     {
-      title: 'Total Students',
-      value: dashboardData.totalStudents,
-      subtitle: 'Active learners',
-      change: '+24.5%',
+      title: 'This Month Revenue',
+      value: dashboardData.monthlyRevenue,
+      subtitle: 'Monthly earnings',
+      change: '+18.2%',
       changeType: 'up',
-      icon: FiUsers,
-      gradient: 'from-blue-500 to-indigo-500',
-    },
-    {
-      title: 'Active Courses',
-      value: dashboardData.totalCourses,
-      subtitle: `${dashboardData.publishedCourses || 0} published`,
-      change: '+5',
-      changeType: 'up',
-      icon: FiBook,
+      icon: FiTrendingUp,
       gradient: 'from-amber-500 to-orange-500',
     },
     {
       title: 'Total Orders',
       value: dashboardData.totalOrders,
-      subtitle: `${dashboardData.pendingOrders || 0} pending`,
-      change: '+12.3%',
+      subtitle: `${dashboardData.completedOrders || 0} completed`,
+      change: '+24.5%',
       changeType: 'up',
-      icon: FiShoppingCart,
+      icon: FiPackage,
       gradient: 'from-violet-500 to-purple-500',
     },
   ];
 
   // Product stats for cards
   const productStats = [
-    { title: 'Websites', value: dashboardData.totalWebsites, icon: FiGlobe, gradient: 'from-pink-500 to-rose-500', href: '/dashboard/admin/website' },
-    { title: 'Software', value: dashboardData.totalSoftware, icon: FiCode, gradient: 'from-cyan-500 to-teal-500', href: '/dashboard/admin/software' },
-    { title: 'Categories', value: dashboardData.categories, icon: FiLayers, gradient: 'from-violet-500 to-purple-500', href: '/dashboard/admin/category' },
-    { title: 'All Lessons', value: dashboardData.totalLessons, icon: FiPlay, gradient: 'from-amber-500 to-orange-500', href: '/dashboard/admin/lesson' },
+    { title: 'All Courses', value: dashboardData.totalCourses, icon: FiBook, gradient: 'from-indigo-500 to-purple-500', href: '/dashboard/admin/course' },
+    { title: 'All Softwares', value: dashboardData.totalSoftware, icon: FiCode, gradient: 'from-cyan-500 to-teal-500', href: '/dashboard/admin/software' },
+    { title: 'All Websites', value: dashboardData.totalWebsites, icon: FiGlobe, gradient: 'from-pink-500 to-rose-500', href: '/dashboard/admin/website' },
+    { title: 'All Categories', value: dashboardData.categories, icon: FiLayers, gradient: 'from-amber-500 to-orange-500', href: '/dashboard/admin/category' },
   ];
 
   const quickActions = [
@@ -454,13 +475,14 @@ export default function AdminDashboard() {
     { title: 'Add Category', href: '/dashboard/admin/category/create', icon: FiLayers, gradient: 'from-violet-500 to-purple-500' },
   ];
 
-  const recentActivities = [
-    { icon: FiCheckCircle, title: 'New Order Received', description: 'Full Stack Course purchased', time: '2 min ago', color: '#10B981', isNew: true },
-    { icon: FiUsers, title: 'New Student Registered', description: 'করিম হাসান joined the platform', time: '15 min ago', color: '#3B82F6', isNew: true },
-    { icon: FiGlobe, title: 'Website Sold', description: 'eCommerce Template downloaded', time: '1 hour ago', color: '#EC4899', isNew: false },
-    { icon: FiCode, title: 'Software Updated', description: 'Chrome Extension v2.1 released', time: '2 hours ago', color: '#14B8A6', isNew: false },
-    { icon: FiStar, title: 'New Review', description: '5-star rating on JavaScript Course', time: '3 hours ago', color: '#F59E0B', isNew: false },
-  ];
+  // Helper function for time ago
+  const getTimeAgo = (date) => {
+    const seconds = Math.floor((new Date() - date) / 1000);
+    if (seconds < 60) return 'Just now';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)} min ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)} hour${Math.floor(seconds / 3600) > 1 ? 's' : ''} ago`;
+    return `${Math.floor(seconds / 86400)} day${Math.floor(seconds / 86400) > 1 ? 's' : ''} ago`;
+  };
 
   const getStatusStyle = (status) => {
     switch (status) {
@@ -666,32 +688,32 @@ export default function AdminDashboard() {
         </div>
 
         {/* Live Stats */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6 shadow-xl">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-indigo-500/20 to-transparent rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-purple-500/20 to-transparent rounded-full blur-3xl" />
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 to-white border border-slate-200/60 p-6 shadow-sm">
+          <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-indigo-100 to-transparent rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-purple-100 to-transparent rounded-full blur-3xl" />
 
           <div className="relative">
-            <div className="flex items-center gap-2 mb-6">
-              <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-lg shadow-emerald-400/50" />
-              <span className="text-sm font-medium text-slate-400">Live Statistics</span>
+            <div className="flex items-center gap-2 mb-5">
+              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+              <span className="text-sm font-semibold text-slate-600">Live Statistics</span>
             </div>
 
-            <div className="space-y-4">
-              <div className="flex justify-between items-center p-3 rounded-xl bg-white/5 backdrop-blur-sm">
-                <span className="text-sm text-slate-400">Today's Revenue</span>
-                <span className="text-lg font-bold text-white">৳{dashboardData.todayRevenue.toLocaleString()}</span>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center p-3 rounded-xl bg-white border border-slate-100 shadow-sm">
+                <span className="text-sm text-slate-500">Today's Revenue</span>
+                <span className="text-lg font-bold text-slate-800">৳{dashboardData.todayRevenue.toLocaleString()}</span>
               </div>
-              <div className="flex justify-between items-center p-3 rounded-xl bg-white/5 backdrop-blur-sm">
-                <span className="text-sm text-slate-400">This Month</span>
-                <span className="text-lg font-bold text-white">৳{dashboardData.monthlyRevenue.toLocaleString()}</span>
+              <div className="flex justify-between items-center p-3 rounded-xl bg-white border border-slate-100 shadow-sm">
+                <span className="text-sm text-slate-500">This Month</span>
+                <span className="text-lg font-bold text-slate-800">৳{dashboardData.monthlyRevenue.toLocaleString()}</span>
               </div>
-              <div className="flex justify-between items-center p-3 rounded-xl bg-white/5 backdrop-blur-sm">
-                <span className="text-sm text-slate-400">New Users</span>
-                <span className="text-lg font-bold text-emerald-400">+{dashboardData.newUsersThisMonth}</span>
+              <div className="flex justify-between items-center p-3 rounded-xl bg-white border border-slate-100 shadow-sm">
+                <span className="text-sm text-slate-500">New Users</span>
+                <span className="text-lg font-bold text-emerald-600">+{dashboardData.newUsersThisMonth}</span>
               </div>
-              <div className="flex justify-between items-center p-3 rounded-xl bg-white/5 backdrop-blur-sm">
-                <span className="text-sm text-slate-400">Active Enrollments</span>
-                <span className="text-lg font-bold text-blue-400">{dashboardData.activeEnrollments}</span>
+              <div className="flex justify-between items-center p-3 rounded-xl bg-white border border-slate-100 shadow-sm">
+                <span className="text-sm text-slate-500">Active Enrollments</span>
+                <span className="text-lg font-bold text-indigo-600">{dashboardData.activeEnrollments}</span>
               </div>
             </div>
           </div>
@@ -757,19 +779,21 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-2xl border border-slate-200/60 overflow-hidden shadow-sm">
           <div className="flex items-center justify-between p-6 border-b border-slate-100">
             <h2 className="text-lg font-bold text-slate-800">Recent Activity</h2>
-            <button className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-              <FiMoreVertical className="text-slate-400" />
-            </button>
+            <Link href="/dashboard/admin/notifications" className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1">
+              View All <FiArrowRight size={14} />
+            </Link>
           </div>
           <div className="divide-y divide-slate-100 max-h-[400px] overflow-y-auto">
-            {recentActivities.map((activity, idx) => (
-              <ActivityItem key={idx} {...activity} />
-            ))}
-          </div>
-          <div className="p-4 border-t border-slate-100">
-            <button className="w-full py-2.5 text-sm text-indigo-600 hover:text-indigo-700 font-medium hover:bg-indigo-50 rounded-xl transition-colors">
-              View All Activity
-            </button>
+            {recentActivities.length === 0 ? (
+              <div className="p-8 text-center text-slate-400">
+                <FiActivity className="mx-auto mb-2" size={24} />
+                <p className="text-sm">No recent activities</p>
+              </div>
+            ) : (
+              recentActivities.map((activity, idx) => (
+                <ActivityItem key={idx} {...activity} />
+              ))
+            )}
           </div>
         </div>
       </div>

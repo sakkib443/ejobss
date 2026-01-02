@@ -9,7 +9,7 @@ import {
     FiBook, FiAward, FiClock, FiTrendingUp, FiArrowRight,
     FiUser, FiMail, FiPhone, FiCalendar, FiLoader,
     FiShield, FiPlay, FiStar, FiRefreshCw, FiGrid, FiExternalLink,
-    FiCheck, FiChevronRight, FiDownload
+    FiCheck, FiChevronRight, FiDownload, FiCode, FiGlobe, FiZap, FiTarget
 } from 'react-icons/fi';
 import { useTheme } from '@/providers/ThemeProvider';
 
@@ -45,262 +45,364 @@ export default function UserDashboard() {
         setTimeout(() => setIsSyncing(false), 1000);
     };
 
-    const stats = [
-        { title: 'Enrolled Courses', value: enrollments.length.toString().padStart(2, '0'), icon: FiBook, gradient: 'from-blue-500 to-indigo-600', trend: '+1 this month' },
-        { title: 'Digital Assets', value: downloads.length.toString().padStart(2, '0'), icon: FiDownload, gradient: 'from-pink-500 to-rose-600', trend: 'Softwares & Web' },
-        { title: 'Reward Points', value: '1,250', icon: FiStar, gradient: 'from-amber-500 to-orange-600', trend: 'Top 10%' },
-        { title: 'Certificates', value: (enrollmentStats?.completedCourses || 0).toString().padStart(2, '0'), icon: FiAward, gradient: 'from-purple-500 to-pink-600', trend: 'Earn your first' },
-    ];
+    const cardClass = `rounded-2xl border transition-all duration-300 ${isDark
+        ? 'bg-slate-800/50 border-white/5 hover:border-[#41bfb8]/20'
+        : 'bg-white border-slate-200/60 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] hover:shadow-md'
+        }`;
 
     if (enrollLoading || downloadLoading) {
         return (
-            <div className="min-h-[60vh] flex items-center justify-center">
-                <FiLoader className={`text-4xl animate-spin ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`} />
+            <div className="space-y-6">
+                {/* Loading Header */}
+                <div className={`p-5 ${cardClass}`}>
+                    <div className="flex items-center gap-4">
+                        <div className={`w-12 h-12 rounded-xl ${isDark ? 'bg-slate-700' : 'bg-slate-100'} animate-pulse`}></div>
+                        <div className="space-y-2">
+                            <div className={`h-4 w-32 rounded ${isDark ? 'bg-slate-700' : 'bg-slate-100'} animate-pulse`}></div>
+                            <div className={`h-3 w-48 rounded ${isDark ? 'bg-slate-700' : 'bg-slate-100'} animate-pulse`}></div>
+                        </div>
+                    </div>
+                </div>
+                {/* Loading Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className={`${cardClass} p-5`}>
+                            <div className={`h-20 rounded-xl ${isDark ? 'bg-slate-700' : 'bg-slate-100'} animate-pulse`}></div>
+                        </div>
+                    ))}
+                </div>
             </div>
         );
     }
 
-    const cardClass = `rounded-2xl border transition-all duration-300 ${isDark ? 'bg-slate-800/50 border-white/5 hover:border-indigo-500/30' : 'bg-white border-slate-200/60 shadow-sm hover:shadow-md'
-        }`;
+    const softwareCount = downloads.filter(d => d.productType === 'software').length;
+    const websiteCount = downloads.filter(d => d.productType === 'website').length;
 
     return (
         <div className="space-y-6">
             {/* Professional Compact Header */}
             <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 ${cardClass}`}>
                 <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#41bfb8] to-[#f79952] flex items-center justify-center text-white shadow-md shadow-[#41bfb8]/10">
                         <FiGrid size={24} />
                     </div>
                     <div>
-                        <h1 className={`text-xl font-bold outfit ${isDark ? 'text-white' : 'text-slate-800'}`}>
-                            Student Overview
+                        <h1 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>
+                            Dashboard Overview
                         </h1>
                         <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                            {hasMounted ? new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'Loading date...'}
+                            {hasMounted ? new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }) : 'Loading...'}
                         </p>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
                     <button
                         onClick={handleSync}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${isDark ? 'bg-slate-700 text-slate-200 hover:bg-slate-600' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${isDark
+                            ? 'bg-slate-700 text-slate-200 hover:bg-slate-600'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                             }`}
                     >
-                        <FiRefreshCw className={isSyncing ? 'animate-spin' : ''} />
-                        Sync Data
+                        <FiRefreshCw size={16} className={isSyncing ? 'animate-spin' : ''} />
+                        Sync
                     </button>
                     <Link
                         href="/courses"
-                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-500/25 hover:scale-105 transition-all"
+                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#41bfb8] to-[#f79952] text-white rounded-xl text-sm font-bold shadow-md shadow-[#41bfb8]/10 hover:scale-105 transition-all"
                     >
-                        <FiBook />
-                        Browse Courses
+                        <FiBook size={16} />
+                        Browse
                     </Link>
                 </div>
             </div>
 
             {/* Welcome Banner */}
-            <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-800 p-8 shadow-2xl">
-                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-                    <div className="space-y-4 text-center md:text-left">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20 text-white text-xs font-bold uppercase tracking-widest">
-                            <span className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
-                            Ongoing Learning
+            <div className={`relative overflow-hidden rounded-2xl p-6 ${isDark
+                ? 'bg-gradient-to-r from-slate-800 to-slate-800/50 border border-white/5'
+                : 'bg-gradient-to-r from-slate-50 to-white border border-slate-100'
+                }`}>
+                <div className="absolute top-0 right-0 w-40 h-40 bg-[#41bfb8]/10 blur-[60px] rounded-full" />
+                <div className="absolute bottom-0 left-0 w-32 h-32 bg-[#f79952]/10 blur-[50px] rounded-full" />
+
+                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${isDark
+                                ? 'bg-[#41bfb8]/10 text-[#41bfb8]'
+                                : 'bg-[#41bfb8]/10 text-[#41bfb8]'
+                                }`}>
+                                <FiZap size={10} className="inline mr-1" />
+                                Active Learner
+                            </span>
                         </div>
-                        <h2 className="text-3xl md:text-4xl font-black text-white outfit">
-                            Welcome Back, {user?.firstName || 'Learner'}! 🚀
+                        <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>
+                            Welcome back, <span className="text-[#41bfb8]">{user?.firstName || 'Learner'}</span>! 👋
                         </h2>
-                        <p className="text-indigo-50 text-base max-w-lg">
-                            You have completed <span className="font-bold text-white underline">{enrollmentStats?.averageProgress || 0}%</span> of your current learning goals. Pickup where you left off and sharpen your skills.
+                        <p className={`text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                            {enrollments.length > 0
+                                ? `Continue your learning journey. You have ${enrollments.length} active course${enrollments.length > 1 ? 's' : ''}.`
+                                : 'Start your learning journey today. Explore our courses and digital assets.'
+                            }
                         </p>
-                        <div className="flex flex-wrap gap-3 justify-center md:justify-start pt-2">
-                            <Link href="/dashboard/user/courses" className="px-6 py-3 bg-white text-indigo-700 rounded-xl font-bold text-sm shadow-xl hover:bg-indigo-50 transition-all active:scale-95">
-                                My Classes
-                            </Link>
-                            <Link href="/dashboard/user/schedule" className="px-6 py-3 bg-indigo-500/20 backdrop-blur-md border border-white/20 text-white rounded-xl font-bold text-sm hover:bg-white/10 transition-all">
-                                View Schedule
-                            </Link>
-                        </div>
                     </div>
-                    <div className="relative hidden lg:block">
-                        <div className="w-48 h-48 rounded-3xl bg-white/10 backdrop-blur-3xl border border-white/20 rotate-12 flex items-center justify-center overflow-hidden group">
-                            <FiPlay className="text-white text-6xl group-hover:scale-125 transition-transform duration-500" />
-                        </div>
-                        <div className="absolute -bottom-4 -left-4 w-24 h-24 bg-indigo-400 blur-[50px] opacity-50" />
+                    <div className="flex items-center gap-3">
+                        <Link
+                            href="/dashboard/user/courses"
+                            className="px-4 py-2.5 bg-gradient-to-r from-[#41bfb8] to-[#2dd4bf] text-white rounded-xl font-bold text-sm shadow-md hover:scale-105 transition-all"
+                        >
+                            My Courses
+                        </Link>
+                        <Link
+                            href="/dashboard/user/downloads"
+                            className={`px-4 py-2.5 rounded-xl font-bold text-sm transition-all ${isDark
+                                ? 'bg-slate-700 text-slate-200 hover:bg-slate-600'
+                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                }`}
+                        >
+                            My Assets
+                        </Link>
                     </div>
                 </div>
-                {/* Decorative Elements */}
-                <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2" />
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-400/10 blur-[100px] rounded-full -translate-x-1/2 translate-y-1/2" />
             </div>
 
-            {/* Stats Grid */}
+            {/* Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {stats.map((stat, idx) => (
-                    <div key={idx} className={`${cardClass} p-6 relative group overflow-hidden`}>
-                        <div className="relative z-10 flex items-start justify-between">
-                            <div>
-                                <p className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                                    {stat.title}
-                                </p>
-                                <h3 className={`text-2xl font-black mt-2 outfit ${isDark ? 'text-white' : 'text-slate-800'}`}>
-                                    {stat.value}
-                                </h3>
-                                <div className={`inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-lg text-xs font-bold ${isDark ? 'bg-indigo-500/10 text-indigo-400' : 'bg-indigo-50 text-indigo-600'
-                                    }`}>
-                                    <FiTrendingUp /> {stat.trend}
-                                </div>
-                            </div>
-                            <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center text-white shadow-xl group-hover:scale-110 transition-transform duration-300`}>
-                                <stat.icon size={22} />
-                            </div>
+                {/* Enrolled Courses */}
+                <div className={`${cardClass} p-5 relative group overflow-hidden`}>
+                    <div className="relative z-10 flex items-start justify-between">
+                        <div>
+                            <p className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                                Enrolled Courses
+                            </p>
+                            <h3 className={`text-3xl font-bold mt-1 ${isDark ? 'text-white' : 'text-slate-800'}`}>
+                                {enrollments.length.toString().padStart(2, '0')}
+                            </h3>
+                            <p className={`text-[10px] mt-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                                {enrollmentStats?.completedCourses || 0} completed
+                            </p>
                         </div>
-                        {/* Underline decorative bar */}
-                        <div className={`absolute bottom-0 left-0 h-1 bg-gradient-to-r ${stat.gradient} transition-all duration-300 group-hover:w-full w-0`} />
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#41bfb8] to-[#2dd4bf] flex items-center justify-center text-white shadow-md group-hover:scale-110 transition-transform duration-300">
+                            <FiBook size={20} />
+                        </div>
                     </div>
-                ))}
+                    <div className={`absolute bottom-0 left-0 h-1 bg-gradient-to-r from-[#41bfb8] to-[#2dd4bf] transition-all duration-300 group-hover:w-full w-0`} />
+                </div>
+
+                {/* Digital Assets */}
+                <div className={`${cardClass} p-5 relative group overflow-hidden`}>
+                    <div className="relative z-10 flex items-start justify-between">
+                        <div>
+                            <p className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                                Digital Assets
+                            </p>
+                            <h3 className={`text-3xl font-bold mt-1 ${isDark ? 'text-white' : 'text-slate-800'}`}>
+                                {downloads.length.toString().padStart(2, '0')}
+                            </h3>
+                            <p className={`text-[10px] mt-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                                {softwareCount} software, {websiteCount} web
+                            </p>
+                        </div>
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#f79952] to-[#fb923c] flex items-center justify-center text-white shadow-md group-hover:scale-110 transition-transform duration-300">
+                            <FiDownload size={20} />
+                        </div>
+                    </div>
+                    <div className={`absolute bottom-0 left-0 h-1 bg-gradient-to-r from-[#f79952] to-[#fb923c] transition-all duration-300 group-hover:w-full w-0`} />
+                </div>
+
+                {/* Certificates */}
+                <div className={`${cardClass} p-5 relative group overflow-hidden`}>
+                    <div className="relative z-10 flex items-start justify-between">
+                        <div>
+                            <p className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                                Certificates
+                            </p>
+                            <h3 className={`text-3xl font-bold mt-1 ${isDark ? 'text-white' : 'text-slate-800'}`}>
+                                {(enrollmentStats?.certificatesEarned || 0).toString().padStart(2, '0')}
+                            </h3>
+                            <p className={`text-[10px] mt-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                                Earned achievements
+                            </p>
+                        </div>
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white shadow-md group-hover:scale-110 transition-transform duration-300">
+                            <FiAward size={20} />
+                        </div>
+                    </div>
+                    <div className={`absolute bottom-0 left-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-300 group-hover:w-full w-0`} />
+                </div>
+
+                {/* Reward Points */}
+                <div className={`${cardClass} p-5 relative group overflow-hidden`}>
+                    <div className="relative z-10 flex items-start justify-between">
+                        <div>
+                            <p className={`text-[10px] font-bold uppercase tracking-wider ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                                Reward Points
+                            </p>
+                            <h3 className={`text-3xl font-bold mt-1 ${isDark ? 'text-white' : 'text-slate-800'}`}>
+                                1,250
+                            </h3>
+                            <p className={`text-[10px] mt-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                                Top 10% learner
+                            </p>
+                        </div>
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#41bfb8] to-[#f79952] flex items-center justify-center text-white shadow-md group-hover:scale-110 transition-transform duration-300">
+                            <FiStar size={20} />
+                        </div>
+                    </div>
+                    <div className={`absolute bottom-0 left-0 h-1 bg-gradient-to-r from-[#41bfb8] to-[#f79952] transition-all duration-300 group-hover:w-full w-0`} />
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Continue Learning Section */}
-                <div className={`lg:col-span-2 ${cardClass} p-6`}>
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className={`text-lg font-black outfit ${isDark ? 'text-white' : 'text-slate-800'}`}>
+                <div className={`lg:col-span-2 ${cardClass} overflow-hidden`}>
+                    <div className={`flex items-center justify-between p-5 border-b ${isDark ? 'border-white/5' : 'border-slate-100'}`}>
+                        <h2 className={`font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>
                             Continue Learning
                         </h2>
-                        <Link href="/dashboard/user/courses" className="text-sm font-bold text-indigo-500 hover:text-indigo-400 flex items-center gap-1">
-                            All Courses <FiArrowRight />
+                        <Link href="/dashboard/user/courses" className="text-xs font-bold text-[#41bfb8] hover:underline flex items-center gap-1">
+                            View All <FiArrowRight size={12} />
                         </Link>
                     </div>
 
                     {enrollments.length === 0 ? (
-                        <div className={`rounded-3xl border-2 border-dashed p-12 text-center transition-colors ${isDark ? 'border-slate-700 hover:border-indigo-500/50' : 'border-slate-100 hover:border-indigo-500/30'
-                            }`}>
-                            <div className={`w-20 h-20 mx-auto rounded-3xl flex items-center justify-center mb-4 ${isDark ? 'bg-slate-800' : 'bg-slate-50'
-                                }`}>
-                                <FiBook className={`text-3xl ${isDark ? 'text-slate-600' : 'text-slate-300'}`} />
+                        <div className="p-10 text-center">
+                            <div className={`w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-4 ${isDark ? 'bg-slate-700' : 'bg-slate-100'}`}>
+                                <FiBook size={28} className={isDark ? 'text-slate-500' : 'text-slate-300'} />
                             </div>
-                            <h3 className={`text-lg font-bold mb-2 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                                Your learning shelf is empty
+                            <h3 className={`font-bold mb-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>
+                                No courses yet
                             </h3>
-                            <p className={`text-sm mb-6 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
-                                Expand your skill set. Browse our marketplace to find the perfect professional course for you.
+                            <p className={`text-sm mb-5 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
+                                Start your learning journey today.
                             </p>
                             <Link
                                 href="/courses"
-                                className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-500 text-white rounded-xl font-bold text-sm shadow-xl shadow-indigo-500/20 hover:bg-indigo-600 transition-all"
+                                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#41bfb8] to-[#f79952] text-white rounded-xl font-bold text-sm shadow-md hover:scale-105 transition-all"
                             >
-                                Explore Marketplace
+                                Browse Courses <FiArrowRight size={14} />
                             </Link>
                         </div>
                     ) : (
-                        <div className="space-y-4">
-                            {enrollments.slice(0, 3).map((enroll) => (
-                                <div key={enroll._id} className={`p-4 rounded-2xl border transition-all ${isDark ? 'bg-slate-800/80 border-white/5 hover:bg-slate-800' : 'bg-white border-slate-100 hover:bg-slate-50 shadow-sm'}`}>
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0">
-                                            <img src={enroll.course?.thumbnail || '/placeholder-course.jpg'} alt={enroll.course?.title} className="w-full h-full object-cover" />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <h4 className={`font-bold text-sm truncate ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>{enroll.course?.title}</h4>
-                                            <div className="mt-2 flex items-center gap-4">
-                                                <div className="flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                                                    <div className="h-full bg-indigo-500" style={{ width: `${enroll.progress || 0}%` }}></div>
-                                                </div>
-                                                <span className="text-[10px] font-black text-indigo-500 whitespace-nowrap">{enroll.progress || 0}% Done</span>
-                                            </div>
-                                        </div>
-                                        <Link href={`/dashboard/user/courses/${enroll.course?._id}`} className={`p-3 rounded-xl ${isDark ? 'bg-slate-700 text-slate-300' : 'bg-indigo-50 text-indigo-600'} hover:scale-105 transition-all`}>
-                                            <FiPlay size={16} />
-                                        </Link>
+                        <div className="divide-y divide-slate-100 dark:divide-white/5">
+                            {enrollments.slice(0, 4).map((enroll) => (
+                                <div key={enroll._id} className={`flex items-center gap-4 p-4 transition-colors ${isDark ? 'hover:bg-slate-800/50' : 'hover:bg-slate-50'}`}>
+                                    <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0">
+                                        <img src={enroll.course?.thumbnail || '/placeholder-course.jpg'} alt="" className="w-full h-full object-cover" />
                                     </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className={`font-bold text-sm truncate ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+                                            {enroll.course?.title}
+                                        </h4>
+                                        <div className="flex items-center gap-3 mt-2">
+                                            <div className={`flex-1 h-1.5 rounded-full overflow-hidden ${isDark ? 'bg-slate-700' : 'bg-slate-200'}`}>
+                                                <div className="h-full bg-gradient-to-r from-[#41bfb8] to-[#f79952] rounded-full" style={{ width: `${enroll.progress || 0}%` }}></div>
+                                            </div>
+                                            <span className="text-[10px] font-bold text-[#41bfb8] whitespace-nowrap">{enroll.progress || 0}%</span>
+                                        </div>
+                                    </div>
+                                    <Link href={`/dashboard/user/courses/${enroll.course?._id}`} className={`p-2.5 rounded-xl transition-all ${isDark
+                                        ? 'bg-slate-700 text-slate-300 hover:bg-[#41bfb8] hover:text-white'
+                                        : 'bg-slate-100 text-slate-500 hover:bg-[#41bfb8] hover:text-white'
+                                        }`}>
+                                        <FiPlay size={16} />
+                                    </Link>
                                 </div>
                             ))}
                         </div>
                     )}
                 </div>
 
-                {/* Right Column: Profile & Schedule */}
+                {/* Right Column */}
                 <div className="space-y-6">
-                    {/* Compact Profile Card */}
-                    <div className={`${cardClass} p-6`}>
-                        <h2 className={`text-base font-black outfit mb-5 ${isDark ? 'text-white' : 'text-slate-800'}`}>
-                            Personal Account
-                        </h2>
-                        <div className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-800/50 border border-slate-200/50 dark:border-white/5 mb-4">
-                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 p-0.5">
-                                <div className="w-full h-full rounded-[14px] bg-white dark:bg-slate-800 flex items-center justify-center overflow-hidden">
-                                    <span className="text-xl font-black text-indigo-600">
-                                        {user?.firstName?.[0] || 'S'}
-                                    </span>
+                    {/* Profile Card */}
+                    <div className={`${cardClass} overflow-hidden`}>
+                        <div className={`p-5 border-b ${isDark ? 'border-white/5' : 'border-slate-100'}`}>
+                            <h2 className={`font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>
+                                My Profile
+                            </h2>
+                        </div>
+                        <div className="p-5">
+                            <div className="flex items-center gap-4 mb-5">
+                                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#41bfb8] to-[#f79952] flex items-center justify-center text-white text-xl font-bold shadow-md">
+                                    {user?.firstName?.[0] || 'S'}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <h4 className={`font-bold truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>
+                                        {user?.firstName} {user?.lastName}
+                                    </h4>
+                                    <p className={`text-xs truncate ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                                        {user?.email}
+                                    </p>
                                 </div>
                             </div>
-                            <div className="min-min-0 flex-1">
-                                <h4 className={`font-bold truncate ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
-                                    {user?.firstName} {user?.lastName}
-                                </h4>
-                                <p className="text-xs text-slate-500 truncate">{user?.email}</p>
-                            </div>
-                        </div>
 
-                        <div className="space-y-3">
-                            <div className={`p-3 rounded-xl flex items-center justify-between text-xs font-bold ${isDark ? 'bg-white/5 text-slate-400' : 'bg-slate-50 text-slate-600'}`}>
-                                <span className="flex items-center gap-2 tracking-wide"><FiShield size={14} className="text-indigo-500" /> STATUS</span>
-                                <span className="text-indigo-500">PRO VERIFIED</span>
+                            <div className="space-y-2">
+                                <div className={`flex items-center justify-between p-3 rounded-xl text-xs ${isDark ? 'bg-slate-800/50' : 'bg-slate-50'}`}>
+                                    <span className={`flex items-center gap-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                                        <FiShield size={12} className="text-[#41bfb8]" /> Status
+                                    </span>
+                                    <span className="font-bold text-[#41bfb8]">Verified</span>
+                                </div>
+                                <div className={`flex items-center justify-between p-3 rounded-xl text-xs ${isDark ? 'bg-slate-800/50' : 'bg-slate-50'}`}>
+                                    <span className={`flex items-center gap-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                                        <FiCalendar size={12} className="text-[#f79952]" /> Joined
+                                    </span>
+                                    <span className={`font-bold ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Jan 2025</span>
+                                </div>
                             </div>
-                            <div className={`p-3 rounded-xl flex items-center justify-between text-xs font-bold ${isDark ? 'bg-white/5 text-slate-400' : 'bg-slate-50 text-slate-600'}`}>
-                                <span className="flex items-center gap-2 tracking-wide"><FiCalendar size={14} className="text-blue-500" /> JOINED</span>
-                                <span>JANUARY 2025</span>
-                            </div>
-                        </div>
 
-                        <Link
-                            href="/dashboard/user/profile"
-                            className="mt-5 w-full flex items-center justify-between p-3 rounded-xl bg-indigo-500/10 text-indigo-600 hover:bg-indigo-500 hover:text-white transition-all text-xs font-black outfit uppercase tracking-widest group"
-                        >
-                            Account Settings
-                            <FiChevronRight className="group-hover:translate-x-1 transition-transform" />
-                        </Link>
+                            <Link
+                                href="/dashboard/user/profile"
+                                className={`mt-4 w-full flex items-center justify-center gap-2 p-3 rounded-xl text-xs font-bold transition-all ${isDark
+                                    ? 'bg-slate-700 text-slate-200 hover:bg-[#41bfb8] hover:text-white'
+                                    : 'bg-slate-100 text-slate-600 hover:bg-[#41bfb8] hover:text-white'
+                                    }`}
+                            >
+                                Edit Profile <FiChevronRight size={12} />
+                            </Link>
+                        </div>
                     </div>
 
-                    {/* Weekly Progress Card */}
-                    <div className={`${cardClass} p-6 bg-gradient-to-br from-slate-900 to-slate-800 text-white border-none shadow-xl relative overflow-hidden`}>
-                        <div className="relative z-10">
-                            <h2 className="text-base font-black outfit mb-1">Learning Momentum</h2>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-6">Weekly Activity Tracking</p>
-
-                            <div className="flex items-end justify-between h-20 gap-1 px-2">
-                                {[30, 0, 0, 0, 0, 0, 0].map((h, i) => (
-                                    <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                                        <div
-                                            className="w-full bg-gradient-to-t from-indigo-500 to-purple-400 rounded-lg group transition-all hover:brightness-110"
-                                            style={{ height: `${h || 5}%` }}
-                                        >
-                                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-white text-slate-900 px-2 py-1 rounded text-[10px] font-black opacity-0 group-hover:opacity-100 transition-opacity">
-                                                {h * 12}min
-                                            </div>
-                                        </div>
-                                        <span className="text-[8px] font-bold text-slate-500">
-                                            {['S', 'M', 'T', 'W', 'T', 'F', 'S'][i]}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="mt-6 flex items-center justify-between">
-                                <div>
-                                    <p className="text-[10px] font-bold text-slate-500 tracking-[0.2em] mb-1">THIS WEEK</p>
-                                    <p className="text-xl font-black outfit">0 hrs</p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-[10px] font-bold text-slate-500 tracking-[0.2em] mb-1">TOTAL</p>
-                                    <p className="text-xl font-black outfit">0 hrs</p>
-                                </div>
-                            </div>
+                    {/* Quick Actions */}
+                    <div className={`${cardClass} overflow-hidden`}>
+                        <div className={`p-5 border-b ${isDark ? 'border-white/5' : 'border-slate-100'}`}>
+                            <h2 className={`font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>
+                                Quick Actions
+                            </h2>
                         </div>
-                        {/* Mesh background effect */}
-                        <div className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none">
-                            <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-[radial-gradient(circle_at_center,_rgba(79,70,229,0.15)_0%,_transparent_50%)]" />
+                        <div className="p-3 space-y-2">
+                            <Link href="/dashboard/user/downloads" className={`flex items-center gap-3 p-3 rounded-xl transition-all ${isDark ? 'hover:bg-slate-800/50' : 'hover:bg-slate-50'}`}>
+                                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#41bfb8]/10 to-[#41bfb8]/5 flex items-center justify-center">
+                                    <FiDownload size={16} className="text-[#41bfb8]" />
+                                </div>
+                                <div className="flex-1">
+                                    <p className={`text-sm font-bold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>My Downloads</p>
+                                    <p className={`text-[10px] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Access digital assets</p>
+                                </div>
+                                <FiChevronRight size={14} className={isDark ? 'text-slate-600' : 'text-slate-300'} />
+                            </Link>
+
+                            <Link href="/dashboard/user/certificates" className={`flex items-center gap-3 p-3 rounded-xl transition-all ${isDark ? 'hover:bg-slate-800/50' : 'hover:bg-slate-50'}`}>
+                                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 flex items-center justify-center">
+                                    <FiAward size={16} className="text-emerald-500" />
+                                </div>
+                                <div className="flex-1">
+                                    <p className={`text-sm font-bold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Certificates</p>
+                                    <p className={`text-[10px] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>View achievements</p>
+                                </div>
+                                <FiChevronRight size={14} className={isDark ? 'text-slate-600' : 'text-slate-300'} />
+                            </Link>
+
+                            <Link href="/dashboard/user/purchases" className={`flex items-center gap-3 p-3 rounded-xl transition-all ${isDark ? 'hover:bg-slate-800/50' : 'hover:bg-slate-50'}`}>
+                                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#f79952]/10 to-[#f79952]/5 flex items-center justify-center">
+                                    <FiClock size={16} className="text-[#f79952]" />
+                                </div>
+                                <div className="flex-1">
+                                    <p className={`text-sm font-bold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Purchase History</p>
+                                    <p className={`text-[10px] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>View transactions</p>
+                                </div>
+                                <FiChevronRight size={14} className={isDark ? 'text-slate-600' : 'text-slate-300'} />
+                            </Link>
                         </div>
                     </div>
                 </div>

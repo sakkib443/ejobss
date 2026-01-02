@@ -1,236 +1,82 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { IoMdCall } from "react-icons/io";
-import { IoMailOutline } from "react-icons/io5";
-import { SlSocialLinkedin } from "react-icons/sl";
-import Link from "next/link";
-import { FiYoutube } from "react-icons/fi";
-import { LuFacebook, LuChevronDown } from "react-icons/lu";
-import { FaInstagram } from "react-icons/fa";
-import { HiOutlineUserCircle } from "react-icons/hi2";
 import { useLanguage } from "@/context/LanguageContext";
 
 const TopHeader = () => {
-  const [user, setUser] = useState(null);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const { t, language } = useLanguage();
+  const [isDark, setIsDark] = useState(false);
+  const { language } = useLanguage();
 
   // Apply Bengali font class when language is Bengali
   const bengaliClass = language === "bn" ? "hind-siliguri" : "";
 
+  // Check for dark mode on mount
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setTimeout(() => setUser(JSON.parse(storedUser)), 0);
-    }
-
-    // Close dropdown on click away
-    const handleClickOutside = (event) => {
-      if (!event.target.closest(".profile-dropdown-container")) {
-        setIsDropdownOpen(false);
-      }
+    const checkDarkMode = () => {
+      const savedTheme = localStorage.getItem("theme");
+      setIsDark(savedTheme === "dark" || document.documentElement.classList.contains("dark"));
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+
+    checkDarkMode();
+
+    // Listen for theme changes
+    const observer = new MutationObserver(checkDarkMode);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+    return () => observer.disconnect();
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setUser(null);
-    window.location.href = "/login";
-  };
-
   return (
-    <div className="work relative hidden lg:block">
-      {/* Premium Gradient Background */}
-      <div className="absolute inset-0 bg-gradient-to-r from-[#0f172a] via-[#1e3a5f] to-[#0f172a]"></div>
-
-      {/* Animated Accent Line */}
-      <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#41bfb8] to-transparent opacity-60"></div>
-
-      <div className="relative w-full container mx-auto">
-        <div className="flex flex-col md:flex-row items-center justify-between py-1.5">
-          {/* Contact Info - Left Side */}
-          <div className="flex items-center gap-6">
-            {/* Phone with Premium Styling */}
-            <a
-              href="tel:01321231802"
-              className="group flex gap-2 items-center px-4 py-1.5 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 hover:border-[#41bfb8]/50 hover:bg-[#41bfb8]/10 transition-all duration-300"
-            >
-              <span className="relative">
-                <IoMdCall className="text-[18px] text-[#41bfb8] group-hover:scale-110 transition-transform duration-300" />
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-              </span>
-              <span className="text-[13px] font-medium text-white/90 group-hover:text-white tracking-wide">
-                +880 1321-231802
-              </span>
+    <div className={`w-full py-2.5 text-sm font-medium font-outfit transition-all duration-300 ${isDark
+      ? 'bg-gray-700 border-b border-teal-500/20'
+      : 'bg-teal-600 text-white'
+      }`}>
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center">
+          {/* Left - Contact Info */}
+          <div className={`hidden md:flex items-center gap-4 ${isDark ? 'text-white/60' : 'text-white/80'}`}>
+            <a href="mailto:info@bdcallingacademy.com" className="flex items-center gap-1.5 hover:text-white transition-colors">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+              </svg>
+              info@bdcallingacademy.com
             </a>
-
-            {/* Email with Premium Styling */}
-            <a
-              href="mailto:info@bdcallingacademy.com"
-              className="group flex gap-2 items-center px-4 py-1.5 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 hover:border-[#F79952]/50 hover:bg-[#F79952]/10 transition-all duration-300"
-            >
-              <IoMailOutline className="text-[18px] text-[#F79952] group-hover:scale-110 transition-transform duration-300" />
-              <span className="text-[13px] font-medium text-white/90 group-hover:text-white tracking-wide">
-                info@bdcallingacademy.com
-              </span>
+            <span className="w-px h-3 bg-white/30"></span>
+            <a href="tel:+8801321231802" className="flex items-center gap-1.5 hover:text-white transition-colors">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+              </svg>
+              +880 1321-231802
             </a>
           </div>
 
-          <div className="flex gap-8 items-center">
-            {/* Social Media Icons with Premium Effects */}
-            <div className="flex gap-2 items-center">
-              {/* Facebook */}
-              <a
-                href="https://www.facebook.com/bdcallingacademy.bd"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group relative w-9 h-9 flex items-center justify-center rounded-full bg-white/5 border border-white/10 hover:border-[#1877F2]/50 hover:bg-[#1877F2]/20 transition-all duration-300 overflow-hidden"
-              >
-                <LuFacebook className="text-[16px] text-white/80 group-hover:text-[#1877F2] group-hover:scale-110 transition-all duration-300 z-10" />
-                <span className="absolute inset-0 bg-gradient-to-t from-[#1877F2]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-              </a>
+          {/* Center - Offer/Announcement */}
+          <div className="flex items-center gap-2">
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${isDark ? 'bg-teal-500/30 text-teal-400' : 'bg-white/20 text-white'
+              }`}>
+              🔥 Hot
+            </span>
+            <span className={`hidden sm:inline ${isDark ? 'text-white/70' : 'text-white/90'} ${bengaliClass}`}>
+              {language === 'bn'
+                ? <>সব কোর্সে ২০% ছাড় — কোড: <span className={`font-bold ${isDark ? 'text-teal-400' : 'text-yellow-300'}`}>BDCA20</span></>
+                : <>Get 20% OFF on all courses — Use code: <span className={`font-bold ${isDark ? 'text-teal-400' : 'text-yellow-300'}`}>BDCA20</span></>
+              }
+            </span>
+          </div>
 
-              {/* YouTube */}
-              <a
-                href="https://www.youtube.com/@bdcallingacademy"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group relative w-9 h-9 flex items-center justify-center rounded-full bg-white/5 border border-white/10 hover:border-[#FF0000]/50 hover:bg-[#FF0000]/20 transition-all duration-300 overflow-hidden"
-              >
-                <FiYoutube className="text-[16px] text-white/80 group-hover:text-[#FF0000] group-hover:scale-110 transition-all duration-300 z-10" />
-                <span className="absolute inset-0 bg-gradient-to-t from-[#FF0000]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-              </a>
-
-              {/* LinkedIn */}
-              <a
-                href="https://www.linkedin.com/company/bdcalling-academy/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group relative w-9 h-9 flex items-center justify-center rounded-full bg-white/5 border border-white/10 hover:border-[#0A66C2]/50 hover:bg-[#0A66C2]/20 transition-all duration-300 overflow-hidden"
-              >
-                <SlSocialLinkedin className="text-[14px] text-white/80 group-hover:text-[#0A66C2] group-hover:scale-110 transition-all duration-300 z-10" />
-                <span className="absolute inset-0 bg-gradient-to-t from-[#0A66C2]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-              </a>
-
-              {/* Instagram */}
-              <a
-                href="https://www.instagram.com/bdcallingacademy/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group relative w-9 h-9 flex items-center justify-center rounded-full bg-white/5 border border-white/10 hover:border-[#E4405F]/50 hover:bg-[#E4405F]/20 transition-all duration-300 overflow-hidden"
-              >
-                <FaInstagram className="text-[16px] text-white/80 group-hover:text-[#E4405F] group-hover:scale-110 transition-all duration-300 z-10" />
-                <span className="absolute inset-0 bg-gradient-to-t from-[#E4405F]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-              </a>
-            </div>
-
-            {/* Vertical Divider */}
-            <div className="h-6 w-px bg-gradient-to-b from-transparent via-white/30 to-transparent"></div>
-
-            {/* Auth Section with Premium Buttons */}
-            <div className="flex gap-3 items-center text-[13px] font-medium">
-              {user ? (
-                <div className="relative profile-dropdown-container">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsDropdownOpen(!isDropdownOpen);
-                    }}
-                    type="button"
-                    className="flex items-center gap-3 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 hover:bg-white/20 hover:border-white/30 transition-all duration-300 group"
-                  >
-                    <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-[#41bfb8]/50 group-hover:border-[#41bfb8] transition-colors">
-                      {user.image ? (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img
-                          src={user.image}
-                          alt={user.name || "User"}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-[#41bfb8] to-[#F79952] flex items-center justify-center text-white text-xs font-bold">
-                          {(user.name || user.gmail || "U").charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                    </div>
-                    <div className="hidden sm:block text-left">
-                      <p className="text-white text-[12px] font-semibold leading-tight max-w-[100px] truncate">
-                        {user.firstName || user.name || user.email?.split('@')[0] || "User"}
-                      </p>
-                      <p className={`text-white/60 text-[10px] uppercase tracking-tighter ${bengaliClass}`}>
-                        {user.role === 'admin' ? t("topHeader.adminPanel") : user.role === 'mentor' ? 'Mentor' : 'Student'}
-                      </p>
-                    </div>
-                    <LuChevronDown className={`text-white/60 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} />
-                  </button>
-
-                  {/* Dropdown Menu */}
-                  {isDropdownOpen && (
-                    <div
-                      className="absolute top-full right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <div className="p-4 border-b border-gray-50 bg-gray-50/50">
-                        <p className={`text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1 ${bengaliClass}`}>{t("topHeader.signedInAs")}</p>
-                        <p className="text-[13px] font-bold text-gray-800 truncate">{user.gmail}</p>
-                      </div>
-
-                      <div className="p-2">
-                        <Link
-                          href={user.role === 'admin' ? "/dashboard/admin" : user.role === 'mentor' ? "/dashboard/mentor" : "/dashboard/user"}
-                          onClick={() => setIsDropdownOpen(false)}
-                          className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-[#41bfb8]/10 hover:text-[#41bfb8] transition-all group/item"
-                        >
-                          <div className="p-2 rounded-lg bg-gray-100 group-hover/item:bg-[#41bfb8]/20 group-hover/item:text-[#41bfb8] transition-colors">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-                          </div>
-                          <span className={`text-[14px] font-semibold ${bengaliClass}`}>{t("navbar.dashboard")}</span>
-                        </Link>
-
-                        <button
-                          onClick={handleLogout}
-                          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 transition-all group/logout"
-                        >
-                          <div className="p-2 rounded-lg bg-red-50 group-hover/logout:bg-red-100 transition-colors">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                          </div>
-                          <span className={`text-[14px] font-semibold ${bengaliClass}`}>{t("navbar.logout")}</span>
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <>
-                  <Link
-                    href="/login"
-                    className="relative px-5 py-1.5 rounded-full bg-white/5 border border-white/20 text-white/90 hover:bg-white/10 hover:border-white/30 hover:text-white transition-all duration-300 overflow-hidden group"
-                  >
-                    <span className={`relative z-10 flex items-center gap-1.5 ${bengaliClass}`}>
-                      <HiOutlineUserCircle className="text-[16px]" />
-                      {t("topHeader.login")}
-                    </span>
-                  </Link>
-
-                  <Link
-                    href="/register"
-                    className="relative px-5 py-1.5 rounded-full overflow-hidden group"
-                  >
-                    {/* Gradient Background */}
-                    <span className="absolute inset-0 bg-gradient-to-r from-[#41bfb8] to-[#2dd4bf] group-hover:from-[#2dd4bf] group-hover:to-[#41bfb8] transition-all duration-500"></span>
-                    {/* Shine Effect */}
-                    <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
-                    <span className={`relative z-10 text-white font-semibold ${bengaliClass}`}>
-                      {t("topHeader.register")}
-                    </span>
-                  </Link>
-                </>
-              )}
-            </div>
+          {/* Right - Social Links */}
+          <div className={`flex items-center gap-3 ${isDark ? 'text-white/60' : 'text-white/80'}`}>
+            <a href="https://www.facebook.com/bdcallingacademy.bd" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors" title="Facebook">
+              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"></path></svg>
+            </a>
+            <a href="https://twitter.com/bdcallingacademy" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors" title="Twitter">
+              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"></path></svg>
+            </a>
+            <a href="https://www.instagram.com/bdcallingacademy/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors" title="Instagram">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37zM17.5 6.5h.01"></path></svg>
+            </a>
+            <span className="w-px h-3 bg-white/30 hidden sm:block"></span>
+            <span className={`hidden sm:inline ${isDark ? 'text-white/40' : 'text-white/70'}`}>🇧🇩 Bangladesh</span>
           </div>
         </div>
       </div>

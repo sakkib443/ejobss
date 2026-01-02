@@ -11,7 +11,7 @@ import "./globals.css";
 import Navbar from "../components/sheard/Navbar";
 import Footer from "@/components/sheard/Footer";
 import TopHeader from "@/components/sheard/TopHeader";
-import PaymentMethod from "@/components/sheard/PaymentMethod";
+
 import ReduxProviderWrapper from "@/components/ReduxProvaiderWrapper";
 import { LanguageProvider } from "@/context/LanguageContext";
 import MouseCursorEffect from "@/components/ui/MouseCursorEffect";

@@ -41,6 +41,7 @@ const AnalyticsService = {
         totalSoftware: number;
         // Order & Revenue Stats
         totalOrders: number;
+        todayOrders: number;
         pendingOrders: number;
         completedOrders: number;
         totalRevenue: number;
@@ -78,6 +79,7 @@ const AnalyticsService = {
             totalCategories,
             // Order counts
             totalOrders,
+            todayOrders,
             pendingOrders,
             completedOrders,
             // Revenue aggregations
@@ -102,9 +104,10 @@ const AnalyticsService = {
             Website.countDocuments({ isDeleted: false }),
             Software.countDocuments({ isDeleted: false }),
             // Category query
-            Category.countDocuments({ isDeleted: false }),
+            Category.countDocuments({}),
             // Order queries
             Order.countDocuments(),
+            Order.countDocuments({ orderDate: { $gte: today } }),
             Order.countDocuments({ paymentStatus: 'pending' }),
             Order.countDocuments({ paymentStatus: 'completed' }),
             // Revenue aggregations
@@ -141,6 +144,7 @@ const AnalyticsService = {
             totalSoftware,
             // Order & Revenue Stats
             totalOrders,
+            todayOrders,
             pendingOrders,
             completedOrders,
             totalRevenue: totalRevenueResult[0]?.total || 0,
@@ -224,6 +228,82 @@ const AnalyticsService = {
             revenue: item.revenue,
             orders: item.orders,
         }));
+    },
+
+    /**
+     * Category Revenue Breakdown - প্রোডাক্ট টাইপ অনুযায়ী রেভিনিউ (মাস ভিত্তিক)
+     * Returns monthly revenue for courses, websites, and software for the last 12 months
+     */
+    async getCategoryRevenue(): Promise<{
+        labels: string[];
+        courses: number[];
+        websites: number[];
+        software: number[];
+    }> {
+        const monthsNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+        // Get date 12 months ago from today
+        const twelveMonthsAgo = new Date();
+        twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 11);
+        twelveMonthsAgo.setDate(1);
+        twelveMonthsAgo.setHours(0, 0, 0, 0);
+
+        // Fetch completed orders for the last 12 months
+        const orders = await Order.find({
+            paymentStatus: 'completed',
+            orderDate: { $gte: twelveMonthsAgo }
+        });
+
+        // Prepare labels for the last 12 months
+        const labels: string[] = [];
+        const courseRevenue: number[] = new Array(12).fill(0);
+        const websiteRevenue: number[] = new Array(12).fill(0);
+        const softwareRevenue: number[] = new Array(12).fill(0);
+
+        // Map month indexes to our array indexes (0-11)
+        const monthToIdx: { [key: string]: number } = {};
+        for (let i = 0; i < 12; i++) {
+            const date = new Date(twelveMonthsAgo);
+            date.setMonth(twelveMonthsAgo.getMonth() + i);
+            const mIdx = date.getMonth();
+            const yIdx = date.getFullYear();
+            const key = `${yIdx}-${mIdx}`;
+            labels.push(monthsNames[mIdx]);
+            monthToIdx[key] = i;
+        }
+
+        // Process each order
+        orders.forEach((order: any) => {
+            const orderDate = new Date(order.orderDate);
+            const month = orderDate.getMonth();
+            const year = orderDate.getFullYear();
+            const key = `${year}-${month}`;
+            const idx = monthToIdx[key];
+
+            if (idx !== undefined) {
+                order.items?.forEach((item: any) => {
+                    const amount = item.price || 0;
+                    const productType = item.productType?.toLowerCase() || '';
+
+                    if (productType === 'course') {
+                        courseRevenue[idx] += amount;
+                    } else if (productType === 'website') {
+                        websiteRevenue[idx] += amount;
+                    } else if (productType === 'software') {
+                        softwareRevenue[idx] += amount;
+                    }
+                });
+            }
+        });
+
+        console.log(`[Analytics] Category revenue generated from ${orders.length} orders`);
+
+        return {
+            labels,
+            courses: courseRevenue,
+            websites: websiteRevenue,
+            software: softwareRevenue,
+        };
     },
 
     /**
@@ -486,6 +566,18 @@ const AnalyticsController = {
             data: stats,
         });
     }),
+
+    // Category Revenue Breakdown
+    getCategoryRevenue: catchAsync(async (req: Request, res: Response) => {
+        const data = await AnalyticsService.getCategoryRevenue();
+
+        sendResponse(res, {
+            statusCode: 200,
+            success: true,
+            message: 'Category revenue fetched',
+            data: data,
+        });
+    }),
 };
 
 // ==================== ROUTES ====================
@@ -504,6 +596,9 @@ router.get('/dashboard', AnalyticsController.getDashboard);
 
 // Revenue
 router.get('/revenue', AnalyticsController.getRevenue);
+
+// Category Revenue Breakdown (for charts)
+router.get('/category-revenue', AnalyticsController.getCategoryRevenue);
 
 // Top Products
 router.get('/top-products', AnalyticsController.getTopProducts);

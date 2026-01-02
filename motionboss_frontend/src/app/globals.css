@@ -1,11 +1,323 @@
 @import "tailwindcss";
 
 /* =====================================================
-   BASE LAYER - Smooth Transitions for Dashboard
+   MOTIONBOSS - GLOBAL DESIGN SYSTEM
+   Colors: Teal (#41bfb8) & Orange (#F79952)
+   Fonts: Outfit (headings) & Poppins (body)
    ===================================================== */
+
+/* =====================================================
+   CSS VARIABLES - Global Theme
+   ===================================================== */
+:root {
+  /* Primary Colors */
+  --color-primary: #41bfb8;
+  --color-primary-dark: #2dd4bf;
+  --color-primary-light: #5eead4;
+  --color-primary-10: rgba(65, 191, 184, 0.1);
+  --color-primary-20: rgba(65, 191, 184, 0.2);
+
+  /* Secondary Colors */
+  --color-secondary: #F79952;
+  --color-secondary-dark: #f59e0b;
+  --color-secondary-light: #fbbf24;
+  --color-secondary-10: rgba(247, 153, 82, 0.1);
+  --color-secondary-20: rgba(247, 153, 82, 0.2);
+
+  /* Neutral Colors */
+  --color-dark: #1e293b;
+  --color-gray-900: #0f172a;
+  --color-gray-800: #1e293b;
+  --color-gray-700: #334155;
+  --color-gray-600: #475569;
+  --color-gray-500: #64748b;
+  --color-gray-400: #94a3b8;
+  --color-gray-300: #cbd5e1;
+  --color-gray-200: #e2e8f0;
+  --color-gray-100: #f1f5f9;
+  --color-gray-50: #f8fafc;
+  --color-white: #ffffff;
+
+  /* Font Families */
+  --font-heading: "Outfit", sans-serif;
+  --font-body: "Poppins", sans-serif;
+  --font-bengali: "Hind Siliguri", sans-serif;
+}
+
+/* =====================================================
+   BASE TYPOGRAPHY - Outfit & Poppins Only
+   ===================================================== */
+
+/* Default body font - Poppins */
+body {
+  font-family: var(--font-body);
+  color: var(--color-gray-800);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* All Headings - Outfit */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--color-gray-900);
+}
+
+/* Paragraphs & Body Text - Poppins */
+p,
+span,
+label,
+input,
+textarea,
+select,
+button,
+a,
+li,
+td,
+th,
+div {
+  font-family: var(--font-body);
+}
+
+/* Bengali Font Override */
+.hind-siliguri,
+[lang="bn"],
+.bn {
+  font-family: var(--font-bengali), var(--font-body);
+}
+
+/* =====================================================
+   FONT UTILITY CLASSES
+   ===================================================== */
+
+.font-outfit {
+  font-family: var(--font-heading) !important;
+}
+
+.font-poppins {
+  font-family: var(--font-body) !important;
+}
+
+/* Outfit Weights */
+.outfit {
+  font-family: var(--font-heading);
+  font-weight: 800;
+}
+
+.outfit-bold {
+  font-family: var(--font-heading);
+  font-weight: 700;
+}
+
+.outfit-semibold {
+  font-family: var(--font-heading);
+  font-weight: 600;
+}
+
+.outfit-medium {
+  font-family: var(--font-heading);
+  font-weight: 500;
+}
+
+/* Poppins Weights */
+.poppins {
+  font-family: var(--font-body);
+  font-weight: 400;
+}
+
+.poppins-medium {
+  font-family: var(--font-body);
+  font-weight: 500;
+}
+
+.poppins-semibold {
+  font-family: var(--font-body);
+  font-weight: 600;
+}
+
+.poppins-bold {
+  font-family: var(--font-body);
+  font-weight: 700;
+}
+
+/* =====================================================
+   COLOR UTILITY CLASSES - Primary (Teal)
+   ===================================================== */
+
+.text-primary {
+  color: var(--color-primary);
+}
+
+.bg-primary {
+  background-color: var(--color-primary);
+}
+
+.bg-primary-10 {
+  background-color: var(--color-primary-10);
+}
+
+.bg-primary-20 {
+  background-color: var(--color-primary-20);
+}
+
+.border-primary {
+  border-color: var(--color-primary);
+}
+
+.hover\:bg-primary:hover {
+  background-color: var(--color-primary);
+}
+
+.hover\:text-primary:hover {
+  color: var(--color-primary);
+}
+
+/* =====================================================
+   COLOR UTILITY CLASSES - Secondary (Orange)
+   ===================================================== */
+
+.text-secondary {
+  color: var(--color-secondary);
+}
+
+.bg-secondary {
+  background-color: var(--color-secondary);
+}
+
+.bg-secondary-10 {
+  background-color: var(--color-secondary-10);
+}
+
+.bg-secondary-20 {
+  background-color: var(--color-secondary-20);
+}
+
+.border-secondary {
+  border-color: var(--color-secondary);
+}
+
+.hover\:bg-secondary:hover {
+  background-color: var(--color-secondary);
+}
+
+.hover\:text-secondary:hover {
+  color: var(--color-secondary);
+}
+
+/* =====================================================
+   LEGACY COLOR CLASSES (for compatibility)
+   ===================================================== */
+
+.cpr,
+.text-cpr {
+  color: var(--color-secondary);
+}
+
+.csd,
+.text-csd {
+  color: var(--color-primary);
+}
+
+.bg-cpr {
+  background-color: var(--color-secondary);
+}
+
+.bg-csd {
+  background-color: var(--color-primary);
+}
+
+.border-cpr {
+  border-color: var(--color-secondary);
+}
+
+.border-csd {
+  border-color: var(--color-primary);
+}
+
+/* =====================================================
+   GRADIENT UTILITIES
+   ===================================================== */
+
+.gradient-primary {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+}
+
+.gradient-secondary {
+  background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-dark) 100%);
+}
+
+.gradient-mixed {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+}
+
+.btn-gradient {
+  background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-primary) 100%);
+}
+
+.btn-gradient:hover {
+  filter: brightness(1.05);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.animated-bg {
+  background: linear-gradient(270deg, var(--color-secondary), var(--color-primary), var(--color-secondary));
+  background-size: 600% 600%;
+  animation: gradientMove 20s ease infinite;
+}
+
+/* =====================================================
+   BUTTON STYLES
+   ===================================================== */
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+  font-family: var(--font-body);
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--color-primary-20);
+}
+
+.btn-secondary {
+  background-color: var(--color-secondary);
+  color: white;
+  font-family: var(--font-body);
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-secondary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--color-secondary-20);
+}
+
+/* =====================================================
+   SMOOTH TRANSITIONS
+   ===================================================== */
+
 @layer base {
 
-  /* All interactive elements get smooth transitions */
   button,
   a,
   input,
@@ -16,92 +328,18 @@
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* Cards and containers */
   .bg-white,
   [class*="rounded-"],
   [class*="shadow"],
   [class*="border"] {
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
-
-  /* Dashboard specific - all children */
-  .dashboard-fonts *:not(.animate-spin):not(.animate-pulse):not([class*="animate-"]) {
-    transition: background-color 0.2s ease,
-      border-color 0.2s ease,
-      color 0.2s ease,
-      box-shadow 0.2s ease,
-      transform 0.15s ease;
-  }
 }
 
-/* Poppins Font */
+/* =====================================================
+   KEYFRAME ANIMATIONS
+   ===================================================== */
 
-.font-poppins {
-  font-family: "Poppins", sans-serif;
-}
-
-/* Roboto Font */
-.font-roboto {
-  font-family: "Roboto", sans-serif;
-}
-
-.lobster-regular {
-  font-family: "Lobster", sans-serif;
-  font-weight: 400;
-  font-style: normal;
-}
-
-.caveat {
-  font-family: "Caveat", cursive;
-  font-weight: 400;
-  font-style: normal;
-}
-
-.work {
-  font-family: "Work Sans", sans-serif;
-  font-weight: 400;
-  font-style: normal;
-}
-
-.poppins {
-  font-family: "Poppins", sans-serif;
-  font-weight: 400;
-  font-style: normal;
-}
-
-.outfit {
-  font-family: "Outfit", sans-serif;
-  font-weight: 800;
-  font-style: normal;
-}
-
-.outfit-semibold {
-  font-family: "Outfit", sans-serif;
-  font-weight: 600;
-  font-style: normal;
-}
-
-/* Hind Siliguri for Bengali Text */
-.hind-siliguri {
-  font-family: var(--font-hind-siliguri), "Hind Siliguri", sans-serif;
-  font-style: normal;
-  /* font-weight inherits from parent - allows headings to stay bold */
-}
-
-/* Custom Animations */
-@layer utilities {
-  .animated-bg {
-    background: linear-gradient(270deg, #f79952, #41bfb8, #f79952);
-    background-size: 600% 600%;
-    animation: gradientMove 20s ease infinite;
-  }
-
-  .animate-flip {
-    animation: flip 0.3s ease-in-out;
-  }
-}
-
-/* Keyframes should be outside @layer */
 @keyframes gradientMove {
   0% {
     background-position: 0% 50%;
@@ -116,24 +354,18 @@
   }
 }
 
-@keyframes flip {
-  0% {
-    transform: translateY(-100%);
-    opacity: 0;
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
   }
 
   50% {
-    transform: translateY(10%);
-    opacity: 0.8;
-  }
-
-  100% {
-    transform: translateY(0%);
-    opacity: 1;
+    transform: translateY(-20px) rotate(10deg);
   }
 }
 
-/* Hero Section Animations */
 @keyframes blob {
 
   0%,
@@ -154,38 +386,6 @@
   }
 }
 
-@keyframes float {
-
-  0%,
-  100% {
-    transform: translateY(0) rotate(0deg);
-  }
-
-  50% {
-    transform: translateY(-20px) rotate(10deg);
-  }
-}
-
-@keyframes particle {
-  0% {
-    transform: translate(0, 0);
-    opacity: 0;
-  }
-
-  10% {
-    opacity: 1;
-  }
-
-  90% {
-    opacity: 1;
-  }
-
-  100% {
-    transform: translate(100px, -100px);
-    opacity: 0;
-  }
-}
-
 @keyframes sparkle {
 
   0%,
@@ -200,35 +400,38 @@
   }
 }
 
-@keyframes grid-flow {
+@keyframes flip {
   0% {
-    background-position: 0 0;
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+
+  50% {
+    transform: translateY(10%);
+    opacity: 0.8;
   }
 
   100% {
-    background-position: 50px 50px;
+    transform: translateY(0%);
+    opacity: 1;
   }
 }
 
 /* Animation Classes */
-.animate-blob {
-  animation: blob 8s ease-in-out infinite;
-}
-
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }
 
-.animate-particle {
-  animation: particle 8s linear infinite;
+.animate-blob {
+  animation: blob 8s ease-in-out infinite;
 }
 
 .animate-sparkle {
   animation: sparkle 3s ease-in-out infinite;
 }
 
-.animate-grid-flow {
-  animation: grid-flow 20s linear infinite;
+.animate-flip {
+  animation: flip 0.3s ease-in-out;
 }
 
 /* Animation Delays */
@@ -248,292 +451,157 @@
   animation-delay: 4s;
 }
 
-/* Custom Colors */
-.cpr {
-  color: #f79952;
-}
+/* =====================================================
+   DASHBOARD SPECIFIC STYLES
+   ===================================================== */
 
-.csd {
-  color: #41bfb8;
-}
-
-.crd {
-  color: #414042;
-}
-
-.tw {
-  color: white;
-}
-
-/* Custom Gradient Classes */
-.btn-gradient {
-  background: linear-gradient(135deg, #f79952 0%, #41bfb8 100%);
-}
-
-.btn-gradient:hover {
-  filter: brightness(0.95);
-}
-
-.text-cpr {
-  color: #f79952;
-}
-
-.text-csd {
-  color: #41bfb8;
-}
-
-.bg-cpr {
-  background-color: #f79952;
-}
-
-.bg-csd {
-  background-color: #41bfb8;
-}
-
-.border-cpr {
-  border-color: #f79952;
-}
-
-.border-csd {
-  border-color: #41bfb8;
-}
-
-/* ============================================= */
-/* Dashboard Typography - Outfit & Poppins */
-/* ============================================= */
-
-/* Dashboard Container - Apply Poppins to all text by default */
 .dashboard-fonts {
-  font-family: var(--font-poppins), "Poppins", sans-serif;
+  font-family: var(--font-body);
 }
 
-/* All Headings use Outfit */
 .dashboard-fonts h1,
 .dashboard-fonts h2,
 .dashboard-fonts h3,
 .dashboard-fonts h4,
 .dashboard-fonts h5,
 .dashboard-fonts h6 {
-  font-family: var(--font-outfit), "Outfit", sans-serif;
+  font-family: var(--font-heading);
 }
 
-/* All Paragraphs use Poppins */
-.dashboard-fonts p,
-.dashboard-fonts span,
-.dashboard-fonts label,
-.dashboard-fonts input,
-.dashboard-fonts textarea,
-.dashboard-fonts select,
-.dashboard-fonts button,
-.dashboard-fonts a,
-.dashboard-fonts li,
-.dashboard-fonts td,
-.dashboard-fonts th {
-  font-family: var(--font-poppins), "Poppins", sans-serif;
-}
-
-/* Outfit utility class for headings */
-.font-outfit {
-  font-family: var(--font-outfit), "Outfit", sans-serif;
-}
-
-/* Poppins utility class */
-.font-poppins {
-  font-family: var(--font-poppins), "Poppins", sans-serif;
+.dashboard-fonts *:not(.animate-spin):not(.animate-pulse):not([class*="animate-"]) {
+  transition: background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
 }
 
 /* =====================================================
-   LIGHT MODE - Override Dark Backgrounds
+   DARK MODE STYLES
    ===================================================== */
 
-/* In light mode, convert dark backgrounds to light */
-.dashboard-fonts .bg-slate-800:not(.dark .bg-slate-800),
-.dashboard-fonts .bg-slate-900:not(.dark .bg-slate-900),
-html:not(.dark) .dashboard-fonts .bg-slate-800,
-html:not(.dark) .dashboard-fonts .bg-slate-900 {
-  background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
-  color: #1e293b !important;
-  border: 1px solid #e2e8f0 !important;
+.dark body {
+  background-color: var(--color-gray-900);
+  color: var(--color-gray-200);
 }
 
-/* Override dark text colors in light mode dark sections */
-html:not(.dark) .dashboard-fonts .bg-slate-800 .text-white,
-html:not(.dark) .dashboard-fonts .bg-slate-900 .text-white,
-html:not(.dark) .dashboard-fonts .bg-slate-800 .text-slate-400,
-html:not(.dark) .dashboard-fonts .bg-slate-900 .text-slate-400 {
-  color: #475569 !important;
+.dark h1,
+.dark h2,
+.dark h3,
+.dark h4,
+.dark h5,
+.dark h6 {
+  color: var(--color-white);
 }
 
-/* Override dark inputs in light mode */
-html:not(.dark) .dashboard-fonts .bg-slate-800 input,
-html:not(.dark) .dashboard-fonts .bg-slate-800 select,
-html:not(.dark) .dashboard-fonts .bg-slate-700,
-html:not(.dark) .dashboard-fonts .bg-slate-900\/50 {
-  background: #ffffff !important;
-  color: #1e293b !important;
-  border: 1px solid #e2e8f0 !important;
-}
-
-/* Override dark borders in light mode */
-html:not(.dark) .dashboard-fonts .border-slate-700,
-html:not(.dark) .dashboard-fonts .border-slate-600 {
-  border-color: #e2e8f0 !important;
-}
-
-/* =====================================================
-   DARK MODE - Subtle Borders & Soft Colors
-   ===================================================== */
-
-/* Dark mode card styles - darker to match sidebar */
-.dark .dashboard-card,
-.dark .card,
 .dark .bg-white {
-  background: rgb(15, 23, 42) !important;
-  /* slate-950 - much darker */
-  border-color: rgba(51, 65, 85, 0.5) !important;
-  color: rgb(226, 232, 240);
+  background: var(--color-gray-900) !important;
+  border-color: var(--color-gray-700) !important;
 }
 
-/* Dark mode table styles */
-.dark .dashboard-table thead {
-  background: linear-gradient(to right, rgb(15, 23, 42), rgb(10, 15, 30));
-}
-
-.dark .dashboard-table tbody tr {
-  border-color: rgba(51, 65, 85, 0.3);
-}
-
-.dark .dashboard-table tbody tr:hover {
-  background: rgba(30, 41, 59, 0.5);
-}
-
-/* Dark mode input styles - darker */
 .dark input,
 .dark select,
 .dark textarea {
-  background: rgb(15, 23, 42) !important;
-  /* slate-950 */
-  border-color: rgba(51, 65, 85, 0.5) !important;
-  color: rgb(226, 232, 240);
-}
-
-.dark input::placeholder,
-.dark textarea::placeholder {
-  color: rgb(100, 116, 139);
+  background: var(--color-gray-900) !important;
+  border-color: var(--color-gray-700) !important;
+  color: var(--color-gray-200);
 }
 
 .dark input:focus,
 .dark select:focus,
 .dark textarea:focus {
-  background: rgb(20, 30, 50) !important;
-  border-color: rgba(99, 102, 241, 0.5) !important;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px var(--color-primary-10);
 }
 
-/* Dark mode text colors */
-.dark .text-slate-800 {
-  color: rgb(226, 232, 240) !important;
+.dark .text-gray-900 {
+  color: var(--color-gray-100) !important;
 }
 
-.dark .text-slate-700 {
-  color: rgb(203, 213, 225) !important;
+.dark .text-gray-800 {
+  color: var(--color-gray-200) !important;
 }
 
-.dark .text-slate-600 {
-  color: rgb(148, 163, 184) !important;
+.dark .text-gray-700 {
+  color: var(--color-gray-300) !important;
 }
 
-.dark .text-slate-500 {
-  color: rgb(100, 116, 139) !important;
+.dark .text-gray-600 {
+  color: var(--color-gray-400) !important;
 }
 
-.dark .text-slate-400 {
-  color: rgb(148, 163, 184) !important;
+.dark .text-gray-500 {
+  color: var(--color-gray-500) !important;
 }
 
-/* Dark mode bg colors - darker to match sidebar */
-.dark .bg-slate-50,
-.dark .bg-slate-100 {
-  background: rgba(30, 41, 59, 0.8) !important;
-  /* slate-800 */
+.dark .bg-gray-50,
+.dark .bg-gray-100 {
+  background: var(--color-gray-800) !important;
 }
 
-.dark .bg-slate-200 {
-  background: rgba(51, 65, 85, 0.5) !important;
-}
-
-/* Dark mode border colors - much softer/subtle */
-.dark .border-slate-200,
-.dark .border-slate-100,
-.dark .border-slate-200\/60,
-.dark .border-slate-200\/50 {
-  border-color: rgba(71, 85, 105, 0.3) !important;
-}
-
-.dark .border-white\/5 {
-  border-color: rgba(255, 255, 255, 0.05) !important;
-}
-
-/* Dark mode dividers */
-.dark .divide-slate-100> :not([hidden])~ :not([hidden]),
-.dark .divide-slate-200> :not([hidden])~ :not([hidden]) {
-  border-color: rgba(71, 85, 105, 0.3);
-}
-
-/* Dark mode hover states */
-.dark .hover\:bg-slate-50:hover,
-.dark .hover\:bg-slate-100:hover {
-  background: rgba(51, 65, 85, 0.5) !important;
-}
-
-.dark .hover\:bg-slate-200:hover {
-  background: rgba(71, 85, 105, 0.4) !important;
-}
-
-/* Dark mode shadows - softer glow */
-.dark .shadow-sm,
-.dark .shadow {
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px -1px rgba(0, 0, 0, 0.3) !important;
-}
-
-.dark .shadow-lg {
-  box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.4) !important;
-}
-
-.dark .shadow-xl {
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.4) !important;
-}
-
-/* Dark mode gradient overlays - softer */
-.dark .from-slate-50,
-.dark .to-slate-50 {
-  --tw-gradient-from: rgb(30, 41, 59);
-  --tw-gradient-to: rgb(15, 23, 42);
+.dark .border-gray-200,
+.dark .border-gray-100 {
+  border-color: var(--color-gray-700) !important;
 }
 
 /* =====================================================
-   SMOOTH HOVER TRANSITIONS - Dashboard Wide
+   LIGHT MODE OVERRIDES
    ===================================================== */
 
-/* Ensure all hover effects are smooth */
-.dashboard-fonts button:hover,
-.dashboard-fonts a:hover,
-.dashboard-fonts [class*="hover:"]:hover {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+html:not(.dark) .bg-slate-800,
+html:not(.dark) .bg-slate-900 {
+  background: linear-gradient(135deg, var(--color-gray-50), var(--color-gray-100)) !important;
+  color: var(--color-gray-800) !important;
+  border: 1px solid var(--color-gray-200) !important;
 }
 
-/* Cards and containers hover */
-.dashboard-fonts .group:hover,
-.dashboard-fonts [class*="rounded-"]:hover {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+/* =====================================================
+   UTILITY CLASSES
+   ===================================================== */
+
+.crd {
+  color: var(--color-dark);
 }
 
-/* Exclude spinning/pulsing animations */
-.animate-spin {
-  transition: none !important;
-  animation: spin 1s linear infinite;
+.tw {
+  color: var(--color-white);
 }
 
-.animate-pulse {
-  transition: none !important;
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-gray-100);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-gray-300);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gray-400);
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: var(--color-gray-800);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: var(--color-gray-600);
+}
+
+/* Focus Ring */
+*:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Selection */
+::selection {
+  background-color: var(--color-primary-20);
+  color: var(--color-primary);
 }

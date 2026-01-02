@@ -1,13 +1,16 @@
 "use client";
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
+import { LuGraduationCap, LuCode, LuGlobe, LuWrench, LuArrowRight } from 'react-icons/lu';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 const HomeCategory = () => {
     const [isVisible, setIsVisible] = useState(false);
-    const { t, language } = useLanguage();
+    const [stats, setStats] = useState(null);
+    const { language } = useLanguage();
     const bengaliClass = language === "bn" ? "hind-siliguri" : "";
 
     useEffect(() => {
@@ -15,186 +18,247 @@ const HomeCategory = () => {
         return () => clearTimeout(timer);
     }, []);
 
+    // Fetch real stats from database
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const res = await fetch(`${API_URL}/stats/dashboard`);
+                const data = await res.json();
+                if (data.success && data.data) {
+                    setStats(data.data);
+                }
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+            }
+        };
+        fetchStats();
+    }, []);
+
+    // Get dynamic count for each category
+    const getCategoryCount = (id) => {
+        if (!stats?.breakdown) return '0';
+
+        switch (id) {
+            case 'courses':
+                return stats.breakdown.courses || 0;
+            case 'software':
+                return stats.breakdown.software || 0;
+            case 'websites':
+                return stats.breakdown.websites || 0;
+            case 'tools':
+                // Tools can be a subset or same as software
+                return stats.breakdown.software || 0;
+            default:
+                return 0;
+        }
+    };
+
     const categories = [
-        { img: '/images/gdIcon.png', titleKey: 'artDesign', subtitleKey: 'artDesignSub', color: '#FF6B6B', bgColor: '#FFF5F5' },
-        { img: '/images/webicon.png', titleKey: 'programming', subtitleKey: 'programmingSub', color: '#41bfb8', bgColor: '#F0FDFA' },
-        { img: '/images/icon5.png', titleKey: 'digitalMarketing', subtitleKey: 'digitalMarketingSub', color: '#F79952', bgColor: '#FFF7ED' },
-        { img: '/images/icon6 (2).png', titleKey: 'mediaFilm', subtitleKey: 'mediaFilmSub', color: '#8B5CF6', bgColor: '#F5F3FF' },
-        { img: '/images/icon3.png', titleKey: 'networkingServer', subtitleKey: 'networkingServerSub', color: '#3B82F6', bgColor: '#EFF6FF' },
-        { img: '/images/icon4.png', titleKey: 'management', subtitleKey: 'managementSub', color: '#10B981', bgColor: '#ECFDF5' },
-        { img: '/images/icon3.png', titleKey: 'database', subtitleKey: 'databaseSub', color: '#EC4899', bgColor: '#FDF2F8' },
-        { img: '/images/gdIcon.png', titleKey: 'diploma', subtitleKey: 'diplomaSub', color: '#6366F1', bgColor: '#EEF2FF' }
+        {
+            id: 'courses',
+            icon: LuGraduationCap,
+            title: language === 'bn' ? 'কোর্স সমূহ' : 'Courses',
+            subtitle: language === 'bn' ? 'প্রফেশনাল স্কিল শিখুন' : 'Professional Skills',
+            itemLabel: language === 'bn' ? 'কোর্স' : 'Courses',
+            color: 'teal',
+            href: '/courses'
+        },
+        {
+            id: 'software',
+            icon: LuCode,
+            title: language === 'bn' ? 'সফটওয়্যার' : 'Software',
+            subtitle: language === 'bn' ? 'প্রিমিয়াম স্ক্রিপ্ট' : 'Premium Scripts',
+            itemLabel: language === 'bn' ? 'আইটেম' : 'Items',
+            color: 'orange',
+            href: '/software'
+        },
+        {
+            id: 'websites',
+            icon: LuGlobe,
+            title: language === 'bn' ? 'ওয়েবসাইট' : 'Websites',
+            subtitle: language === 'bn' ? 'প্রিমিয়াম টেমপ্লেট' : 'Premium Templates',
+            itemLabel: language === 'bn' ? 'টেমপ্লেট' : 'Templates',
+            color: 'teal',
+            href: '/websites'
+        },
+        {
+            id: 'tools',
+            icon: LuWrench,
+            title: language === 'bn' ? 'টুলস' : 'Tools',
+            subtitle: language === 'bn' ? 'প্রোডাক্টিভিটি টুলস' : 'Productivity Tools',
+            itemLabel: language === 'bn' ? 'টুলস' : 'Tools',
+            color: 'orange',
+            href: '/tools'
+        }
     ];
 
-    // Map for URL category names (keep English for URLs)
-    const categoryUrlMap = {
-        'artDesign': 'Art & Design',
-        'programming': 'Programming',
-        'digitalMarketing': 'Digital Marketing',
-        'mediaFilm': 'Media & Film',
-        'networkingServer': 'Networking & Server',
-        'management': 'Management',
-        'database': 'Database',
-        'diploma': 'Diploma'
+    const getColorClasses = (color) => {
+        if (color === 'teal') {
+            return {
+                gradient: 'from-[#41bfb8] to-[#2dd4bf]',
+                light: 'bg-[#41bfb8]/10',
+                text: 'text-[#41bfb8]',
+                border: 'border-[#41bfb8]/20',
+                shadow: 'shadow-[#41bfb8]/20'
+            };
+        }
+        return {
+            gradient: 'from-[#F79952] to-[#fb923c]',
+            light: 'bg-[#F79952]/10',
+            text: 'text-[#F79952]',
+            border: 'border-[#F79952]/20',
+            shadow: 'shadow-[#F79952]/20'
+        };
     };
 
     return (
-        <section className='relative bg-gradient-to-b from-white via-slate-50/50 to-white py-12 lg:py-16 overflow-hidden'>
-            {/* Top Border Gradient */}
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#41bfb8]/30 to-transparent"></div>
+        <section className='relative bg-gradient-to-b from-gray-50 via-white to-gray-50 py-20 lg:py-28 overflow-hidden'>
 
-            {/* Background Gradient Mesh */}
-            <div className="absolute inset-0 opacity-40">
-                <div className="absolute top-0 left-1/4 w-96 h-96 bg-gradient-to-br from-[#41bfb8]/10 via-transparent to-transparent rounded-full blur-3xl"></div>
-                <div className="absolute top-1/2 right-0 w-80 h-80 bg-gradient-to-bl from-[#F79952]/10 via-transparent to-transparent rounded-full blur-3xl"></div>
-                <div className="absolute bottom-0 left-0 w-72 h-72 bg-gradient-to-tr from-purple-200/20 via-transparent to-transparent rounded-full blur-3xl"></div>
+            {/* CSS for Animations */}
+            <style jsx>{`
+                @keyframes float {
+                    0%, 100% { transform: translateY(0px) rotate(0deg); }
+                    50% { transform: translateY(-20px) rotate(5deg); }
+                }
+                @keyframes float-reverse {
+                    0%, 100% { transform: translateY(0px) rotate(0deg); }
+                    50% { transform: translateY(20px) rotate(-5deg); }
+                }
+                @keyframes pulse-slow {
+                    0%, 100% { opacity: 0.4; transform: scale(1); }
+                    50% { opacity: 0.7; transform: scale(1.05); }
+                }
+                @keyframes spin-slow {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+                .animate-float { animation: float 6s ease-in-out infinite; }
+                .animate-float-reverse { animation: float-reverse 7s ease-in-out infinite; }
+                .animate-pulse-slow { animation: pulse-slow 4s ease-in-out infinite; }
+                .animate-spin-slow { animation: spin-slow 20s linear infinite; }
+            `}</style>
+
+            {/* Animated Background Elements */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                {/* Floating Circles */}
+                <div className="absolute top-20 left-[10%] w-72 h-72 bg-gradient-to-br from-[#41bfb8]/10 to-transparent rounded-full blur-3xl animate-float"></div>
+                <div className="absolute bottom-20 right-[10%] w-80 h-80 bg-gradient-to-br from-[#F79952]/10 to-transparent rounded-full blur-3xl animate-float-reverse"></div>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-[#41bfb8]/5 to-[#F79952]/5 rounded-full blur-3xl animate-pulse-slow"></div>
+
+                {/* Geometric Shapes */}
+                <div className="absolute top-32 right-[15%] w-16 h-16 border-2 border-[#41bfb8]/20 rounded-xl animate-float" style={{ animationDelay: '1s' }}></div>
+                <div className="absolute top-1/4 left-[8%] w-12 h-12 border-2 border-[#F79952]/20 rounded-full animate-float-reverse" style={{ animationDelay: '0.5s' }}></div>
+                <div className="absolute bottom-1/4 right-[8%] w-20 h-20 border-2 border-[#41bfb8]/15 rounded-2xl animate-spin-slow"></div>
+                <div className="absolute bottom-32 left-[20%] w-8 h-8 bg-[#F79952]/10 rounded-lg animate-float" style={{ animationDelay: '2s' }}></div>
+
+                {/* Dots Pattern */}
+                <div className="absolute top-40 left-[5%] flex flex-col gap-2 opacity-30">
+                    {[...Array(4)].map((_, i) => (
+                        <div key={i} className="flex gap-2">
+                            {[...Array(3)].map((_, j) => (
+                                <div key={j} className="w-1.5 h-1.5 bg-[#41bfb8] rounded-full"></div>
+                            ))}
+                        </div>
+                    ))}
+                </div>
+                <div className="absolute bottom-40 right-[5%] flex flex-col gap-2 opacity-30">
+                    {[...Array(4)].map((_, i) => (
+                        <div key={i} className="flex gap-2">
+                            {[...Array(3)].map((_, j) => (
+                                <div key={j} className="w-1.5 h-1.5 bg-[#F79952] rounded-full"></div>
+                            ))}
+                        </div>
+                    ))}
+                </div>
             </div>
 
-            {/* Decorative Grid Pattern */}
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(65,191,184,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(65,191,184,0.02)_1px,transparent_1px)] bg-[size:60px_60px]"></div>
-
-            {/* Floating Geometric Shapes */}
-            <div className="absolute top-20 left-[8%] w-20 h-20 border border-[#41bfb8]/10 rounded-2xl rotate-12"></div>
-            <div className="absolute top-1/3 right-[5%] w-16 h-16 border border-[#F79952]/10 rounded-full"></div>
-            <div className="absolute bottom-20 left-[15%] w-12 h-12 bg-[#41bfb8]/5 rounded-lg rotate-45"></div>
-            <div className="absolute bottom-1/3 right-[12%] w-14 h-14 border border-purple-200/20 rounded-xl -rotate-12"></div>
-
-            {/* Dot Pattern - Left Side */}
-            <div className="absolute top-1/4 left-[3%] hidden lg:flex flex-col gap-3 opacity-30">
-                {[...Array(5)].map((_, i) => (
-                    <div key={i} className="flex gap-3">
-                        {[...Array(3)].map((_, j) => (
-                            <div key={j} className="w-1.5 h-1.5 bg-[#41bfb8] rounded-full"></div>
-                        ))}
+            <div className='container mx-auto px-4 lg:px-16 relative z-10'>
+                {/* Section Header with Description */}
+                <div className={`text-center mb-14 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
+                    <div className="inline-flex items-center gap-2 mb-4 px-4 py-1.5 bg-white border border-gray-200 rounded-full shadow-sm">
+                        <span className="w-2 h-2 bg-[#41bfb8] rounded-full animate-pulse"></span>
+                        <span className={`text-sm font-medium text-gray-600 ${bengaliClass}`}>
+                            {language === 'bn' ? 'আমাদের প্রোডাক্ট' : 'Our Products'}
+                        </span>
                     </div>
-                ))}
-            </div>
 
-            {/* Dot Pattern - Right Side */}
-            <div className="absolute bottom-1/4 right-[3%] hidden lg:flex flex-col gap-3 opacity-30">
-                {[...Array(4)].map((_, i) => (
-                    <div key={i} className="flex gap-3">
-                        {[...Array(3)].map((_, j) => (
-                            <div key={j} className="w-1.5 h-1.5 bg-[#F79952] rounded-full"></div>
-                        ))}
-                    </div>
-                ))}
-            </div>
-
-            {/* Curved Lines */}
-            <svg className="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none" viewBox="0 0 1440 600" preserveAspectRatio="none">
-                <path d="M0,300 Q360,200 720,300 T1440,300" fill="none" stroke="#41bfb8" strokeWidth="2" />
-                <path d="M0,350 Q360,250 720,350 T1440,350" fill="none" stroke="#F79952" strokeWidth="1.5" />
-            </svg>
-
-            {/* Corner Decorations */}
-            <div className="absolute top-8 right-8 w-24 h-24 border-t-2 border-r-2 border-[#41bfb8]/10 rounded-tr-3xl"></div>
-            <div className="absolute bottom-8 left-8 w-24 h-24 border-b-2 border-l-2 border-[#F79952]/10 rounded-bl-3xl"></div>
-
-            <div className='container mx-auto px-4 lg:px-16'>
-                {/* Section Header */}
-                <div className={`text-center mb-10 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
-                    <div className="inline-flex items-center gap-2 mb-3 px-4 py-1.5 bg-[#41bfb8]/10 rounded-full">
-                        <span className="w-2 h-2 bg-[#41bfb8] rounded-full"></span>
-                        <span className={`text-sm font-medium text-[#41bfb8] work ${bengaliClass}`}>{t("homeCategory.badge")}</span>
-                    </div>
-                    <h2 className={`text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 outfit ${bengaliClass}`}>
-                        {t("homeCategory.title")}
+                    <h2 className={`text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 ${bengaliClass}`}>
+                        {language === 'bn' ? 'ক্যাটাগরি অনুযায়ী খুঁজুন' : 'Browse by Category'}
                     </h2>
-                    <p className={`mt-2 text-gray-500 work text-sm sm:text-base max-w-xl mx-auto ${bengaliClass}`}>
-                        {t("homeCategory.subtitle")}
+
+                    <p className={`text-gray-500 text-base lg:text-lg max-w-2xl mx-auto leading-relaxed ${bengaliClass}`}>
+                        {language === 'bn'
+                            ? 'আমাদের বিভিন্ন ক্যাটাগরি থেকে আপনার প্রয়োজনীয় প্রোডাক্ট খুঁজে নিন। কোর্স, সফটওয়্যার, ওয়েবসাইট টেমপ্লেট এবং প্রোডাক্টিভিটি টুলস - সবই এক জায়গায়।'
+                            : 'Explore our diverse categories to find exactly what you need. Courses, software, website templates, and productivity tools - all in one place.'
+                        }
                     </p>
                 </div>
 
                 {/* Categories Grid */}
-                <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-5'>
-                    {categories.map((cat, index) => (
-                        <Link
-                            key={index}
-                            href={`/courses?category=${encodeURIComponent(categoryUrlMap[cat.titleKey])}`}
-                            className={`group relative bg-white border border-gray-200 rounded-md p-4 lg:p-5 transition-all duration-500 hover:shadow-xl hover:shadow-gray-200/50 hover:-translate-y-1 hover:border-transparent ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}
-                            style={{ transitionDelay: `${index * 50}ms` }}
-                        >
-                            {/* Hover Gradient Border */}
-                            <div
-                                className="absolute inset-0 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                                style={{
-                                    background: `linear-gradient(135deg, ${cat.color}15, transparent)`,
-                                }}
-                            ></div>
+                <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'>
+                    {categories.map((cat, index) => {
+                        const Icon = cat.icon;
+                        const colors = getColorClasses(cat.color);
+                        const count = getCategoryCount(cat.id);
 
-                            {/* Top Accent Line */}
-                            <div
-                                className="absolute top-0 left-0 w-0 group-hover:w-full h-[3px] rounded-t-md transition-all duration-500"
-                                style={{ backgroundColor: cat.color }}
-                            ></div>
-
-                            <div className='relative flex flex-col sm:flex-row items-start sm:items-center gap-3 lg:gap-4'>
-                                {/* Icon Container */}
-                                <div
-                                    className='w-12 h-12 lg:w-14 lg:h-14 rounded-md flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg shrink-0'
-                                    style={{ backgroundColor: cat.bgColor }}
-                                >
-                                    <Image
-                                        src={cat.img}
-                                        alt={t(`homeCategory.categories.${cat.titleKey}`)}
-                                        width={32}
-                                        height={32}
-                                        className='w-7 h-7 lg:w-8 lg:h-8 object-contain transition-transform duration-300 group-hover:scale-110'
-                                    />
+                        return (
+                            <Link
+                                key={cat.id}
+                                href={cat.href}
+                                className={`group relative bg-white rounded-2xl p-6 border border-gray-100 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:${colors.shadow} overflow-hidden ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}
+                                style={{ transitionDelay: `${index * 100}ms` }}
+                            >
+                                {/* Card Background Pattern */}
+                                <div className="absolute top-0 right-0 w-32 h-32 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                                    <div className={`absolute top-4 right-4 w-24 h-24 rounded-full bg-gradient-to-br ${colors.gradient} opacity-10 blur-xl`}></div>
                                 </div>
 
-                                {/* Text Content */}
-                                <div className='flex-1 min-w-0'>
-                                    <h3 className={`font-semibold text-gray-800 outfit-semibold text-sm lg:text-base truncate group-hover:text-gray-900 transition-colors ${bengaliClass}`}>
-                                        {t(`homeCategory.categories.${cat.titleKey}`)}
+                                {/* Decorative Corner */}
+                                <div className={`absolute -top-10 -right-10 w-24 h-24 rounded-full bg-gradient-to-br ${colors.gradient} opacity-5 group-hover:opacity-10 transition-opacity duration-500`}></div>
+
+                                {/* Card Inner Design Lines */}
+                                <div className="absolute bottom-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                                {/* Content */}
+                                <div className="relative z-10">
+                                    {/* Icon with Ring */}
+                                    <div className="relative mb-5">
+                                        <div className={`w-16 h-16 ${colors.light} rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:scale-110`}>
+                                            <Icon size={28} className={`${colors.text} transition-transform duration-500 group-hover:scale-110`} />
+                                        </div>
+                                        {/* Decorative ring on hover */}
+                                        <div className={`absolute inset-0 w-16 h-16 rounded-2xl border-2 ${colors.border} scale-100 opacity-0 group-hover:scale-125 group-hover:opacity-100 transition-all duration-500`}></div>
+                                    </div>
+
+                                    {/* Title */}
+                                    <h3 className={`text-xl font-bold text-gray-900 mb-2 group-hover:text-gray-800 transition-colors ${bengaliClass}`}>
+                                        {cat.title}
                                     </h3>
-                                    <p className={`work text-xs lg:text-sm text-gray-500 truncate group-hover:text-gray-600 transition-colors ${bengaliClass}`}>
-                                        {t(`homeCategory.categories.${cat.subtitleKey}`)}
+
+                                    {/* Subtitle */}
+                                    <p className={`text-sm text-gray-500 mb-4 ${bengaliClass}`}>
+                                        {cat.subtitle}
                                     </p>
+
+                                    {/* Bottom Row */}
+                                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                                        {/* Dynamic Items Count */}
+                                        <span className={`text-sm font-semibold ${colors.text} ${bengaliClass}`}>
+                                            {count}+ {cat.itemLabel}
+                                        </span>
+
+                                        {/* Arrow */}
+                                        <div className={`w-8 h-8 rounded-lg ${colors.light} flex items-center justify-center transition-all duration-300 group-hover:bg-gradient-to-r group-hover:${colors.gradient}`}>
+                                            <LuArrowRight size={16} className={`${colors.text} transition-all duration-300 group-hover:text-white group-hover:translate-x-0.5`} />
+                                        </div>
+                                    </div>
                                 </div>
 
-                                {/* Arrow Icon */}
-                                <div className='hidden sm:flex w-8 h-8 rounded-full items-center justify-center bg-gray-50 group-hover:bg-gray-100 transition-all duration-300 shrink-0'>
-                                    <svg
-                                        className="w-4 h-4 text-gray-400 group-hover:text-gray-600 transform group-hover:translate-x-0.5 transition-all duration-300"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                    </svg>
-                                </div>
-                            </div>
-
-                            {/* Course Count Badge */}
-                            <div className='mt-3 pt-3 border-t border-gray-50 flex items-center justify-between'>
-                                <span className={`text-xs text-gray-400 work ${bengaliClass}`}>{t("homeCategory.exploreCourses")}</span>
-                                <span
-                                    className={`text-xs font-medium px-2 py-0.5 rounded-full transition-colors duration-300 ${bengaliClass}`}
-                                    style={{
-                                        backgroundColor: `${cat.color}15`,
-                                        color: cat.color
-                                    }}
-                                >
-                                    {t("homeCategory.viewAll")}
-                                </span>
-                            </div>
-                        </Link>
-                    ))}
-                </div>
-
-                {/* Bottom CTA */}
-                <div className={`text-center mt-10 transition-all duration-700 delay-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
-                    <Link
-                        href="/courses"
-                        className={`inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#41bfb8] to-[#38a89d] text-white rounded-md font-medium work hover:shadow-lg hover:shadow-[#41bfb8]/30 transition-all duration-300 ${bengaliClass}`}
-                    >
-                        <span>{t("homeCategory.browseAllCourses")}</span>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                        </svg>
-                    </Link>
+                                {/* Bottom Accent Line */}
+                                <div className={`absolute bottom-0 left-0 w-0 h-1 bg-gradient-to-r ${colors.gradient} group-hover:w-full transition-all duration-500 rounded-b-2xl`}></div>
+                            </Link>
+                        );
+                    })}
                 </div>
             </div>
         </section>
