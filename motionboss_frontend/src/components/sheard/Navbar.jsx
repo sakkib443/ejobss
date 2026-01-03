@@ -262,7 +262,7 @@ const Navbar = () => {
             <div className="flex items-center gap-8 xl:gap-12">
               <Link href="/" className="relative flex-shrink-0">
                 <img
-                  className={`transition-all duration-300 ${isSticky ? "w-32" : "w-36 lg:w-40"}`}
+                  className={`transition-all duration-300 ${isSticky ? "w-32" : "w-36 lg:w-30"}`}
                   src="/images/ejobsitlogo.png"
                   alt="eJobsIT"
                 />

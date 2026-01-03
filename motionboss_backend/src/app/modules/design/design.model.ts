@@ -14,7 +14,9 @@ const heroContentSchema = new Schema({
     },
     heading: {
         line1: { type: String, default: 'Discover Premium' },
-        line1Bn: { type: String, default: 'আবিষ্কার করুন প্রিমিয়াম' }
+        line1Bn: { type: String, default: 'আবিষ্কার করুন প্রিমিয়াম' },
+        line2: { type: String, default: 'Learn' },
+        line2Bn: { type: String, default: 'শিখুন' }
     },
     dynamicTexts: {
         type: [String],

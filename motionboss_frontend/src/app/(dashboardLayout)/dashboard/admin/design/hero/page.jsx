@@ -12,7 +12,7 @@ const HeroDesignPage = () => {
     const [saving, setSaving] = useState(false);
     const [heroContent, setHeroContent] = useState({
         badge: { text: '', textBn: '', showNew: true },
-        heading: { line1: '', line1Bn: '' },
+        heading: { line1: '', line1Bn: '', line2: '', line2Bn: '' },
         dynamicTexts: [''],
         dynamicTextsBn: [''],
         description: { text: '', textBn: '', brandName: '' },
@@ -222,23 +222,45 @@ const HeroDesignPage = () => {
                     </div>
                     <div className="space-y-4">
                         <div>
-                            <label className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Heading (English)</label>
+                            <label className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Main Heading (English) - Big</label>
                             <input
                                 type="text"
                                 value={heroContent.heading?.line1 || ''}
                                 onChange={(e) => setHeroContent(prev => ({ ...prev, heading: { ...prev.heading, line1: e.target.value } }))}
                                 className={`w-full mt-1 px-4 py-3 rounded-xl ${isDark ? 'bg-slate-700 text-white border-slate-600' : 'bg-gray-50 text-gray-900 border-gray-200'} border focus:ring-2 focus:ring-teal-500 focus:border-transparent text-lg font-semibold`}
-                                placeholder="e.g., Discover Premium"
+                                placeholder="e.g., Elevate Your Digital Success"
                             />
                         </div>
                         <div>
-                            <label className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Heading (বাংলা)</label>
+                            <label className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Main Heading (বাংলা) - Big</label>
                             <input
                                 type="text"
                                 value={heroContent.heading?.line1Bn || ''}
                                 onChange={(e) => setHeroContent(prev => ({ ...prev, heading: { ...prev.heading, line1Bn: e.target.value } }))}
                                 className={`w-full mt-1 px-4 py-3 rounded-xl ${isDark ? 'bg-slate-700 text-white border-slate-600' : 'bg-gray-50 text-gray-900 border-gray-200'} border focus:ring-2 focus:ring-teal-500 focus:border-transparent text-lg font-semibold hind-siliguri`}
-                                placeholder="যেমন: আবিষ্কার করুন প্রিমিয়াম"
+                                placeholder="যেমন: আপনার ভবিষ্যৎ গড়ুন"
+                            />
+                        </div>
+                        <hr className={`my-2 ${isDark ? 'border-slate-600' : 'border-gray-200'}`} />
+                        <div>
+                            <label className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Text Before Typing (English) - Smaller</label>
+                            <input
+                                type="text"
+                                value={heroContent.heading?.line2 || ''}
+                                onChange={(e) => setHeroContent(prev => ({ ...prev, heading: { ...prev.heading, line2: e.target.value } }))}
+                                className={`w-full mt-1 px-4 py-3 rounded-xl ${isDark ? 'bg-slate-700 text-white border-slate-600' : 'bg-gray-50 text-gray-900 border-gray-200'} border focus:ring-2 focus:ring-teal-500 focus:border-transparent`}
+                                placeholder="e.g., Learn"
+                            />
+                            <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>This text appears before the typing animation</p>
+                        </div>
+                        <div>
+                            <label className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Text Before Typing (বাংলা) - Smaller</label>
+                            <input
+                                type="text"
+                                value={heroContent.heading?.line2Bn || ''}
+                                onChange={(e) => setHeroContent(prev => ({ ...prev, heading: { ...prev.heading, line2Bn: e.target.value } }))}
+                                className={`w-full mt-1 px-4 py-3 rounded-xl ${isDark ? 'bg-slate-700 text-white border-slate-600' : 'bg-gray-50 text-gray-900 border-gray-200'} border focus:ring-2 focus:ring-teal-500 focus:border-transparent hind-siliguri`}
+                                placeholder="যেমন: শিখুন"
                             />
                         </div>
                     </div>

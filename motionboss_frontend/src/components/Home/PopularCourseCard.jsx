@@ -90,38 +90,7 @@ const PopularCourseCard = () => {
 
   return (
     <div className="relative">
-      {/* Category Filter Tabs */}
-      <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-10">
-        {/* All Button */}
-        <button
-          onClick={() => handleCategoryChange("All")}
-          className={`relative px-5 py-2.5 rounded-xl font-medium text-sm transition-all duration-300 ${selectedCategory === "All"
-              ? "bg-[#41bfb8] text-white shadow-lg shadow-[#41bfb8]/20"
-              : "bg-gray-50 text-gray-600 border border-gray-200 hover:border-[#41bfb8]/50 hover:text-[#41bfb8] hover:bg-white"
-            } ${bengaliClass}`}
-        >
-          <span className="flex items-center gap-2">
-            {selectedCategory === "All" && <LuLayoutGrid size={14} />}
-            {language === 'bn' ? 'সব' : 'All'}
-          </span>
-        </button>
 
-        {courseCategories.map((cat) => (
-          <button
-            key={cat._id || cat.id}
-            onClick={() => handleCategoryChange(cat._id || cat.id)}
-            className={`relative px-5 py-2.5 rounded-xl font-medium text-sm transition-all duration-300 ${selectedCategory === (cat._id || cat.id)
-                ? "bg-[#41bfb8] text-white shadow-lg shadow-[#41bfb8]/20"
-                : "bg-gray-50 text-gray-600 border border-gray-200 hover:border-[#41bfb8]/50 hover:text-[#41bfb8] hover:bg-white"
-              } ${bengaliClass}`}
-          >
-            <span className="flex items-center gap-2">
-              {selectedCategory === (cat._id || cat.id) && <LuSparkles size={14} />}
-              {cat.name}
-            </span>
-          </button>
-        ))}
-      </div>
 
       {/* Courses Display with Navigation */}
       <div className="relative px-4 sm:px-12 lg:px-20">
@@ -207,8 +176,8 @@ const PopularCourseCard = () => {
                 key={index}
                 onClick={() => setStartIndex(index * visibleItems)}
                 className={`transition-all duration-300 rounded-full ${Math.floor(startIndex / visibleItems) === index
-                    ? "w-8 h-2 bg-[#41bfb8]"
-                    : "w-2 h-2 bg-gray-200 hover:bg-gray-300"
+                  ? "w-8 h-2 bg-[#41bfb8]"
+                  : "w-2 h-2 bg-gray-200 hover:bg-gray-300"
                   }`}
               />
             ))}
