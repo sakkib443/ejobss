@@ -14,7 +14,6 @@ import {
 import { FaHeart, FaRegHeart, FaStar, FaArrowRight } from "react-icons/fa";
 import { MdVerified, MdOutlineMenuBook, MdPlayCircleOutline } from "react-icons/md";
 import { motion, AnimatePresence } from "framer-motion";
-import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import ReviewsSection from "@/components/Reviews/ReviewsSection";
 
