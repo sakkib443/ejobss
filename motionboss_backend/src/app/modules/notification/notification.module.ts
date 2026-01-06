@@ -6,7 +6,7 @@ import sendResponse from '../../utils/sendResponse';
 
 // ============ INTERFACE ============
 export interface INotification extends Document {
-    type: 'order' | 'enrollment' | 'review' | 'user' | 'course' | 'system';
+    type: 'order' | 'enrollment' | 'review' | 'user' | 'course' | 'system' | 'like';
     title: string;
     message: string;
     data?: {
@@ -30,7 +30,7 @@ const NotificationSchema = new Schema<INotification>(
     {
         type: {
             type: String,
-            enum: ['order', 'enrollment', 'review', 'user', 'course', 'system'],
+            enum: ['order', 'enrollment', 'review', 'user', 'course', 'system', 'like'],
             required: true,
         },
         title: {
@@ -161,6 +161,26 @@ export const NotificationService = {
                 reviewId: reviewData.reviewId,
                 userId: reviewData.userId,
                 link: `/dashboard/admin/reviews`,
+            },
+            forAdmin: true,
+        });
+    },
+
+    // Create like notification
+    async createLikeNotification(likeData: {
+        userId: Types.ObjectId;
+        userName: string;
+        productId: Types.ObjectId;
+        productName: string;
+        productType: 'website' | 'software' | 'course';
+    }): Promise<INotification> {
+        return this.createNotification({
+            type: 'like',
+            title: `New Like! ❤️`,
+            message: `${likeData.userName} liked "${likeData.productName}"`,
+            data: {
+                userId: likeData.userId,
+                link: `/dashboard/admin/favorites-ratings`,
             },
             forAdmin: true,
         });

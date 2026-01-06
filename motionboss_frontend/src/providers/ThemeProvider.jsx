@@ -17,27 +17,39 @@ export const ThemeProvider = ({ children }) => {
     // Load theme from localStorage on mount
     useEffect(() => {
         setMounted(true);
-        const savedTheme = localStorage.getItem('dashboard-theme') || 'light';
-        setTheme(savedTheme);
+        try {
+            if (typeof window !== 'undefined') {
+                const savedTheme = localStorage.getItem('dashboard-theme') || 'light';
+                setTheme(savedTheme);
 
-        // Apply theme to document
-        if (savedTheme === 'dark') {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
+                // Apply theme to document
+                if (savedTheme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            }
+        } catch (error) {
+            console.error('Error loading theme:', error);
         }
     }, []);
 
     const toggleTheme = () => {
         const newTheme = theme === 'light' ? 'dark' : 'light';
         setTheme(newTheme);
-        localStorage.setItem('dashboard-theme', newTheme);
+        try {
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('dashboard-theme', newTheme);
 
-        // Apply theme to document
-        if (newTheme === 'dark') {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
+                // Apply theme to document
+                if (newTheme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            }
+        } catch (error) {
+            console.error('Error saving theme:', error);
         }
     };
 

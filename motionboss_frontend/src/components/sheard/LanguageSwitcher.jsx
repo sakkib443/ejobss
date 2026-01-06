@@ -28,36 +28,39 @@ const LanguageSwitcher = ({ variant = "default" }) => {
 
     const currentLang = languages.find((l) => l.code === language) || languages[0];
 
+    // ALL RENDERING LOGIC AT THE BOTTOM TO ENSURE HOOKS LOADED
+    // Compact variant for mobile menu
+    const renderCompact = () => (
+        <div className="flex gap-2">
+            {languages.map((lang) => (
+                <button
+                    key={lang.code}
+                    onClick={() => setLanguage(lang.code)}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-all duration-300 ${language === lang.code
+                        ? "bg-[#41bfb8]/10 border-[#41bfb8] text-[#0f766e]"
+                        : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
+                        }`}
+                >
+                    <span className="text-lg">{lang.flag}</span>
+                    <span className={`text-sm font-medium ${lang.code === "bn" ? "hind-siliguri" : ""}`}>
+                        {lang.label}
+                    </span>
+                    {language === lang.code && (
+                        <LuCheck className="text-[#41bfb8] text-sm" />
+                    )}
+                </button>
+            ))}
+        </div>
+    );
+
     if (!isLoaded) {
         return (
             <div className="w-20 h-9 bg-gray-100 rounded-md animate-pulse"></div>
         );
     }
 
-    // Compact variant for mobile menu
     if (variant === "compact") {
-        return (
-            <div className="flex gap-2">
-                {languages.map((lang) => (
-                    <button
-                        key={lang.code}
-                        onClick={() => setLanguage(lang.code)}
-                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-all duration-300 ${language === lang.code
-                            ? "bg-[#41bfb8]/10 border-[#41bfb8] text-[#0f766e]"
-                            : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
-                            }`}
-                    >
-                        <span className="text-lg">{lang.flag}</span>
-                        <span className={`text-sm font-medium ${lang.code === "bn" ? "hind-siliguri" : ""}`}>
-                            {lang.label}
-                        </span>
-                        {language === lang.code && (
-                            <LuCheck className="text-[#41bfb8] text-sm" />
-                        )}
-                    </button>
-                ))}
-            </div>
-        );
+        return renderCompact();
     }
 
     return (

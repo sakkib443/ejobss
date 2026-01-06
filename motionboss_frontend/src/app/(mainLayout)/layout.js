@@ -9,10 +9,10 @@ import React from 'react';
 const mainLayout = ({ children }) => {
     return (
         <div>
-            <TopHeader></TopHeader>
-            <Navbar></Navbar>
+            <TopHeader />
+            <Navbar />
             {children}
-            <Footer></Footer>
+            <Footer />
             <ScrollToTop />
             <FloatingSeminarButton />
             <FloatingLanguageButton />

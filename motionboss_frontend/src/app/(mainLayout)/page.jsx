@@ -13,12 +13,14 @@ import WhatWeProvide from "@/components/Home/WhatWeProvide";
 import DigitalProducts from "@/components/Home/DigitalProducts";
 import { fetchCoursesData } from "@/redux/CourseSlice";
 
-// Component to handle mouse light without re-rendering the whole page
+// Component to handle mouse light - Hook safe
 const MouseLight = () => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const handleMouseMove = (e) => {
       mouseX.set(e.clientX);
       mouseY.set(e.clientY);
@@ -30,24 +32,33 @@ const MouseLight = () => {
   const lightX = useSpring(mouseX, { stiffness: 50, damping: 30, mass: 0.5 });
   const lightY = useSpring(mouseY, { stiffness: 50, damping: 30, mass: 0.5 });
 
+  const translateX = useTransform(lightX, (v) => v - 300);
+  const translateY = useTransform(lightY, (v) => v - 300);
+
+  if (!mounted) return null;
+
   return (
     <motion.div
       className="fixed top-0 left-0 w-[600px] h-[600px] rounded-full bg-teal-500/[0.04] dark:bg-teal-500/[0.06] blur-[150px] pointer-events-none z-[1] hidden lg:block"
       style={{
-        x: useTransform(lightX, (v) => v - 300),
-        y: useTransform(lightY, (v) => v - 300)
+        x: translateX,
+        y: translateY
       }}
     />
   );
 };
 
-// Generic Transition Wrapper for scroll animations
+// ScrollSection - Hook safe
 const ScrollSection = ({ children, className = "" }) => {
   const ref = useRef(null);
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
 
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+    const checkMobile = () => {
+      if (typeof window !== 'undefined') {
+        setIsMobileDevice(window.innerWidth < 1024);
+      }
+    };
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -58,24 +69,22 @@ const ScrollSection = ({ children, className = "" }) => {
     offset: ["start end", "center center", "end start"]
   });
 
-  // Soft spring to prevent jittering/shaking
   const sectionProgress = useSpring(rawSectionProgress, {
     stiffness: 50,
     damping: 40,
     restDelta: 0.001
   });
 
-  // Wider ranges to prevent content from "disappearing" too quickly
   const scale = useTransform(sectionProgress, [0, 0.45, 0.55, 1], [0.95, 1, 1, 0.95]);
   const opacity = useTransform(sectionProgress, [0, 0.35, 0.65, 1], [0.3, 1, 1, 0.3]);
 
   return (
     <motion.div
       ref={ref}
-      style={isMobile ? {} : {
-        scale,
-        opacity,
-        willChange: "transform, opacity"
+      style={{
+        scale: isMobileDevice ? 1 : scale,
+        opacity: isMobileDevice ? 1 : opacity,
+        willChange: isMobileDevice ? "auto" : "transform, opacity"
       }}
       className={`w-full origin-center ${className}`}
     >
@@ -88,23 +97,29 @@ const HomePage = () => {
   const dispatch = useDispatch();
   const { scrollYProgress } = useScroll();
   const [isMobile, setIsMobile] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+    setMounted(true);
+    const checkMobile = () => {
+      if (typeof window !== 'undefined') {
+        setIsMobile(window.innerWidth < 1024);
+      }
+    };
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   useEffect(() => {
-    dispatch(fetchCoursesData());
-    dispatch(fetchCategories());
-  }, [dispatch]);
+    if (mounted) {
+      dispatch(fetchCoursesData());
+      dispatch(fetchCategories());
+    }
+  }, [dispatch, mounted]);
 
-  // Initialize Smooth Scroll (Lenis)
   useEffect(() => {
-    // Disable smooth scroll on mobile for better native experience
-    if (window.innerWidth < 1024) return;
+    if (!mounted || isMobile) return;
 
     const lenis = new Lenis({
       duration: 1.2,
@@ -120,20 +135,26 @@ const HomePage = () => {
 
     requestAnimationFrame(raf);
     return () => lenis.destroy();
-  }, []);
+  }, [mounted, isMobile]);
 
-  // Stabilized Hero progress
   const smoothProgress = useSpring(scrollYProgress, {
     stiffness: 100,
     damping: 30,
     restDelta: 0.001
   });
 
-  // Hero Scroll Transforms
   const heroScale = useTransform(smoothProgress, [0, 0.15], [1, 0.85]);
   const heroOpacity = useTransform(smoothProgress, [0, 0.15], [1, 0]);
   const heroY = useTransform(smoothProgress, [0, 0.15], [0, -100]);
-  const heroBlur = useTransform(smoothProgress, [0, 0.15], ["0px", "20px"]);
+  const heroFilter = useTransform(smoothProgress, [0, 0.15], ["blur(0px)", "blur(20px)"]);
+
+  // Computed styles to avoid object literals in JSX which sometimes trigger deep comparison errors
+  const heroStyleApplied = {
+    scale: isMobile ? 1 : heroScale,
+    opacity: isMobile ? 1 : heroOpacity,
+    y: isMobile ? 0 : heroY,
+    filter: isMobile ? "blur(0px)" : heroFilter
+  };
 
   return (
     <div className="relative min-h-screen bg-white dark:bg-black selection:bg-teal-500 selection:text-black font-poppins antialiased">
@@ -148,12 +169,7 @@ const HomePage = () => {
         {/* Sticky Hero with Parallax Effect */}
         <section className={`${isMobile ? 'relative' : 'sticky top-0'} h-screen w-full overflow-hidden z-0 bg-white dark:bg-black`}>
           <motion.div
-            style={isMobile ? {} : {
-              scale: heroScale,
-              opacity: heroOpacity,
-              y: heroY,
-              filter: `blur(${heroBlur})`
-            }}
+            style={heroStyleApplied}
             className="h-full w-full"
           >
             <Hero />
@@ -162,7 +178,6 @@ const HomePage = () => {
 
         {/* Following Sections with Scroll Transitions */}
         <section className={`relative z-10 bg-white dark:bg-[#020202] ${isMobile ? '' : 'shadow-[0_-80px_100px_rgba(0,0,0,0.1)] dark:shadow-[0_-80px_100px_rgba(0,0,0,0.6)] rounded-t-[50px] lg:rounded-t-[100px]'}`}>
-          {/* All sections with consistent scroll effects */}
           <ScrollSection>
             <HomeCategory />
           </ScrollSection>

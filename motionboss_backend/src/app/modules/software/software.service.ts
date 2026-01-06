@@ -10,6 +10,8 @@ import AppError from '../../utils/AppError';
 import { ISoftware, ISoftwareFilters, ISoftwareQuery } from './software.interface';
 import { Software } from './software.model';
 import CategoryService from '../category/category.service';
+import { User } from '../user/user.model';
+import { NotificationService } from '../notification/notification.module';
 
 interface IPaginatedResult<T> {
     data: T[];
@@ -301,7 +303,8 @@ const SoftwareService = {
                 console.error('Wishlist sync error (unlike):', error);
             }
 
-            return { liked: false, likeCount: Math.max(0, (software.likeCount || 0) - 1) };
+            const updated = await Software.findById(id).select('likeCount');
+            return { liked: false, likeCount: Math.max(0, updated?.likeCount || 0) };
         } else {
             // Like
             await Software.findByIdAndUpdate(id, {
@@ -313,11 +316,24 @@ const SoftwareService = {
             try {
                 const WishlistService = (await import('../wishlist/wishlist.module')).default;
                 await WishlistService.addToWishlist(userId, id, 'software');
+
+                // Notification
+                const user = await User.findById(userId);
+                if (user && software) {
+                    await NotificationService.createLikeNotification({
+                        userId: user._id,
+                        userName: `${user.firstName} ${user.lastName}`,
+                        productId: software._id,
+                        productName: software.title,
+                        productType: 'software'
+                    });
+                }
             } catch (error) {
-                console.error('Wishlist sync error (like):', error);
+                console.error('Wishlist/Notification sync error (like):', error);
             }
 
-            return { liked: true, likeCount: (software.likeCount || 0) + 1 };
+            const updated = await Software.findById(id).select('likeCount');
+            return { liked: true, likeCount: updated?.likeCount || 0 };
         }
     },
 

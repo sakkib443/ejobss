@@ -16,28 +16,40 @@ export const LanguageProvider = ({ children }) => {
 
   // Load language preference from localStorage on mount
   useEffect(() => {
-    const savedLanguage = localStorage.getItem("language");
-    if (savedLanguage && (savedLanguage === "en" || savedLanguage === "bn")) {
-      setLanguageState(savedLanguage);
-      // Apply Bengali font on initial load if Bengali was saved
-      if (savedLanguage === "bn") {
-        document.body.classList.add("font-bengali");
-      }
-    }
     setIsLoaded(true);
+    try {
+      if (typeof window !== 'undefined') {
+        const savedLanguage = localStorage.getItem("language");
+        if (savedLanguage && (savedLanguage === "en" || savedLanguage === "bn")) {
+          setLanguageState(savedLanguage);
+          // Apply Bengali font on initial load if Bengali was saved
+          if (savedLanguage === "bn") {
+            document.body.classList.add("font-bengali");
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error loading language preference:", error);
+    }
   }, []);
 
   // Save language preference to localStorage
   const setLanguage = useCallback((lang) => {
     setLanguageState(lang);
-    localStorage.setItem("language", lang);
-    // Update document language attribute
-    document.documentElement.lang = lang === "bn" ? "bn" : "en";
-    // Apply Bengali font globally when Bengali is selected
-    if (lang === "bn") {
-      document.body.classList.add("font-bengali");
-    } else {
-      document.body.classList.remove("font-bengali");
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem("language", lang);
+        // Update document language attribute
+        document.documentElement.lang = lang === "bn" ? "bn" : "en";
+        // Apply Bengali font globally when Bengali is selected
+        if (lang === "bn") {
+          document.body.classList.add("font-bengali");
+        } else {
+          document.body.classList.remove("font-bengali");
+        }
+      }
+    } catch (error) {
+      console.error("Error saving language preference:", error);
     }
   }, []);
 

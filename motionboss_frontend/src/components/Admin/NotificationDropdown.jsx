@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import {
     FiBell, FiShoppingBag, FiUser, FiStar, FiBookOpen,
-    FiCheck, FiCheckCircle, FiX, FiExternalLink
+    FiCheck, FiCheckCircle, FiX, FiExternalLink, FiHeart
 } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -125,6 +125,7 @@ const NotificationDropdown = () => {
             case 'enrollment': return <FiBookOpen className="text-blue-500" />;
             case 'user': return <FiUser className="text-purple-500" />;
             case 'review': return <FiStar className="text-yellow-500" />;
+            case 'like': return <FiHeart className="text-rose-500 fill-current" />;
             default: return <FiBell className="text-gray-500" />;
         }
     };
@@ -136,6 +137,7 @@ const NotificationDropdown = () => {
             case 'enrollment': return 'bg-blue-50';
             case 'user': return 'bg-purple-50';
             case 'review': return 'bg-yellow-50';
+            case 'like': return 'bg-rose-50';
             default: return 'bg-gray-50';
         }
     };

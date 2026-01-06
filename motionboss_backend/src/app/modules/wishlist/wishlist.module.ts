@@ -63,16 +63,28 @@ const WishlistService = {
         // Get all wishlists with user and product details
         const wishlists = await Wishlist.find({})
             .populate('user', 'firstName lastName email avatar')
-            .populate('items.product', 'title slug images thumbnail price offerPrice discountPrice');
+            .populate('items.product', 'title slug images thumbnail price offerPrice discountPrice likeCount likedBy');
 
         // Flatten the data for admin view - each item becomes a row
         const allFavorites: any[] = [];
         wishlists.forEach((wishlist: any) => {
             wishlist.items.forEach((item: any) => {
+                const product = item.product ? item.product.toObject?.() || item.product : null;
+
+                // If likeCount is missing or 0 but we have likedBy, use likedBy length
+                // This handles data sync issues
+                let totalLikes = product?.likeCount || 0;
+                if (totalLikes === 0 && product?.likedBy?.length > 0) {
+                    totalLikes = product.likedBy.length;
+                }
+
                 allFavorites.push({
                     _id: `${wishlist._id}-${item.product?._id}`,
                     user: wishlist.user,
-                    product: item.product,
+                    product: {
+                        ...product,
+                        likeCount: totalLikes
+                    },
                     productType: item.productType,
                     createdAt: item.addedAt
                 });

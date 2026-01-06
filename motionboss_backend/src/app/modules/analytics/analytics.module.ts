@@ -49,6 +49,8 @@ const AnalyticsService = {
         monthlyRevenue: number;
         // Category Stats
         totalCategories: number;
+        // Engagement Stats
+        totalLikes: number;
     }> {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -82,6 +84,10 @@ const AnalyticsService = {
             todayOrders,
             pendingOrders,
             completedOrders,
+            // Engagement (Sum of likeCount)
+            websiteLikes,
+            softwareLikes,
+            courseLikes,
             // Revenue aggregations
             totalRevenueResult,
             todayRevenueResult,
@@ -110,6 +116,10 @@ const AnalyticsService = {
             Order.countDocuments({ orderDate: { $gte: today } }),
             Order.countDocuments({ paymentStatus: 'pending' }),
             Order.countDocuments({ paymentStatus: 'completed' }),
+            // Engagement (Sum of likeCount)
+            Website.aggregate([{ $group: { _id: null, total: { $sum: '$likeCount' } } }]),
+            Software.aggregate([{ $group: { _id: null, total: { $sum: '$likeCount' } } }]),
+            Course.aggregate([{ $group: { _id: null, total: { $sum: '$likeCount' } } }]),
             // Revenue aggregations
             Order.aggregate([
                 { $match: { paymentStatus: 'completed' } },
@@ -152,6 +162,8 @@ const AnalyticsService = {
             monthlyRevenue: monthlyRevenueResult[0]?.total || 0,
             // Category Stats
             totalCategories,
+            // Engagement
+            totalLikes: (websiteLikes[0]?.total || 0) + (softwareLikes[0]?.total || 0) + (courseLikes[0]?.total || 0),
         };
     },
 
@@ -399,7 +411,7 @@ const AnalyticsService = {
     },
 
     /**
-     * Generate CSV Content - CSV format এ data তৈরি
+     * Generate CSV Content - CSV format 에 data তৈরি
      */
     generateSalesCSV(orders: any[]): string {
         const headers = [

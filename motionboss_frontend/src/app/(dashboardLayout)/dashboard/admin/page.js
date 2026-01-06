@@ -73,6 +73,7 @@ const StatsCard = ({ title, value, change, changeType, icon: Icon, gradient, loa
   </div>
 );
 
+
 // ==================== PROFESSIONAL AREA CHART ====================
 const AreaChart = ({ data, height = 250 }) => {
   const [isVisible, setIsVisible] = useState(false);
@@ -300,6 +301,7 @@ export default function AdminDashboard() {
     newUsersThisMonth: 0,
     activeEnrollments: 0,
     completedEnrollments: 0,
+    totalLikes: 0,
   });
   const [recentOrders, setRecentOrders] = useState([]);
   const [topCourses, setTopCourses] = useState([]);
@@ -361,6 +363,7 @@ export default function AdminDashboard() {
         todayOrders: summary?.todayOrders || 0,
         monthlyRevenue: summary?.monthlyRevenue || 0,
         newUsersThisMonth: summary?.newUsersThisMonth || 0,
+        totalLikes: summary?.totalLikes || 0,
       });
 
       if (revData && revData.length > 0) {
@@ -423,13 +426,13 @@ export default function AdminDashboard() {
   // Stats cards data
   const mainStats = [
     {
-      title: 'Today Orders',
-      value: dashboardData.todayOrders || 0,
-      subtitle: 'Orders received today',
-      change: '+12%',
+      title: 'Total Likes',
+      value: dashboardData.totalLikes || 0,
+      subtitle: 'Across all products',
+      change: '+15.2%',
       changeType: 'up',
-      icon: FiShoppingCart,
-      gradient: 'from-blue-500 to-indigo-500',
+      icon: FiHeart,
+      gradient: 'from-rose-500 to-pink-500',
     },
     {
       title: 'Today Revenue',

@@ -13,8 +13,14 @@ const TopHeader = () => {
   // Check for dark mode on mount
   useEffect(() => {
     const checkDarkMode = () => {
-      const savedTheme = localStorage.getItem("theme");
-      setIsDark(savedTheme === "dark" || document.documentElement.classList.contains("dark"));
+      try {
+        if (typeof window !== 'undefined') {
+          const savedTheme = localStorage.getItem("theme");
+          setIsDark(savedTheme === "dark" || document.documentElement.classList.contains("dark"));
+        }
+      } catch (error) {
+        setIsDark(document.documentElement.classList.contains("dark"));
+      }
     };
 
     checkDarkMode();

@@ -45,6 +45,14 @@ const Hero = () => {
     const y1 = useTransform(scrollY, [0, 500], [0, 200]);
     const y2 = useTransform(scrollY, [0, 500], [0, -150]);
 
+    // Mouse parallax effects - MUST BE TOP LEVEL
+    const mouseParallaxX1 = useTransform(smoothMouseX, v => v * -1.5);
+    const mouseParallaxY1 = useTransform(smoothMouseY, v => v * -1.5);
+    const mouseParallaxX2 = useTransform(smoothMouseX, v => v * 2);
+    const mouseParallaxY2 = useTransform(smoothMouseY, v => v * 2);
+    const mouseParallaxX3 = useTransform(smoothMouseX, v => v * -0.8);
+    const mouseParallaxY3 = useTransform(smoothMouseY, v => v * -0.8);
+
     const bengaliClass = language === "bn" ? "hind-siliguri" : "";
     const headingFont = "font-outfit";
 
@@ -238,22 +246,22 @@ const Hero = () => {
                 />
                 <motion.div
                     style={isMobile ? {} : {
-                        x: useTransform(smoothMouseX, v => v * -1.5),
-                        y: useTransform(smoothMouseY, v => v * -1.5)
+                        x: mouseParallaxX1,
+                        y: mouseParallaxY1
                     }}
                     className="absolute top-[40%] left-[10%] w-[250px] h-[250px] rounded-full bg-gradient-to-br from-blue-400/15 to-indigo-500/10 blur-[70px] animate-float-medium"
                 />
                 <motion.div
                     style={isMobile ? {} : {
-                        x: useTransform(smoothMouseX, v => v * 2),
-                        y: useTransform(smoothMouseY, v => v * 2)
+                        x: mouseParallaxX2,
+                        y: mouseParallaxY2
                     }}
                     className="absolute bottom-[20%] right-[25%] w-[350px] h-[350px] rounded-full bg-gradient-to-br from-orange-400/15 to-amber-500/10 blur-[90px] animate-float-fast"
                 />
                 <motion.div
                     style={isMobile ? {} : {
-                        x: useTransform(smoothMouseX, v => v * -0.8),
-                        y: useTransform(smoothMouseY, v => v * -0.8)
+                        x: mouseParallaxX3,
+                        y: mouseParallaxY3
                     }}
                     className="absolute top-[60%] right-[5%] w-[200px] h-[200px] rounded-full bg-gradient-to-br from-purple-400/10 to-pink-500/5 blur-[60px] animate-float-slow"
                 />

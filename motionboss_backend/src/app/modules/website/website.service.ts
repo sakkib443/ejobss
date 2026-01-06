@@ -10,6 +10,8 @@ import AppError from '../../utils/AppError';
 import { IWebsite, IWebsiteFilters, IWebsiteQuery } from './website.interface';
 import { Website } from './website.model';
 import CategoryService from '../category/category.service';
+import { User } from '../user/user.model';
+import { NotificationService } from '../notification/notification.module';
 
 interface IPaginatedResult<T> {
     data: T[];
@@ -395,8 +397,20 @@ const WebsiteService = {
             try {
                 const WishlistService = (await import('../wishlist/wishlist.module')).default;
                 await WishlistService.addToWishlist(userId, id, 'website');
+
+                // Notification
+                const user = await User.findById(userId);
+                if (user && website) {
+                    await NotificationService.createLikeNotification({
+                        userId: user._id,
+                        userName: `${user.firstName} ${user.lastName}`,
+                        productId: website._id,
+                        productName: website.title,
+                        productType: 'website'
+                    });
+                }
             } catch (error) {
-                console.error('Wishlist sync error (like):', error);
+                console.error('Wishlist/Notification sync error (like):', error);
             }
 
             const updated = await Website.findById(id).select('likeCount');

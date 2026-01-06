@@ -8,6 +8,8 @@ import { Types } from 'mongoose';
 import { Course } from './course.model';
 import { ICourse, ICourseFilters } from './course.interface';
 import AppError from '../../utils/AppError';
+import { User } from '../user/user.model';
+import { NotificationService } from '../notification/notification.module';
 
 /**
  * Generate URL-friendly slug from title
@@ -428,8 +430,20 @@ const toggleLike = async (id: string, userId: string): Promise<{ isLiked: boolea
         try {
             const WishlistService = (await import('../wishlist/wishlist.module')).default;
             await WishlistService.addToWishlist(userId, id, 'course');
+
+            // Notification
+            const user = await User.findById(userId);
+            if (user && course) {
+                await NotificationService.createLikeNotification({
+                    userId: user._id,
+                    userName: `${user.firstName} ${user.lastName}`,
+                    productId: course._id,
+                    productName: course.title,
+                    productType: 'course'
+                });
+            }
         } catch (error) {
-            console.error('Wishlist sync error (like):', error);
+            console.error('Wishlist/Notification sync error (like):', error);
         }
 
         const updated = await Course.findById(id).select('likeCount');

@@ -4,103 +4,68 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function MouseCursorEffect() {
     const [particles, setParticles] = useState([]);
-
-    // Magical Palette (Gold, Pink, Orange)
-    const colors = [
-        "#FFD700", // Gold
-        "#FFB6C1", // LightPink
-        "#FF69B4", // HotPink
-        "#FFA500", // Orange
-    ];
-
-    const createParticle = (x, y, isBurst = false) => {
-        const id = Math.random().toString(36).substr(2, 9);
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        const size = Math.random() * (isBurst ? 8 : 4) + 2;
-        const angle = Math.random() * Math.PI * 2;
-        const velocity = Math.random() * (isBurst ? 60 : 20) + (isBurst ? 20 : 5);
-        const xDist = Math.cos(angle) * velocity;
-        const yDist = Math.sin(angle) * velocity;
-        const duration = Math.random() * 0.5 + 0.5;
-
-        return {
-            id,
-            x,
-            y,
-            color,
-            size,
-            xDist,
-            yDist,
-            duration,
-            isBurst
-        };
-    };
-
     const [isMobile, setIsMobile] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
+    // Magical Palette
+    const colors = ["#FFD700", "#FFB6C1", "#FF69B4", "#FFA500"];
 
     useEffect(() => {
-        const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+        setMounted(true);
+        const checkMobile = () => {
+            if (typeof window !== 'undefined') {
+                setIsMobile(window.innerWidth < 1024);
+            }
+        };
         checkMobile();
         window.addEventListener('resize', checkMobile);
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
     useEffect(() => {
-        if (isMobile) return;
+        if (!mounted || isMobile) return;
+
+        const createParticle = (x, y, isBurst = false) => {
+            const id = Math.random().toString(36).substr(2, 9);
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            const size = Math.random() * (isBurst ? 8 : 4) + 2;
+            const angle = Math.random() * Math.PI * 2;
+            const velocity = Math.random() * (isBurst ? 60 : 20) + (isBurst ? 20 : 5);
+            return { id, x, y, color, size, xDist: Math.cos(angle) * velocity, yDist: Math.sin(angle) * velocity, duration: Math.random() * 0.5 + 0.5 };
+        };
 
         const handleMouseMove = (e) => {
-            // 10% chance to spawn trail
             if (Math.random() > 0.9) {
-                setParticles((prev) => {
-                    const newParticle = createParticle(e.clientX, e.clientY, false);
-                    return [...prev.slice(-20), newParticle];
-                });
+                setParticles((prev) => [...prev.slice(-20), createParticle(e.clientX, e.clientY)]);
             }
         };
 
         const handleClick = (e) => {
-            // Burst
-            const burstCount = 6;
-            const newParticles = [];
-            for (let i = 0; i < burstCount; i++) {
-                newParticles.push(createParticle(e.clientX, e.clientY, true));
-            }
+            const newParticles = Array.from({ length: 6 }).map(() => createParticle(e.clientX, e.clientY, true));
             setParticles((prev) => [...prev.slice(-40), ...newParticles]);
         };
 
         window.addEventListener("mousemove", handleMouseMove);
         window.addEventListener("click", handleClick);
-
         return () => {
             window.removeEventListener("mousemove", handleMouseMove);
             window.removeEventListener("click", handleClick);
         };
-    }, [isMobile]);
+    }, [isMobile, mounted]);
 
-    const removeParticle = (id) => {
-        setParticles((prev) => prev.filter((p) => p.id !== id));
-    };
+    const removeParticle = (id) => setParticles((prev) => prev.filter((p) => p.id !== id));
 
-    if (isMobile) return null;
+    // MOVED RETURN STATEMENT TO THE BOTTOM TO ENSURE ALL HOOKS LOADED
+    if (!mounted || isMobile) return null;
 
     return (
-        <div className="pointer-events-none fixed inset-0 overflow-hidden z-[99999]">
+        <div className="pointer-events-none fixed inset-0 overflow-hidden z-[99999]" aria-hidden="true">
             <AnimatePresence>
                 {particles.map((p) => (
                     <motion.div
                         key={p.id}
-                        initial={{
-                            x: p.x - p.size / 2,
-                            y: p.y - p.size / 2,
-                            opacity: 1,
-                            scale: 0.5,
-                        }}
-                        animate={{
-                            x: p.x + p.xDist,
-                            y: p.y + p.yDist,
-                            opacity: 0,
-                            scale: 0,
-                        }}
+                        initial={{ x: p.x - p.size / 2, y: p.y - p.size / 2, opacity: 1, scale: 0.5 }}
+                        animate={{ x: p.x + p.xDist, y: p.y + p.yDist, opacity: 0, scale: 0 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: p.duration, ease: "easeOut" }}
                         onAnimationComplete={() => removeParticle(p.id)}

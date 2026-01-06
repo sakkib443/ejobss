@@ -120,14 +120,14 @@ const CategoryMegaMenu = ({ closeMobileMenu, language, bengaliClass }) => {
                 onMouseEnter={() => setActiveParent(category._id)}
                 onClick={() => handleCategoryClick(category.slug, category.type)}
                 className={`w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl transition-all ${isActive
-                    ? 'bg-white dark:bg-white/10 text-teal-600 dark:text-teal-400 shadow-sm'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-white/5'
+                  ? 'bg-white dark:bg-white/10 text-teal-600 dark:text-teal-400 shadow-sm'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-white/5'
                   }`}
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${isActive
-                      ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/30'
-                      : 'bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400'
+                    ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/30'
+                    : 'bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400'
                     }`}>
                     <Icon size={16} />
                   </div>
@@ -216,37 +216,66 @@ const Navbar = () => {
   const router = useRouter();
   const { items = [] } = useSelector((state) => state.cart || {});
   const { t, language } = useLanguage();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Dark mode toggle handler
   useEffect(() => {
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme === "dark") {
-      setIsDarkMode(true);
-      document.documentElement.classList.add("dark");
+    try {
+      if (typeof window !== 'undefined') {
+        const savedTheme = localStorage.getItem("theme");
+        if (savedTheme === "dark") {
+          setIsDarkMode(true);
+          document.documentElement.classList.add("dark");
+        }
+      }
+    } catch (error) {
+      console.error("Error loading theme:", error);
     }
   }, []);
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
-    if (!isDarkMode) {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("theme", "light");
+    try {
+      if (typeof window !== 'undefined') {
+        if (!isDarkMode) {
+          document.documentElement.classList.add("dark");
+          localStorage.setItem("theme", "dark");
+        } else {
+          document.documentElement.classList.remove("dark");
+          localStorage.setItem("theme", "light");
+        }
+      }
+    } catch (error) {
+      console.error("Error saving theme:", error);
     }
   };
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setTimeout(() => setUser(JSON.parse(storedUser)), 0);
+    try {
+      if (typeof window !== 'undefined') {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+          setTimeout(() => setUser(JSON.parse(storedUser)), 0);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading user:", error);
     }
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      }
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
     setUser(null);
     closeMobileMenu();
     router.replace("/login");
@@ -501,17 +530,19 @@ const Navbar = () => {
                 className="hidden lg:flex w-10 h-10 items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 transition-all duration-300 group"
                 aria-label="Toggle dark mode"
               >
-                <motion.div
-                  animate={{ rotate: isDarkMode ? 180 : 0 }}
-                  transition={{ duration: 0.5, ease: "easeInOut" }}
-                  className="relative"
-                >
-                  {isDarkMode ? (
-                    <LuMoon size={18} className="text-amber-400" />
-                  ) : (
-                    <LuSun size={18} className="text-amber-500 group-hover:rotate-12 transition-transform" />
-                  )}
-                </motion.div>
+                {mounted && (
+                  <motion.div
+                    animate={{ rotate: isDarkMode ? 180 : 0 }}
+                    transition={{ duration: 0.5, ease: "easeInOut" }}
+                    className="relative"
+                  >
+                    {isDarkMode ? (
+                      <LuMoon size={18} className="text-amber-400" />
+                    ) : (
+                      <LuSun size={18} className="text-amber-500 group-hover:rotate-12 transition-transform" />
+                    )}
+                  </motion.div>
+                )}
               </button>
 
               {/* 2. Language Switcher */}
@@ -522,7 +553,7 @@ const Navbar = () => {
               {/* 3. Cart */}
               <Link href="/cart" className="relative w-10 h-10 flex items-center justify-center rounded-full text-gray-600 hover:bg-teal-50 hover:text-teal-600 transition-all group">
                 <LuShoppingCart size={20} className="group-hover:scale-110 transition-transform" />
-                {items.length > 0 && (
+                {mounted && items.length > 0 && (
                   <span className="absolute top-0.5 right-0.5 w-4 h-4 bg-amber-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-md">
                     {items.length}
                   </span>
@@ -530,7 +561,7 @@ const Navbar = () => {
               </Link>
 
               {/* 4. Profile with Name & Dropdown */}
-              {user ? (
+              {mounted && user ? (
                 <div className="profile-dropdown-container relative hidden sm:block">
                   <button
                     onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
@@ -605,12 +636,12 @@ const Navbar = () => {
                     )}
                   </AnimatePresence>
                 </div>
-              ) : (
+              ) : mounted ? (
                 <Link href="/login" className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-teal-500 hover:bg-teal-600 text-white font-semibold text-sm transition-all shadow-md shadow-teal-500/20">
                   <LuUser size={16} />
                   <span>Login</span>
                 </Link>
-              )}
+              ) : null}
 
               {/* Mobile Toggle */}
               <button
