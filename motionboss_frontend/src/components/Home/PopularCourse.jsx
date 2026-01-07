@@ -77,7 +77,7 @@ const PopularCourse = () => {
             const Icon = stat.icon;
             const colors = getColorClasses(stat.color);
             return (
-              <motion.div key={index} variants={cardVariants} className="group relative bg-white dark:bg-[#0d0d0d] rounded-[2rem] px-8 py-6 border border-gray-200 dark:border-white/10 hover:shadow-lg hover:-translate-y-2 transition-all">
+              <motion.div key={index} variants={cardVariants} className="group relative bg-white dark:bg-[#0d0d0d] rounded-md px-8 py-6 border border-gray-200 dark:border-white/10 hover:shadow-lg hover:-translate-y-2 transition-all">
                 <div className={`absolute -top-10 -right-10 w-24 h-24 rounded-full bg-gradient-to-br ${colors.gradient} opacity-5`} />
                 <div className="relative z-10 flex items-center gap-5">
                   <div className={`w-14 h-14 ${colors.light} rounded-2xl flex items-center justify-center`}>

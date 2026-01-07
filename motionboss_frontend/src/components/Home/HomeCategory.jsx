@@ -234,7 +234,7 @@ const HomeCategory = () => {
                             <motion.div key={cat.id} variants={cardVariants}>
                                 <Link
                                     href={cat.href}
-                                    className="group relative bg-white dark:bg-[#0d0d0d] rounded-[2rem] p-8 border border-gray-200 dark:border-white/10 transition-all duration-500 hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.4)] overflow-hidden block hover:-translate-y-2"
+                                    className="group relative bg-white dark:bg-[#0d0d0d] rounded-md p-8 border border-gray-200 dark:border-white/10 transition-all duration-500 hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.4)] overflow-hidden block hover:-translate-y-2"
                                 >
                                     {/* Decorative Corner */}
                                     <div className={`absolute -top-10 -right-10 w-24 h-24 rounded-full bg-gradient-to-br ${colors.gradient} opacity-5 group-hover:opacity-10 transition-opacity duration-500`}></div>
@@ -278,7 +278,7 @@ const HomeCategory = () => {
                                     </div>
 
                                     {/* Bottom Accent Line */}
-                                    <div className={`absolute bottom-0 left-0 w-0 h-1 bg-gradient-to-r ${colors.gradient} rounded-b-2xl group-hover:w-full transition-all duration-500`}></div>
+                                    <div className={`absolute bottom-0 left-0 w-0 h-1 bg-gradient-to-r ${colors.gradient} rounded-b-md group-hover:w-full transition-all duration-500`}></div>
                                 </Link>
                             </motion.div>
                         );
