@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
     FiSearch,
     FiBell,
@@ -11,17 +12,20 @@ import {
     FiMoon,
     FiSun,
     FiChevronDown,
-    FiMail,
-    FiCheck,
     FiBookOpen,
-    FiStar
+    FiAward,
+    FiHeart,
+    FiDownload,
+    FiCreditCard,
+    FiCheck
 } from 'react-icons/fi';
 import { useTheme } from '@/providers/ThemeProvider';
 
 const UserHeader = () => {
+    const router = useRouter();
     const [showNotifications, setShowNotifications] = useState(false);
     const [showProfile, setShowProfile] = useState(false);
-    const { theme, toggleTheme, isDark } = useTheme();
+    const { toggleTheme, isDark } = useTheme();
     const [user, setUser] = useState(null);
 
     useEffect(() => {
@@ -31,11 +35,12 @@ const UserHeader = () => {
         }
     }, []);
 
-    // Student specific mock notifications
+    // Student specific notifications
     const notifications = [
-        { id: 1, title: 'New Lesson Uploaded', message: 'Full Stack Course: Module 5 is live', time: '2 min ago', read: false },
-        { id: 2, title: 'Exam Reminder', message: 'Your Next.js exam starts in 2 hours', time: '15 min ago', read: false },
-        { id: 3, title: 'Review Approved', message: 'Your review for React Course is live', time: '1 hour ago', read: true },
+        { id: 1, title: 'New Lesson Available', message: 'Module 5: Advanced React Patterns is now live!', time: '2 min ago', read: false, type: 'course' },
+        { id: 2, title: 'Certificate Ready', message: 'Your Web Development certificate is ready to download', time: '1 hour ago', read: false, type: 'certificate' },
+        { id: 3, title: 'Course Completed', message: 'Congratulations on completing JavaScript Basics!', time: '2 hours ago', read: true, type: 'success' },
+        { id: 4, title: 'New Resource', message: 'PDF study guide added to your enrolled course', time: '5 hours ago', read: true, type: 'resource' },
     ];
 
     const unreadCount = notifications.filter(n => !n.read).length;
@@ -54,7 +59,21 @@ const UserHeader = () => {
     const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        window.location.href = '/login';
+        router.push('/login');
+    };
+
+    const handleMenuClick = () => {
+        setShowProfile(false);
+    };
+
+    const getNotificationIcon = (type) => {
+        switch (type) {
+            case 'course': return <FiBookOpen className="text-[#41bfb8]" size={14} />;
+            case 'certificate': return <FiAward className="text-[#F79952]" size={14} />;
+            case 'success': return <FiCheck className="text-green-500" size={14} />;
+            case 'resource': return <FiDownload className="text-blue-500" size={14} />;
+            default: return <FiBell className="text-gray-500" size={14} />;
+        }
     };
 
     return (
@@ -69,10 +88,10 @@ const UserHeader = () => {
                         <FiSearch className={`absolute left-4 top-1/2 -translate-y-1/2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
                         <input
                             type="text"
-                            placeholder="Search lessons, resources, mentor..."
+                            placeholder="Search courses, resources..."
                             className={`w-full pl-11 pr-4 py-2.5 border-0 rounded-xl text-sm transition-all ${isDark
-                                ? 'bg-slate-800/80 text-slate-200 placeholder:text-slate-500 focus:ring-indigo-500/30 focus:bg-slate-800'
-                                : 'bg-slate-100/80 text-slate-700 placeholder:text-slate-400 focus:ring-indigo-500/20 focus:bg-white'
+                                ? 'bg-slate-800/80 text-slate-200 placeholder:text-slate-500 focus:ring-[#41bfb8]/30 focus:bg-slate-800'
+                                : 'bg-slate-100/80 text-slate-700 placeholder:text-slate-400 focus:ring-[#41bfb8]/20 focus:bg-white'
                                 } focus:outline-none focus:ring-2`}
                         />
                     </div>
@@ -84,9 +103,10 @@ const UserHeader = () => {
                     <button
                         onClick={toggleTheme}
                         className={`relative p-2.5 rounded-xl transition-all duration-300 overflow-hidden group ${isDark
-                            ? 'bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50'
-                            : 'bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50'
+                            ? 'bg-gradient-to-br from-[#41bfb8] to-[#2dd4bf] text-white shadow-lg shadow-[#41bfb8]/30'
+                            : 'bg-gradient-to-br from-[#F79952] to-orange-500 text-white shadow-lg shadow-[#F79952]/30'
                             }`}
+                        title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
                     >
                         <div className="relative w-5 h-5">
                             <FiSun size={20} className={`absolute inset-0 transition-all duration-300 transform ${isDark ? 'rotate-0 opacity-100 scale-100' : 'rotate-90 opacity-0 scale-50'}`} />
@@ -110,35 +130,57 @@ const UserHeader = () => {
                         >
                             <FiBell size={18} />
                             {unreadCount > 0 && (
-                                <span className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
+                                <span className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-[#41bfb8] to-[#2dd4bf] text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
                                     {unreadCount}
                                 </span>
                             )}
                         </button>
 
-                        {/* Dropdown */}
+                        {/* Notifications Dropdown */}
                         {showNotifications && (
                             <div className={`absolute right-0 top-full mt-2 w-80 rounded-2xl shadow-2xl border overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 ${isDark
                                 ? 'bg-slate-800 border-slate-700 shadow-slate-900/50'
                                 : 'bg-white border-slate-100 shadow-slate-200/50'
                                 }`}>
                                 <div className={`flex items-center justify-between px-4 py-3 border-b ${isDark
-                                    ? 'bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border-slate-700'
-                                    : 'bg-gradient-to-r from-indigo-500/5 to-purple-500/5 border-slate-100'
+                                    ? 'bg-gradient-to-r from-[#41bfb8]/10 to-[#2dd4bf]/10 border-slate-700'
+                                    : 'bg-gradient-to-r from-[#41bfb8]/5 to-[#2dd4bf]/5 border-slate-100'
                                     }`}>
                                     <h3 className={`font-semibold ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>Notifications</h3>
+                                    {unreadCount > 0 && (
+                                        <span className="px-2 py-0.5 bg-[#41bfb8] text-white text-xs font-bold rounded-full">{unreadCount} new</span>
+                                    )}
                                 </div>
                                 <div className="max-h-80 overflow-y-auto">
                                     {notifications.map((notif) => (
-                                        <div key={notif.id} className={`flex items-start gap-3 px-4 py-3 transition-colors cursor-pointer ${isDark ? 'hover:bg-slate-700/50' : 'hover:bg-slate-50'}`}>
+                                        <div key={notif.id} className={`flex items-start gap-3 px-4 py-3 transition-colors cursor-pointer border-l-2 ${notif.read
+                                            ? `border-transparent ${isDark ? 'hover:bg-slate-700/50' : 'hover:bg-slate-50'}`
+                                            : `border-[#41bfb8] ${isDark ? 'bg-[#41bfb8]/5 hover:bg-[#41bfb8]/10' : 'bg-[#41bfb8]/5 hover:bg-[#41bfb8]/10'}`
+                                            }`}>
+                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? 'bg-slate-700' : 'bg-gray-100'}`}>
+                                                {getNotificationIcon(notif.type)}
+                                            </div>
                                             <div className="flex-1 min-w-0">
                                                 <p className={`text-sm font-medium ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>{notif.title}</p>
                                                 <p className={`text-xs truncate ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{notif.message}</p>
                                                 <p className={`text-[10px] mt-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{notif.time}</p>
                                             </div>
+                                            {!notif.read && (
+                                                <div className="w-2 h-2 rounded-full bg-[#41bfb8] mt-2"></div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
+                                <Link
+                                    href="/dashboard/user/notifications"
+                                    onClick={() => setShowNotifications(false)}
+                                    className={`block text-center py-3 text-sm font-medium border-t transition-colors ${isDark
+                                        ? 'border-slate-700 text-[#41bfb8] hover:bg-slate-700/50'
+                                        : 'border-slate-100 text-[#41bfb8] hover:bg-slate-50'
+                                        }`}
+                                >
+                                    View All Notifications
+                                </Link>
                             </div>
                         )}
                     </div>
@@ -152,11 +194,11 @@ const UserHeader = () => {
                                 setShowNotifications(false);
                             }}
                             className={`flex items-center gap-3 pl-3 pr-2 py-1.5 rounded-xl transition-all ${isDark
-                                ? 'bg-gradient-to-r from-indigo-500/20 to-purple-500/20 hover:from-indigo-500/30 hover:to-purple-500/30'
-                                : 'bg-gradient-to-r from-indigo-500/10 to-purple-500/10 hover:from-indigo-500/20 hover:to-purple-500/20'
+                                ? 'bg-gradient-to-r from-[#41bfb8]/20 to-[#2dd4bf]/20 hover:from-[#41bfb8]/30 hover:to-[#2dd4bf]/30'
+                                : 'bg-gradient-to-r from-[#41bfb8]/10 to-[#2dd4bf]/10 hover:from-[#41bfb8]/20 hover:to-[#2dd4bf]/20'
                                 }`}
                         >
-                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-indigo-500/25">
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#41bfb8] to-[#2dd4bf] flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-[#41bfb8]/25">
                                 {user?.firstName?.[0] || 'S'}
                             </div>
                             <div className="hidden md:block text-left">
@@ -164,10 +206,10 @@ const UserHeader = () => {
                                     {user?.firstName || 'Student'}
                                 </p>
                                 <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                                    Student ID: #MB-2025
+                                    Student
                                 </p>
                             </div>
-                            <FiChevronDown className={`transition-transform ${showProfile ? 'rotate-180' : ''}`} />
+                            <FiChevronDown className={`transition-transform ${isDark ? 'text-slate-400' : 'text-slate-400'} ${showProfile ? 'rotate-180' : ''}`} />
                         </button>
 
                         {/* Profile Dropdown */}
@@ -176,21 +218,86 @@ const UserHeader = () => {
                                 ? 'bg-slate-800 border-slate-700'
                                 : 'bg-white border-slate-100'
                                 }`}>
-                                <div className="p-4 border-b">
-                                    <p className={`font-semibold ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>{user?.firstName} {user?.lastName}</p>
-                                    <p className="text-xs text-slate-500">{user?.email}</p>
+                                <div className={`p-4 border-b ${isDark
+                                    ? 'bg-gradient-to-r from-[#41bfb8]/10 to-[#2dd4bf]/10 border-slate-700'
+                                    : 'bg-gradient-to-r from-[#41bfb8]/5 to-[#2dd4bf]/5 border-slate-100'
+                                    }`}>
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#41bfb8] to-[#2dd4bf] flex items-center justify-center text-white font-bold shadow-lg">
+                                            {user?.firstName?.[0] || 'S'}
+                                        </div>
+                                        <div>
+                                            <p className={`font-semibold text-sm ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+                                                {user?.firstName} {user?.lastName}
+                                            </p>
+                                            <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{user?.email}</p>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div className="py-2">
-                                    <Link href="/dashboard/user/profile" className={`flex items-center gap-3 px-4 py-2 text-sm ${isDark ? 'text-slate-400 hover:bg-slate-700 hover:text-white' : 'text-slate-600 hover:bg-slate-50'}`}>
-                                        <FiUser size={16} /> My Profile
+                                    <Link
+                                        href="/dashboard/user/profile"
+                                        onClick={handleMenuClick}
+                                        className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${isDark
+                                            ? 'text-slate-400 hover:bg-slate-700/50 hover:text-slate-200'
+                                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-800'
+                                            }`}
+                                    >
+                                        <FiUser size={16} />
+                                        My Profile
                                     </Link>
-                                    <Link href="/dashboard/user/courses" className={`flex items-center gap-3 px-4 py-2 text-sm ${isDark ? 'text-slate-400 hover:bg-slate-700 hover:text-white' : 'text-slate-600 hover:bg-slate-50'}`}>
-                                        <FiBookOpen size={16} /> My Courses
+                                    <Link
+                                        href="/dashboard/user/courses"
+                                        onClick={handleMenuClick}
+                                        className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${isDark
+                                            ? 'text-slate-400 hover:bg-slate-700/50 hover:text-slate-200'
+                                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-800'
+                                            }`}
+                                    >
+                                        <FiBookOpen size={16} />
+                                        My Courses
+                                    </Link>
+                                    <Link
+                                        href="/dashboard/user/certificates"
+                                        onClick={handleMenuClick}
+                                        className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${isDark
+                                            ? 'text-slate-400 hover:bg-slate-700/50 hover:text-slate-200'
+                                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-800'
+                                            }`}
+                                    >
+                                        <FiAward size={16} />
+                                        Certificates
+                                    </Link>
+                                    <Link
+                                        href="/dashboard/user/favorites"
+                                        onClick={handleMenuClick}
+                                        className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${isDark
+                                            ? 'text-slate-400 hover:bg-slate-700/50 hover:text-slate-200'
+                                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-800'
+                                            }`}
+                                    >
+                                        <FiHeart size={16} />
+                                        Favorites
+                                    </Link>
+                                    <Link
+                                        href="/dashboard/user/purchases"
+                                        onClick={handleMenuClick}
+                                        className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${isDark
+                                            ? 'text-slate-400 hover:bg-slate-700/50 hover:text-slate-200'
+                                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-800'
+                                            }`}
+                                    >
+                                        <FiCreditCard size={16} />
+                                        Purchases
                                     </Link>
                                 </div>
-                                <div className="p-2 border-t">
-                                    <button onClick={handleLogout} className="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg">
-                                        <FiLogOut size={16} /> Sign Out
+                                <div className={`p-2 border-t ${isDark ? 'border-slate-700' : 'border-slate-100'}`}>
+                                    <button
+                                        onClick={handleLogout}
+                                        className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                    >
+                                        <FiLogOut size={16} />
+                                        Sign Out
                                     </button>
                                 </div>
                             </div>

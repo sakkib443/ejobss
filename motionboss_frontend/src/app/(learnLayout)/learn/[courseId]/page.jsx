@@ -12,7 +12,7 @@ import {
     FiPlay, FiCheck, FiChevronDown, FiChevronUp,
     FiArrowLeft, FiClock, FiBookOpen, FiMenu, FiX,
     FiChevronRight, FiPlayCircle, FiAward, FiFileText,
-    FiFile, FiHelpCircle
+    FiFile, FiHelpCircle, FiHome, FiUser, FiMaximize2, FiMinimize2, FiMonitor
 } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -31,7 +31,8 @@ export default function CourseLearnPage() {
     const [expandedModules, setExpandedModules] = useState({});
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [completedLessons, setCompletedLessons] = useState([]);
-    const [activeTab, setActiveTab] = useState('video'); // video, text, documents, quiz
+    const [activeTab, setActiveTab] = useState('video');
+    const [videoMode, setVideoMode] = useState('normal'); // normal, wide, theater
 
     useEffect(() => {
         if (courseId) {
@@ -63,10 +64,8 @@ export default function CourseLearnPage() {
         }
     }, [groupedContent, activeLesson]);
 
-    // Reset activeTab when lesson changes
     useEffect(() => {
         if (activeLesson) {
-            // Default to video if has video, otherwise text, otherwise documents, otherwise quiz
             if (activeLesson.videoUrl) {
                 setActiveTab('video');
             } else if (activeLesson.textContent || activeLesson.textBlocks?.length > 0) {
@@ -84,9 +83,9 @@ export default function CourseLearnPage() {
     const handleMarkAsDone = async () => {
         if (!activeLesson || !courseId) return;
         try {
-            await dispatch(updateLessonProgress({ courseId, lessonId: activeLesson._id })).unwrap();
+            await dispatch(updateLessonProgress({ courseId, lessonId: activeLesson._id }).unwrap());
             setCompletedLessons(prev => [...prev, activeLesson._id]);
-            toast.success('Lesson completed!');
+            toast.success('Lesson completed! 🎉');
 
             let foundActive = false;
             let nextLesson = null;
@@ -103,7 +102,7 @@ export default function CourseLearnPage() {
                 const activeModule = groupedContent.find(m => m.lessons.some(l => l._id === nextLesson._id));
                 if (activeModule) setExpandedModules(prev => ({ ...prev, [activeModule._id]: true }));
             } else {
-                toast('🎉 Congratulations! Course completed!');
+                toast('🎊 Congratulations! Course completed!');
             }
         } catch (err) {
             toast.error(err || 'Failed to update progress');
@@ -131,7 +130,6 @@ export default function CourseLearnPage() {
     const totalDuration = groupedContent.reduce((sum, m) => sum + m.lessons.reduce((s, l) => s + (l.videoDuration || 0), 0), 0);
     const progressPercent = totalLessons > 0 ? Math.round((completedLessons.length / totalLessons) * 100) : 0;
 
-    // Content tabs configuration
     const contentTabs = [
         { id: 'video', label: 'Video', icon: FiPlay, show: !!activeLesson?.videoUrl },
         { id: 'text', label: 'Notes', icon: FiFileText, show: !!(activeLesson?.textContent || activeLesson?.textBlocks?.length > 0) },
@@ -144,13 +142,10 @@ export default function CourseLearnPage() {
     // Loading
     if (contentLoading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 flex items-center justify-center">
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <div className="text-center">
-                    <div className="relative">
-                        <div className="w-16 h-16 border-4 border-indigo-100 rounded-full"></div>
-                        <div className="absolute inset-0 w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-                    </div>
-                    <p className="text-slate-500 text-sm mt-4 font-poppins">Loading your course...</p>
+                    <div className="w-12 h-12 border-4 border-[#41bfb8] border-t-transparent rounded-full animate-spin mx-auto"></div>
+                    <p className="text-gray-500 text-sm mt-4 font-medium">Loading course...</p>
                 </div>
             </div>
         );
@@ -159,16 +154,16 @@ export default function CourseLearnPage() {
     // Error
     if (error) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 flex items-center justify-center p-6">
-                <div className="max-w-md w-full bg-white p-8 rounded-2xl border border-gray-100 shadow-xl shadow-gray-100/50 text-center">
-                    <div className="w-20 h-20 bg-gradient-to-br from-red-50 to-red-100 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-red-100">
-                        <FiX size={36} />
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+                <div className="max-w-md w-full bg-white p-8 rounded-2xl border border-gray-200 shadow-xl text-center">
+                    <div className="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                        <FiX size={32} />
                     </div>
-                    <h2 className="text-2xl font-bold text-slate-800 mb-3 font-outfit">Oops! Something went wrong</h2>
-                    <p className="text-slate-500 mb-8 font-poppins">{error}</p>
+                    <h2 className="text-xl font-bold text-gray-800 mb-3">Oops! Something went wrong</h2>
+                    <p className="text-gray-500 mb-6">{error}</p>
                     <button
                         onClick={() => router.push('/dashboard/user/courses')}
-                        className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-indigo-200 transition-all font-poppins"
+                        className="w-full py-3 bg-[#41bfb8] text-white rounded-xl font-bold hover:bg-[#2dd4bf] transition-all"
                     >
                         Back to My Courses
                     </button>
@@ -180,91 +175,95 @@ export default function CourseLearnPage() {
     if (!currentCourse) return null;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 font-poppins">
-            {/* ===== BEAUTIFUL HEADER ===== */}
-            <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100 shadow-sm">
-                <div className="max-w-7xl mx-auto px-4 lg:px-8">
-                    <div className="h-[70px] flex items-center justify-between">
-                        {/* Left: Logo & Back */}
-                        <div className="flex items-center gap-5">
+        <div className="min-h-screen bg-gray-50">
+            {/* ===== PROFESSIONAL HEADER ===== */}
+            <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+                <div className="max-w-[1600px] mx-auto px-4 lg:px-6">
+                    <div className="h-16 flex items-center justify-between">
+                        {/* Left: Logo & Nav */}
+                        <div className="flex items-center gap-4">
                             {/* Logo */}
-                            <Link href="/" className="block w-28 h-9 group">
+                            <Link href="/" className="flex items-center gap-2 group">
                                 <Image
                                     src="/images/ejobsitlogo.png"
                                     alt="eJobsIT"
-                                    width={112}
-                                    height={36}
-                                    className="w-full h-full object-contain group-hover:opacity-80 transition-opacity"
+                                    width={100}
+                                    height={32}
+                                    className="h-8 w-auto object-contain"
                                 />
                             </Link>
 
                             {/* Divider */}
-                            <div className="h-8 w-px bg-gradient-to-b from-transparent via-gray-200 to-transparent"></div>
+                            <div className="h-6 w-px bg-gray-200 hidden sm:block"></div>
 
-                            {/* Back Button */}
-                            <button
-                                onClick={() => router.push('/dashboard/user/courses')}
-                                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-800 transition-all group"
-                            >
-                                <FiArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
-                                <span className="text-sm font-medium">My Courses</span>
-                            </button>
+                            {/* Back & Home */}
+                            <div className="hidden sm:flex items-center gap-1">
+                                <Link
+                                    href="/"
+                                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-gray-500 hover:text-[#41bfb8] hover:bg-[#41bfb8]/5 transition-all text-sm font-medium"
+                                >
+                                    <FiHome size={14} />
+                                    Home
+                                </Link>
+                                <button
+                                    onClick={() => router.push('/dashboard/user/courses')}
+                                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-gray-500 hover:text-[#41bfb8] hover:bg-[#41bfb8]/5 transition-all text-sm font-medium"
+                                >
+                                    <FiArrowLeft size={14} />
+                                    My Courses
+                                </button>
+                            </div>
                         </div>
 
-                        {/* Center: Course Title & Progress (Desktop) */}
-                        <div className="hidden lg:flex items-center gap-6 flex-1 max-w-xl mx-8">
+                        {/* Center: Course Title & Progress */}
+                        <div className="hidden lg:flex items-center gap-5 flex-1 max-w-xl mx-6">
                             <div className="flex-1 min-w-0">
-                                <p className="text-xs text-indigo-600 font-semibold uppercase tracking-wider mb-1">Now Learning</p>
-                                <h1 className="text-slate-800 font-semibold font-outfit truncate">
+                                <p className="text-[10px] text-[#41bfb8] font-bold uppercase tracking-wider">Learning Now</p>
+                                <h1 className="text-gray-800 font-semibold truncate text-sm">
                                     {currentCourse.title}
                                 </h1>
                             </div>
-                            {/* Progress Ring */}
-                            <div className="flex items-center gap-3">
-                                <div className="relative w-12 h-12">
-                                    <svg className="w-12 h-12 -rotate-90">
-                                        <circle cx="24" cy="24" r="20" fill="none" stroke="#e2e8f0" strokeWidth="4" />
-                                        <circle
-                                            cx="24" cy="24" r="20" fill="none"
-                                            stroke="url(#progressGradient)"
-                                            strokeWidth="4"
-                                            strokeLinecap="round"
-                                            strokeDasharray={`${progressPercent * 1.256} 999`}
-                                        />
-                                        <defs>
-                                            <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                                <stop offset="0%" stopColor="#6366f1" />
-                                                <stop offset="100%" stopColor="#a855f7" />
-                                            </linearGradient>
-                                        </defs>
-                                    </svg>
-                                    <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-slate-700">
-                                        {progressPercent}%
-                                    </span>
+                            {/* Progress */}
+                            <div className="flex items-center gap-3 shrink-0">
+                                <div className="flex flex-col items-end">
+                                    <span className="text-xs text-gray-400">{completedLessons.length}/{totalLessons}</span>
+                                    <div className="w-24 h-1.5 bg-gray-200 rounded-full overflow-hidden mt-1">
+                                        <div className="h-full bg-gradient-to-r from-[#41bfb8] to-[#F79952] rounded-full" style={{ width: `${progressPercent}%` }}></div>
+                                    </div>
                                 </div>
+                                <span className="text-sm font-bold text-[#41bfb8]">{progressPercent}%</span>
                             </div>
                         </div>
 
-                        {/* Right: Stats & Menu */}
-                        <div className="flex items-center gap-4">
-                            {/* Stats Pills */}
+                        {/* Right: Stats & Actions */}
+                        <div className="flex items-center gap-3">
+                            {/* Stats */}
                             <div className="hidden md:flex items-center gap-2">
-                                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-600 text-sm font-medium">
-                                    <FiBookOpen size={14} />
+                                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#41bfb8]/10 text-[#41bfb8] text-xs font-bold">
+                                    <FiBookOpen size={13} />
                                     <span>{totalLessons}</span>
                                 </div>
-                                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-50 text-purple-600 text-sm font-medium">
-                                    <FiClock size={14} />
+                                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F79952]/10 text-[#F79952] text-xs font-bold">
+                                    <FiClock size={13} />
                                     <span>{Math.round(totalDuration / 60)}m</span>
                                 </div>
                             </div>
 
+                            {/* Dashboard Link */}
+                            <Link
+                                href="/dashboard/user"
+                                className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-[#41bfb8] hover:text-white transition-all text-sm font-medium"
+                            >
+                                <FiUser size={14} />
+                                Dashboard
+                            </Link>
+
                             {/* Mobile Menu Toggle */}
                             <button
                                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                                className="lg:hidden p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-600 transition-all"
+                                className="lg:hidden p-2.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 transition-all"
                             >
-                                {sidebarOpen ? <FiX size={20} /> : <FiMenu size={20} />}
+                                {sidebarOpen ? <FiX size={18} /> : <FiMenu size={18} />}
                             </button>
                         </div>
                     </div>
@@ -272,26 +271,26 @@ export default function CourseLearnPage() {
             </header>
 
             {/* ===== MAIN CONTENT ===== */}
-            <div className="max-w-7xl mx-auto px-4 lg:px-8 py-6 lg:py-8">
-                <div className="flex gap-8">
+            <div className="max-w-[1600px] mx-auto px-4 lg:px-6 py-5">
+                <div className="flex gap-6">
                     {/* Video & Info Section */}
                     <main className="flex-1 min-w-0">
-                        {/* Content Tabs - Show if there are multiple content types */}
+                        {/* Content Tabs */}
                         {visibleTabs.length > 1 && (
-                            <div className="flex gap-1 mb-4 p-1 bg-slate-100 rounded-xl overflow-x-auto">
+                            <div className="flex gap-1 mb-4 p-1 bg-white rounded-xl border border-gray-200 overflow-x-auto">
                                 {visibleTabs.map(tab => (
                                     <button
                                         key={tab.id}
                                         onClick={() => setActiveTab(tab.id)}
-                                        className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-semibold text-sm transition-all whitespace-nowrap ${activeTab === tab.id
-                                                ? 'bg-white text-slate-800 shadow-sm'
-                                                : 'text-slate-500 hover:text-slate-700'
+                                        className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all whitespace-nowrap ${activeTab === tab.id
+                                            ? 'bg-[#41bfb8] text-white shadow-sm'
+                                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                                             }`}
                                     >
-                                        <tab.icon size={16} />
+                                        <tab.icon size={15} />
                                         {tab.label}
                                         {tab.badge > 0 && (
-                                            <span className="ml-1 px-1.5 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-600">
+                                            <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${activeTab === tab.id ? 'bg-white/20' : 'bg-[#41bfb8]/10 text-[#41bfb8]'}`}>
                                                 {tab.badge}
                                             </span>
                                         )}
@@ -302,34 +301,63 @@ export default function CourseLearnPage() {
 
                         {/* Video Tab */}
                         {activeTab === 'video' && (
-                            <div className="bg-slate-900 rounded-2xl overflow-hidden shadow-2xl shadow-slate-900/20 mb-6">
-                                <div className="relative w-full" style={{ paddingTop: '56.25%' }}>
-                                    {activeLesson?.videoUrl ? (
-                                        <iframe
-                                            src={getVideoEmbedUrl(activeLesson.videoUrl)}
-                                            title={activeLesson.title}
-                                            className="absolute inset-0 w-full h-full"
-                                            allowFullScreen
-                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                        ></iframe>
-                                    ) : (
-                                        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-slate-800 via-slate-900 to-indigo-950">
-                                            <div className="text-center">
-                                                <div className="w-20 h-20 rounded-full bg-white/5 backdrop-blur-sm flex items-center justify-center mx-auto mb-4 border border-white/10">
-                                                    <FiPlayCircle size={40} className="text-white/50" />
+                            <>
+                                {/* Video Player */}
+                                <div className={`bg-gray-900 rounded-xl overflow-hidden shadow-lg mb-4 ${videoMode === 'theater' ? 'fixed inset-0 z-50 rounded-none' : ''
+                                    }`}>
+                                    <div className="relative w-full" style={{ paddingTop: videoMode === 'theater' ? '0' : '56.25%', height: videoMode === 'theater' ? '100vh' : 'auto' }}>
+                                        {activeLesson?.videoUrl ? (
+                                            <iframe
+                                                src={getVideoEmbedUrl(activeLesson.videoUrl)}
+                                                title={activeLesson.title}
+                                                className="absolute inset-0 w-full h-full"
+                                                allowFullScreen
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                            ></iframe>
+                                        ) : (
+                                            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
+                                                <div className="text-center">
+                                                    <FiPlayCircle size={48} className="text-white/30 mx-auto mb-3" />
+                                                    <p className="text-white/40 text-sm">No video for this lesson</p>
                                                 </div>
-                                                <p className="text-white/50 font-medium">No video available for this lesson</p>
-                                                <p className="text-white/30 text-sm mt-2">Check Notes, Resources, or Quiz tabs</p>
                                             </div>
-                                        </div>
-                                    )}
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
+
+                                {/* Video Control Bar */}
+                                <div className="flex items-center justify-end gap-2 mb-5">
+                                    <button
+                                        onClick={() => setVideoMode(videoMode === 'theater' ? 'normal' : 'theater')}
+                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${videoMode === 'theater'
+                                                ? 'bg-[#F79952] text-white'
+                                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                            }`}
+                                    >
+                                        <FiMaximize2 size={12} />
+                                        {videoMode === 'theater' ? 'Exit Fullscreen' : 'Fullscreen'}
+                                    </button>
+                                </div>
+
+                                {/* Theater mode - ESC hint & backdrop */}
+                                {videoMode === 'theater' && (
+                                    <>
+                                        <div className="fixed inset-0 bg-black z-40" onClick={() => setVideoMode('normal')} />
+                                        <button
+                                            onClick={() => setVideoMode('normal')}
+                                            className="fixed top-4 right-4 z-[60] flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm text-white rounded-lg text-sm font-medium hover:bg-white/20 transition-all"
+                                        >
+                                            <FiX size={16} />
+                                            ESC to exit
+                                        </button>
+                                    </>
+                                )}
+                            </>
                         )}
 
                         {/* Text Content Tab */}
                         {activeTab === 'text' && (
-                            <div className="mb-6">
+                            <div className="mb-5">
                                 <LessonTextContent
                                     textContent={activeLesson?.textContent}
                                     textContentBn={activeLesson?.textContentBn}
@@ -340,21 +368,21 @@ export default function CourseLearnPage() {
 
                         {/* Documents Tab */}
                         {activeTab === 'documents' && (
-                            <div className="bg-white rounded-2xl border border-gray-100 shadow-lg shadow-gray-100/50 p-6 mb-6">
+                            <div className="bg-white rounded-2xl border border-gray-200 p-5 mb-5">
                                 <LessonDocuments documents={activeLesson?.documents} />
                             </div>
                         )}
 
                         {/* Quiz Tab */}
                         {activeTab === 'quiz' && (
-                            <div className="bg-white rounded-2xl border border-gray-100 shadow-lg shadow-gray-100/50 p-6 mb-6">
+                            <div className="bg-white rounded-2xl border border-gray-200 p-5 mb-5">
                                 <LessonQuiz
                                     lessonId={activeLesson?._id}
                                     questions={activeLesson?.questions}
                                     quizSettings={activeLesson?.quizSettings}
                                     onComplete={(result) => {
                                         if (result.passed) {
-                                            // Optionally auto-complete lesson when quiz is passed
+                                            // Auto-complete on quiz pass
                                         }
                                     }}
                                 />
@@ -362,65 +390,52 @@ export default function CourseLearnPage() {
                         )}
 
                         {/* Lesson Info Card */}
-                        <div className="bg-white rounded-2xl border border-gray-100 shadow-lg shadow-gray-100/50 p-6 lg:p-8">
-                            <div className="flex flex-col lg:flex-row lg:items-start gap-6">
+                        <div className="bg-white rounded-2xl border border-gray-200 p-5 lg:p-6">
+                            <div className="flex flex-col lg:flex-row lg:items-start gap-5">
                                 <div className="flex-1">
                                     {/* Breadcrumb Tags */}
-                                    <div className="flex items-center gap-2 mb-4 flex-wrap">
-                                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-600 text-xs font-semibold border border-indigo-100/50">
+                                    <div className="flex items-center gap-2 mb-3 flex-wrap">
+                                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#41bfb8]/10 text-[#41bfb8] text-xs font-bold">
                                             <FiBookOpen size={12} />
                                             Module {groupedContent.findIndex(m => m.lessons.some(l => l._id === activeLesson?._id)) + 1}
                                         </span>
                                         <FiChevronRight size={14} className="text-gray-300" />
-                                        <span className="px-3 py-1.5 rounded-lg bg-slate-50 text-slate-600 text-xs font-semibold border border-slate-100">
+                                        <span className="px-3 py-1.5 rounded-lg bg-[#F79952]/10 text-[#F79952] text-xs font-bold">
                                             Lesson {activeLesson?.order || 1}
                                         </span>
-                                        {activeLesson?.lessonType && activeLesson.lessonType !== 'video' && (
-                                            <>
-                                                <FiChevronRight size={14} className="text-gray-300" />
-                                                <span className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${activeLesson.lessonType === 'quiz' ? 'bg-indigo-50 text-indigo-600' :
-                                                        activeLesson.lessonType === 'text' ? 'bg-amber-50 text-amber-600' :
-                                                            'bg-purple-50 text-purple-600'
-                                                    }`}>
-                                                    {activeLesson.lessonType === 'quiz' ? 'Quiz' :
-                                                        activeLesson.lessonType === 'text' ? 'Reading' :
-                                                            'Mixed Content'}
-                                                </span>
-                                            </>
-                                        )}
                                     </div>
 
                                     {/* Title */}
-                                    <h2 className="text-2xl lg:text-3xl font-bold text-slate-800 mb-3 font-outfit leading-tight">
+                                    <h2 className="text-xl lg:text-2xl font-bold text-gray-800 mb-2">
                                         {activeLesson?.title || 'Course Overview'}
                                     </h2>
 
                                     {/* Description */}
                                     {activeLesson?.description && (
-                                        <p className="text-slate-500 leading-relaxed mb-4">
+                                        <p className="text-gray-500 text-sm leading-relaxed mb-4">
                                             {activeLesson.description}
                                         </p>
                                     )}
 
-                                    {/* Stats Badges */}
+                                    {/* Stats */}
                                     <div className="flex flex-wrap gap-2">
                                         {activeLesson?.videoDuration > 0 && (
-                                            <div className="inline-flex items-center gap-2 text-sm text-slate-400 bg-slate-50 px-3 py-1.5 rounded-lg">
-                                                <FiClock size={14} />
-                                                <span>{Math.round(activeLesson.videoDuration / 60)} minutes</span>
-                                            </div>
+                                            <span className="inline-flex items-center gap-1.5 text-xs text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg">
+                                                <FiClock size={12} />
+                                                {Math.round(activeLesson.videoDuration / 60)} min
+                                            </span>
                                         )}
                                         {activeLesson?.documents?.length > 0 && (
-                                            <div className="inline-flex items-center gap-2 text-sm text-emerald-500 bg-emerald-50 px-3 py-1.5 rounded-lg">
-                                                <FiFile size={14} />
-                                                <span>{activeLesson.documents.length} resources</span>
-                                            </div>
+                                            <span className="inline-flex items-center gap-1.5 text-xs text-[#41bfb8] bg-[#41bfb8]/10 px-3 py-1.5 rounded-lg">
+                                                <FiFile size={12} />
+                                                {activeLesson.documents.length} resources
+                                            </span>
                                         )}
                                         {activeLesson?.questions?.length > 0 && (
-                                            <div className="inline-flex items-center gap-2 text-sm text-indigo-500 bg-indigo-50 px-3 py-1.5 rounded-lg">
-                                                <FiHelpCircle size={14} />
-                                                <span>{activeLesson.questions.length} questions</span>
-                                            </div>
+                                            <span className="inline-flex items-center gap-1.5 text-xs text-[#F79952] bg-[#F79952]/10 px-3 py-1.5 rounded-lg">
+                                                <FiHelpCircle size={12} />
+                                                {activeLesson.questions.length} questions
+                                            </span>
                                         )}
                                     </div>
                                 </div>
@@ -428,24 +443,24 @@ export default function CourseLearnPage() {
                                 {/* Action Button */}
                                 <div className="flex-shrink-0">
                                     {completedLessons.includes(activeLesson?._id) ? (
-                                        <div className="flex items-center gap-3 px-6 py-4 rounded-xl bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-100">
-                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center shadow-lg shadow-emerald-200">
-                                                <FiCheck size={18} className="text-white" />
+                                        <div className="flex items-center gap-3 px-5 py-3 rounded-xl bg-[#41bfb8]/10 border border-[#41bfb8]/20">
+                                            <div className="w-9 h-9 rounded-full bg-[#41bfb8] flex items-center justify-center">
+                                                <FiCheck size={16} className="text-white" />
                                             </div>
                                             <div>
-                                                <p className="text-emerald-700 font-semibold">Completed!</p>
-                                                <p className="text-emerald-600/60 text-sm">Great job!</p>
+                                                <p className="text-[#41bfb8] font-bold text-sm">Completed!</p>
+                                                <p className="text-[#41bfb8]/60 text-xs">Great job!</p>
                                             </div>
                                         </div>
                                     ) : (
                                         <button
                                             onClick={handleMarkAsDone}
-                                            className="group flex items-center gap-3 px-8 py-4 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold shadow-lg shadow-indigo-200 hover:shadow-xl hover:shadow-indigo-300 hover:-translate-y-0.5 active:translate-y-0 transition-all"
+                                            className="group flex items-center gap-3 px-6 py-3 rounded-xl bg-gradient-to-r from-[#41bfb8] to-[#2dd4bf] text-white font-bold text-sm shadow-lg shadow-[#41bfb8]/20 hover:shadow-xl hover:scale-[1.02] active:scale-95 transition-all"
                                         >
-                                            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                                <FiCheck size={16} />
+                                            <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                                <FiCheck size={14} />
                                             </div>
-                                            <span>Mark as Complete</span>
+                                            Mark Complete
                                         </button>
                                     )}
                                 </div>
@@ -454,60 +469,56 @@ export default function CourseLearnPage() {
                     </main>
 
                     {/* ===== CURRICULUM SIDEBAR (Desktop) ===== */}
-                    <aside className={`hidden lg:block w-[380px] flex-shrink-0 ${!sidebarOpen ? 'lg:hidden' : ''}`}>
-                        <div className="sticky top-[94px] bg-white rounded-2xl border border-gray-100 shadow-lg shadow-gray-100/50 overflow-hidden">
+                    <aside className={`hidden lg:block w-[340px] flex-shrink-0 ${!sidebarOpen ? 'lg:hidden' : ''}`}>
+                        <div className="sticky top-[80px] bg-white rounded-2xl border border-gray-200 overflow-hidden">
                             {/* Header */}
-                            <div className="p-6 bg-gradient-to-r from-indigo-50/50 to-purple-50/50 border-b border-gray-100">
+                            <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-[#41bfb8]/5 to-[#F79952]/5">
                                 <div className="flex items-center gap-3 mb-4">
-                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-200">
+                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#41bfb8] to-[#2dd4bf] flex items-center justify-center shadow-md">
                                         <FiBookOpen size={18} className="text-white" />
                                     </div>
                                     <div>
-                                        <h3 className="text-lg font-bold text-slate-800 font-outfit">Course Content</h3>
-                                        <p className="text-xs text-slate-500">{groupedContent.length} modules • {totalLessons} lessons</p>
+                                        <h3 className="font-bold text-gray-800">Course Content</h3>
+                                        <p className="text-xs text-gray-500">{groupedContent.length} modules • {totalLessons} lessons</p>
                                     </div>
                                 </div>
 
                                 {/* Progress Bar */}
                                 <div className="space-y-2">
-                                    <div className="flex items-center justify-between text-sm">
-                                        <span className="text-slate-500">{completedLessons.length} of {totalLessons} completed</span>
-                                        <span className="text-indigo-600 font-bold">{progressPercent}%</span>
+                                    <div className="flex items-center justify-between text-xs">
+                                        <span className="text-gray-500">{completedLessons.length} of {totalLessons}</span>
+                                        <span className="text-[#41bfb8] font-bold">{progressPercent}%</span>
                                     </div>
-                                    <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                                        <div
-                                            className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-700"
-                                            style={{ width: `${progressPercent}%` }}
-                                        ></div>
+                                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                        <div className="h-full bg-gradient-to-r from-[#41bfb8] to-[#F79952] rounded-full transition-all" style={{ width: `${progressPercent}%` }}></div>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Module List */}
-                            <div className="max-h-[calc(100vh-340px)] overflow-y-auto">
+                            <div className="max-h-[calc(100vh-300px)] overflow-y-auto">
                                 {groupedContent.map((module, mIdx) => (
                                     <div key={module._id} className="border-b border-gray-50 last:border-0">
                                         <button
                                             onClick={() => toggleModule(module._id)}
-                                            className={`w-full p-4 flex items-start gap-4 text-left transition-all ${expandedModules[module._id] ? 'bg-indigo-50/30' : 'hover:bg-slate-50'
-                                                }`}
+                                            className={`w-full p-4 flex items-start gap-3 text-left transition-all ${expandedModules[module._id] ? 'bg-[#41bfb8]/5' : 'hover:bg-gray-50'}`}
                                         >
-                                            <div className={`flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold transition-all ${expandedModules[module._id]
-                                                ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md shadow-indigo-200'
-                                                : 'bg-slate-100 text-slate-500'
+                                            <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold transition-all ${expandedModules[module._id]
+                                                ? 'bg-[#41bfb8] text-white shadow-md'
+                                                : 'bg-gray-100 text-gray-500'
                                                 }`}>
                                                 {mIdx + 1}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <h4 className="text-sm font-semibold text-slate-700 line-clamp-2 font-outfit leading-snug">
+                                                <h4 className="text-sm font-semibold text-gray-700 line-clamp-2 leading-snug">
                                                     {module.title}
                                                 </h4>
-                                                <p className="text-xs text-slate-400 mt-1">
-                                                    {module.lessons.length} lessons • {Math.round(module.lessons.reduce((s, l) => s + (l.videoDuration || 0), 0) / 60)} min
+                                                <p className="text-xs text-gray-400 mt-1">
+                                                    {module.lessons.length} lessons
                                                 </p>
                                             </div>
-                                            <div className={`text-slate-400 transition-transform ${expandedModules[module._id] ? 'rotate-180' : ''}`}>
-                                                <FiChevronDown size={18} />
+                                            <div className={`text-gray-400 transition-transform ${expandedModules[module._id] ? 'rotate-180' : ''}`}>
+                                                <FiChevronDown size={16} />
                                             </div>
                                         </button>
 
@@ -517,42 +528,38 @@ export default function CourseLearnPage() {
                                                     initial={{ height: 0, opacity: 0 }}
                                                     animate={{ height: 'auto', opacity: 1 }}
                                                     exit={{ height: 0, opacity: 0 }}
-                                                    transition={{ duration: 0.25 }}
+                                                    transition={{ duration: 0.2 }}
                                                     className="overflow-hidden"
                                                 >
-                                                    <div className="pb-3 px-2">
+                                                    <div className="pb-3 px-3 space-y-1">
                                                         {module.lessons.map((lesson) => {
                                                             const isActive = activeLesson?._id === lesson._id;
                                                             const isCompleted = completedLessons.includes(lesson._id);
-                                                            const hasQuiz = lesson.questions?.length > 0 || lesson.hasQuiz;
-                                                            const hasDocs = lesson.documents?.length > 0;
 
                                                             return (
                                                                 <button
                                                                     key={lesson._id}
                                                                     onClick={() => setActiveLesson(lesson)}
-                                                                    className={`w-full ml-[52px] mr-2 px-4 py-3 rounded-xl flex items-center gap-3 text-left mb-1 transition-all ${isActive
-                                                                        ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md shadow-indigo-200'
-                                                                        : 'hover:bg-slate-50'
+                                                                    className={`w-full ml-8 px-3 py-2.5 rounded-lg flex items-center gap-3 text-left transition-all ${isActive
+                                                                        ? 'bg-gradient-to-r from-[#41bfb8] to-[#2dd4bf] text-white shadow-md'
+                                                                        : 'hover:bg-gray-50'
                                                                         }`}
                                                                 >
-                                                                    <div className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center ${isActive
+                                                                    <div className={`flex-shrink-0 w-6 h-6 rounded-md flex items-center justify-center ${isActive
                                                                         ? 'bg-white/20'
                                                                         : isCompleted
-                                                                            ? 'bg-emerald-100 text-emerald-600'
-                                                                            : 'bg-slate-100 text-slate-400'
+                                                                            ? 'bg-[#41bfb8]/10 text-[#41bfb8]'
+                                                                            : 'bg-gray-100 text-gray-400'
                                                                         }`}>
-                                                                        {isCompleted && !isActive ? <FiCheck size={12} /> : <FiPlay size={10} />}
+                                                                        {isCompleted && !isActive ? <FiCheck size={11} /> : <FiPlay size={9} />}
                                                                     </div>
                                                                     <div className="flex-1 min-w-0">
-                                                                        <p className={`text-sm font-medium truncate ${isActive ? 'text-white' : 'text-slate-600'}`}>
+                                                                        <p className={`text-xs font-medium truncate ${isActive ? 'text-white' : 'text-gray-600'}`}>
                                                                             {lesson.title}
                                                                         </p>
-                                                                        <div className={`flex items-center gap-2 text-xs ${isActive ? 'text-white/70' : 'text-slate-400'}`}>
-                                                                            <span>{Math.round((lesson.videoDuration || 0) / 60)} min</span>
-                                                                            {hasQuiz && <span>• Quiz</span>}
-                                                                            {hasDocs && <span>• {lesson.documents.length} files</span>}
-                                                                        </div>
+                                                                        <p className={`text-[10px] ${isActive ? 'text-white/60' : 'text-gray-400'}`}>
+                                                                            {Math.round((lesson.videoDuration || 0) / 60)} min
+                                                                        </p>
                                                                     </div>
                                                                 </button>
                                                             );
@@ -577,7 +584,7 @@ export default function CourseLearnPage() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="fixed inset-0 bg-slate-900/30 backdrop-blur-sm z-40 lg:hidden"
+                            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden"
                             onClick={() => setSidebarOpen(false)}
                         />
                         <motion.aside
@@ -587,10 +594,10 @@ export default function CourseLearnPage() {
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                             className="fixed top-0 right-0 bottom-0 w-full max-w-sm bg-white z-50 lg:hidden shadow-2xl overflow-y-auto"
                         >
-                            <div className="sticky top-0 p-5 bg-white border-b border-gray-100 flex items-center justify-between z-10">
-                                <h3 className="text-lg font-bold text-slate-800 font-outfit">Course Content</h3>
-                                <button onClick={() => setSidebarOpen(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
-                                    <FiX size={20} className="text-slate-500" />
+                            <div className="sticky top-0 p-4 bg-white border-b border-gray-200 flex items-center justify-between z-10">
+                                <h3 className="font-bold text-gray-800">Course Content</h3>
+                                <button onClick={() => setSidebarOpen(false)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                                    <FiX size={18} className="text-gray-500" />
                                 </button>
                             </div>
                             <div className="p-4 space-y-2">
@@ -598,15 +605,13 @@ export default function CourseLearnPage() {
                                     <div key={module._id}>
                                         <button
                                             onClick={() => toggleModule(module._id)}
-                                            className={`w-full p-4 rounded-xl flex items-center gap-3 text-left transition-all ${expandedModules[module._id] ? 'bg-indigo-50' : 'bg-slate-50 hover:bg-slate-100'
-                                                }`}
+                                            className={`w-full p-3 rounded-xl flex items-center gap-3 text-left transition-all ${expandedModules[module._id] ? 'bg-[#41bfb8]/10' : 'bg-gray-50 hover:bg-gray-100'}`}
                                         >
-                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${expandedModules[module._id] ? 'bg-indigo-500 text-white' : 'bg-white text-slate-500'
-                                                }`}>
+                                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold ${expandedModules[module._id] ? 'bg-[#41bfb8] text-white' : 'bg-white text-gray-500'}`}>
                                                 {mIdx + 1}
                                             </div>
-                                            <span className="flex-1 text-sm font-semibold text-slate-700 truncate">{module.title}</span>
-                                            <FiChevronDown className={`text-slate-400 transition-transform ${expandedModules[module._id] ? 'rotate-180' : ''}`} />
+                                            <span className="flex-1 text-sm font-semibold text-gray-700 truncate">{module.title}</span>
+                                            <FiChevronDown className={`text-gray-400 transition-transform ${expandedModules[module._id] ? 'rotate-180' : ''}`} />
                                         </button>
                                         <AnimatePresence>
                                             {expandedModules[module._id] && (
@@ -616,16 +621,16 @@ export default function CourseLearnPage() {
                                                     exit={{ height: 0 }}
                                                     className="overflow-hidden"
                                                 >
-                                                    <div className="ml-11 mt-1 space-y-1 pb-2">
+                                                    <div className="ml-10 mt-1 space-y-1 pb-2">
                                                         {module.lessons.map((lesson) => {
                                                             const isActive = activeLesson?._id === lesson._id;
                                                             return (
                                                                 <button
                                                                     key={lesson._id}
                                                                     onClick={() => { setActiveLesson(lesson); setSidebarOpen(false); }}
-                                                                    className={`w-full p-3 rounded-lg text-left text-sm font-medium transition-all ${isActive
-                                                                        ? 'bg-indigo-500 text-white'
-                                                                        : 'text-slate-600 hover:bg-slate-100'
+                                                                    className={`w-full p-2.5 rounded-lg text-left text-sm font-medium transition-all ${isActive
+                                                                        ? 'bg-[#41bfb8] text-white'
+                                                                        : 'text-gray-600 hover:bg-gray-100'
                                                                         }`}
                                                                 >
                                                                     {lesson.title}

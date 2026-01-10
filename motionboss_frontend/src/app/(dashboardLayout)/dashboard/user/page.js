@@ -300,7 +300,7 @@ export default function UserDashboard() {
                                             <span className="text-[10px] font-bold text-[#41bfb8] whitespace-nowrap">{enroll.progress || 0}%</span>
                                         </div>
                                     </div>
-                                    <Link href={`/dashboard/user/courses/${enroll.course?._id}`} className={`p-2.5 rounded-xl transition-all ${isDark
+                                    <Link href={`/dashboard/user/courses/${enroll.course?._id}/watch`} className={`p-2.5 rounded-xl transition-all ${isDark
                                         ? 'bg-slate-700 text-slate-300 hover:bg-[#41bfb8] hover:text-white'
                                         : 'bg-slate-100 text-slate-500 hover:bg-[#41bfb8] hover:text-white'
                                         }`}>
